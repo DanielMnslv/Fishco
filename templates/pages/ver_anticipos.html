@@ -1,0 +1,172 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block extrastyle %}
+<style>
+    .iframe-container {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .parent-fit {
+        flex-grow: 1;
+        border: none;
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+    }
+    .table-container {
+        margin-top: 20px;
+    }
+    .pagination {
+        margin-top: 20px;
+    }
+</style>
+{% endblock extrastyle %}
+
+{% block content %}
+<div class="container">
+    <h1>Ver Anticipos</h1>
+
+    <!-- Formulario de búsqueda -->
+    <form method="GET" action="">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="id">ID:</label>
+                            <input type="text" id="id" name="id" class="form-control" value="{{ request.GET.id }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="centro_costo">Centro de Costo:</label>
+                            <input type="text" id="centro_costo" name="centro_costo" class="form-control" value="{{ request.GET.centro_costo }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="nit">NIT:</label>
+                            <input type="text" id="nit" name="nit" class="form-control" value="{{ request.GET.nit }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="nombre">Nombre:</label>
+                            <input type="text" id="nombre" name="nombre" class="form-control" value="{{ request.GET.nombre }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="producto_servicio">Producto/Servicio:</label>
+                            <input type="text" id="producto_servicio" name="producto_servicio" class="form-control" value="{{ request.GET.producto_servicio }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="cantidad">Cantidad:</label>
+                            <input type="text" id="cantidad" name="cantidad" class="form-control" value="{{ request.GET.cantidad }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="vlr_unitario">Valor Unitario:</label>
+                            <input type="text" id="vlr_unitario" name="vlr_unitario" class="form-control" value="{{ request.GET.vlr_unitario }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="subtotal">Subtotal:</label>
+                            <input type="text" id="subtotal" name="subtotal" class="form-control" value="{{ request.GET.subtotal }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="iva">IVA:</label>
+                            <input type="text" id="iva" name="iva" class="form-control" value="{{ request.GET.iva }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="retencion">Retención:</label>
+                            <input type="text" id="retencion" name="retencion" class="form-control" value="{{ request.GET.retencion }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="total_pagar">Total a Pagar:</label>
+                            <input type="text" id="total_pagar" name="total_pagar" class="form-control" value="{{ request.GET.total_pagar }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="observaciones">Observaciones:</label>
+                            <input type="text" id="observaciones" name="observaciones" class="form-control" value="{{ request.GET.observaciones }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="documento_pdf">Documento PDF:</label>
+                            <input type="text" id="documento_pdf" name="documento_pdf" class="form-control" value="{{ request.GET.documento_pdf }}">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Buscar</button>
+                </form>
+
+    <!-- Tabla de resultados -->
+    <div class="table-container">
+        <table class="table table-striped">
+            <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Centro de Costo</th>
+                            <th>NIT</th>
+                            <th>Nombre</th>
+                            <th>Producto/Servicio</th>
+                            <th>Cantidad</th>
+                            <th>Valor Unitario</th>
+                            <th>Subtotal</th>
+                            <th>IVA</th>
+                            <th>Retención</th>
+                            <th>Total a Pagar</th>
+                            <th>Observaciones</th>
+                            <th>Documento PDF</th>
+                        </tr>
+                    </thead>
+            <tbody>
+                        {% for item in anticipo %}
+                        <tr>
+                            <td>{{ item.id }}</td>
+                            <td>{{ item.centro_costo }}</td>
+                            <td>{{ item.nit }}</td>
+                            <td>{{ item.nombre }}</td>
+                            <td>{{ item.producto_servicio }}</td>
+                            <td>{{ item.cantidad }}</td>
+                            <td>{{ item.vlr_unitario }}</td>
+                            <td>{{ item.subtotal }}</td>
+                            <td>{{ item.iva }}</td>
+                            <td>{{ item.retencion|floatformat:3 }}</td>
+                            <td>{{ item.total_pagar }}</td>
+                            <td>{{ item.observaciones }}</td>
+                            <td>
+                                {% if item.documento_pdf %}
+                                    <a href="{{ item.documento_pdf.url }}" target="_blank">Ver PDF</a>
+                                {% else %}
+                                    No disponible
+                                {% endif %}
+                            </td>
+                            <td>
+    {% if not item.aprobado %}
+        <a href="{% url 'aprobar_anticipo' item.id %}" class="btn btn-success">Aprobar</a>
+    {% else %}
+        Aprobado
+    {% endif %}
+</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="13" class="text-center">No se encontraron registros.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+        </table>
+
+        <!-- Paginación -->
+        <div class="pagination">
+            <span class="step-links">
+                {% if solicitudes.has_previous %}
+                    <a href="?page=1{% if request.GET.id %}&id={{ request.GET.id }}{% endif %}{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.descripcion %}&descripcion={{ request.GET.descripcion }}{% endif %}{% if request.GET.cantidad %}&cantidad={{ request.GET.cantidad }}{% endif %}{% if request.GET.destino %}&destino={{ request.GET.destino }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.solicitado %}&solicitado={{ request.GET.solicitado }}{% endif %}">&laquo; Primera</a>
+                    <a href="?page={{ solicitudes.previous_page_number }}{% if request.GET.id %}&id={{ request.GET.id }}{% endif %}{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.descripcion %}&descripcion={{ request.GET.descripcion }}{% endif %}{% if request.GET.cantidad %}&cantidad={{ request.GET.cantidad }}{% endif %}{% if request.GET.destino %}&destino={{ request.GET.destino }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.solicitado %}&solicitado={{ request.GET.solicitado }}{% endif %}">Anterior</a>
+                {% endif %}
+
+                <span class="current">
+                    Página {{ solicitudes.number }} de {{ solicitudes.paginator.num_pages }}.
+                </span>
+
+                {% if solicitudes.has_next %}
+                    <a href="?page={{ solicitudes.next_page_number }}{% if request.GET.id %}&id={{ request.GET.id }}{% endif %}{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.descripcion %}&descripcion={{ request.GET.descripcion }}{% endif %}{% if request.GET.cantidad %}&cantidad={{ request.GET.cantidad }}{% endif %}{% if request.GET.destino %}&destino={{ request.GET.destino }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.solicitado %}&solicitado={{ request.GET.solicitado }}{% endif %}">Siguiente</a>
+                    <a href="?page={{ solicitudes.paginator.num_pages }}{% if request.GET.id %}&id={{ request.GET.id }}{% endif %}{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.descripcion %}&descripcion={{ request.GET.descripcion }}{% endif %}{% if request.GET.cantidad %}&cantidad={{ request.GET.cantidad }}{% endif %}{% if request.GET.destino %}&destino={{ request.GET.destino }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.solicitado %}&solicitado={{ request.GET.solicitado }}{% endif %}">Última &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+{% endblock content %}

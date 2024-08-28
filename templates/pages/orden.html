@@ -1,0 +1,110 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block content %}
+
+  <!-- [ Main Content ] start -->
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="card">
+        <div class="card-header">
+          <h5>Registrar</h5>
+        </div>
+        <div class="card-body">
+          <h5>Orden de Compra o Servicio</h5>
+          <hr>
+          <form action="{% url 'orden' %}" method="POST" enctype="multipart/form-data" name="orden">
+            {% csrf_token %}
+            
+            <!-- First Row: Product Description and Code -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="descripcion">Descripción del Producto o Servicio</label>
+                  <input type="text" id="descripcion" name="descripcion" class="form-control" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="codigo_cotizacion"># de Codigo o # de Cotizacion</label>
+                  <input type="text" id="codigo_cotizacion" name="codigo_cotizacion" class="form-control" required>
+                </div>
+              </div>
+            </div>
+
+            <!-- Second Row: Quantity and Destination -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="cantidad">Cantidad</label>
+                  <input type="number" id="cantidad" name="cantidad" class="form-control" min="1" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="destino">Destino de Producto o Servicio</label>
+                  <select id="destino" name="destino" class="form-control" required>
+                    <option value="ADMINISTRACIÓN">ADMINISTRACIÓN</option>
+                    <option value="PRODUCCION">PRODUCCIÓN</option>
+                    <option value="ALEVINERA">ALEVINERA</option>
+                    <option value="ECOPEZ">ECOPEZ</option>
+                    <option value="FERRY">FERRY</option>
+                    <option value="CARRO VNS228">CARRO VNS228</option>
+                    <option value="CARRO WGY">CARRO WGY</option>
+                    <option value="CARRO THS 473">CARRO THS 473</option>
+                    <option value="CARRO PESCA SRP 254">CARRO PESCA SRP 254</option>
+                    <option value="TERMOKIN GQZ 727">TERMOKIN GQZ 727</option>
+                    <option value="TERMOKIN GRK 030">TERMOKIN GRK 030</option>
+                    <option value="THERMO KING THS 592">THERMO KING THS 592</option>
+                    <option value="UNIDAD COMERCIALIZACION">UNIDAD COMERCIALIZACIÓN</option>
+                    <!-- Other options -->
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Third Row: Price and Company -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="precio">Precio del Producto o Servicio</label>
+                  <input type="number" id="precio" name="precio" class="form-control" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="empresa">Empresa</label>
+                  <input type="text" id="empresa" name="empresa" class="form-control" required>
+                </div>
+              </div>
+            </div>
+
+            <!-- Fourth Row: Delivery Time and Observations -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="tiempo_entrega">Tiempo de Entrega</label>
+                  <input type="datetime-local" id="tiempo_entrega" name="tiempo_entrega" class="form-control" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="observaciones">Observaciones</label>
+                  <textarea id="observaciones" name="observaciones" class="form-control" rows="3"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="text-center">
+              <button type="submit" class="btn btn-primary btn-block">Submit</button>
+            </div>
+            
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- [ Main Content ] end -->
+
+{% endblock content %}

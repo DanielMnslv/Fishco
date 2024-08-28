@@ -1,0 +1,188 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ver Diario</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <style>
+        .container {
+            max-width: 1200px;
+            margin-top: 30px;
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+        }
+        .table thead th {
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: #007bff;
+            border-color: #007bff;
+            color: white;
+        }
+        .pagination .page-link {
+            border-radius: 0;
+            color: #007bff;
+        }
+        .pagination .page-link:hover {
+            background-color: #e9ecef;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .form-control {
+            border-radius: 0;
+        }
+        .card-body form {
+            margin-bottom: 0;
+        }
+        .card-body table {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4 text-center">Ver Diario</h1>
+
+        <!-- Filtros -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Filtros</h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="id">ID:</label>
+                            <input type="text" id="id" name="id" class="form-control" value="{{ request.GET.id }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="tiempo_entrega">Tiempo de Entrega:</label>
+                            <input type="text" id="tiempo_entrega" name="tiempo_entrega" class="form-control" value="{{ request.GET.tiempo_entrega }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="nombre">Nombre:</label>
+                            <input type="text" id="nombre" name="nombre" class="form-control" value="{{ request.GET.nombre }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="empresa">Empresa:</label>
+                            <input type="text" id="empresa" name="empresa" class="form-control" value="{{ request.GET.empresa }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                        <label for="centro_costo">Centro de Costo:</label>
+                        <select id="centro_costo" name="centro_costo" class="form-control">
+                        <option value="">Seleccionar</option>
+                        {% for value, display in form.fields.centro_costo.choices %}
+                        <option value="{{ value }}" {% if value == request.GET.centro_costo %}selected{% endif %}>{{ display }}</option>
+                        {% endfor %}
+                        </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                        <label for="destino">Destino:</label>
+                        <select id="destino" name="destino" class="form-control">
+                        <option value="">Seleccionar</option>
+                        {% for value, display in form.fields.destino.choices %}
+                        <option value="{{ value }}" {% if value == request.GET.destino %}selected{% endif %}>{{ display }}</option>
+                        {% endfor %}
+                        </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                        <label for="medio_pago">Medio de Pago:</label>
+                        <select id="medio_pago" name="medio_pago" class="form-control">
+                        <option value="">Seleccionar</option>
+                        {% for value, display in form.fields.medio_pago.choices %}
+                        <option value="{{ value }}" {% if value == request.GET.medio_pago %}selected{% endif %}>{{ display }}</option>
+                        {% endfor %}
+                        </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="documento_pdf">Documento PDF:</label>
+                            <input type="text" id="documento_pdf" name="documento_pdf" class="form-control" value="{{ request.GET.documento_pdf }}">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Buscar</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Mostrar los registros del diario -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Registros del Diario</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tiempo de Entrega</th>
+                            <th>Nombre</th>
+                            <th>Empresa</th>
+                            <th>Centro de Costo</th>
+                            <th>Destino</th>
+                            <th>Medio de Pago</th>
+                            <th>Documento PDF</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in diario %}
+                        <tr>
+                            <td>{{ item.id }}</td>
+                            <td>{{ item.tiempo_entrega }}</td>
+                            <td>{{ item.nombre }}</td>
+                            <td>{{ item.empresa }}</td>
+                            <td>{{ item.centro_costo }}</td>
+                            <td>{{ item.destino }}</td>
+                            <td>{{ item.medio_pago }}</td>
+                            <td>
+                                {% if item.documento_pdf %}
+                                    <a href="{{ item.documento_pdf.url }}" target="_blank">Ver PDF</a>
+                                {% else %}
+                                    No disponible
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center">No se encontraron registros.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <!-- Paginación -->
+                <nav aria-label="Página de navegación">
+                    <ul class="pagination justify-content-center">
+                        {% if diario.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1&{% if request.GET.id %}id={{ request.GET.id }}&{% endif %}{% if request.GET.tiempo_entrega %}tiempo_entrega={{ request.GET.tiempo_entrega }}&{% endif %}{% if request.GET.nombre %}nombre={{ request.GET.nombre }}&{% endif %}{% if request.GET.empresa %}empresa={{ request.GET.empresa }}&{% endif %}{% if request.GET.centro_costo %}centro_costo={{ request.GET.centro_costo }}&{% endif %}{% if request.GET.destino %}destino={{ request.GET.destino }}&{% endif %}{% if request.GET.medio_pago %}medio_pago={{ request.GET.medio_pago }}&{% endif %}{% if request.GET.documento_pdf %}documento_pdf={{ request.GET.documento_pdf }}&{% endif %}">&laquo; Primera</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ diario.previous_page_number }}&{% if request.GET.id %}id={{ request.GET.id }}&{% endif %}{% if request.GET.tiempo_entrega %}tiempo_entrega={{ request.GET.tiempo_entrega }}&{% endif %}{% if request.GET.nombre %}nombre={{ request.GET.nombre }}&{% endif %}{% if request.GET.empresa %}empresa={{ request.GET.empresa }}&{% endif %}{% if request.GET.centro_costo %}centro_costo={{ request.GET.centro_costo }}&{% endif %}{% if request.GET.destino %}destino={{ request.GET.destino }}&{% endif %}{% if request.GET.medio_pago %}medio_pago={{ request.GET.medio_pago }}&{% endif %}{% if request.GET.documento_pdf %}documento_pdf={{ request.GET.documento_pdf }}&{% endif %}">Anterior</a>
+                            </li>
+                        {% endif %}
+
+                        {% if diario.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ diario.next_page_number }}&{% if request.GET.id %}id={{ request.GET.id }}&{% endif %}{% if request.GET.tiempo_entrega %}tiempo_entrega={{ request.GET.tiempo_entrega }}&{% endif %}{% if request.GET.nombre %}nombre={{ request.GET.nombre }}&{% endif %}{% if request.GET.empresa %}empresa={{ request.GET.empresa }}&{% endif %}{% if request.GET.centro_costo %}centro_costo={{ request.GET.centro_costo }}&{% endif %}{% if request.GET.destino %}destino={{ request.GET.destino }}&{% endif %}{% if request.GET.medio_pago %}medio_pago={{ request.GET.medio_pago }}&{% endif %}{% if request.GET.documento_pdf %}documento_pdf={{ request.GET.documento_pdf }}&{% endif %}">Siguiente</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ diario.paginator.num_pages }}&{% if request.GET.id %}id={{ request.GET.id }}&{% endif %}{% if request.GET.tiempo_entrega %}tiempo_entrega={{ request.GET.tiempo_entrega }}&{% endif %}{% if request.GET.nombre %}nombre={{ request.GET.nombre }}&{% endif %}{% if request.GET.empresa %}empresa={{ request.GET.empresa }}&{% endif %}{% if request.GET.centro_costo %}centro_costo={{ request.GET.centro_costo }}&{% endif %}{% if request.GET.destino %}destino={{ request.GET.destino }}&{% endif %}{% if request.GET.medio_pago %}medio_pago={{ request.GET.medio_pago }}&{% endif %}{% if request.GET.documento_pdf %}documento_pdf={{ request.GET.documento_pdf }}&{% endif %}">Última &raquo;</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ver Órdenes</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin-top: 30px;
+        }
+
+        .table-container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+            font-weight: 500;
+            color: #007bff;
+            text-align: center;
+        }
+
+        .form-inline .form-group {
+            margin-right: 10px;
+        }
+
+        .form-inline .form-control {
+            border-radius: 5px;
+            box-shadow: none;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #004085;
+        }
+
+        .table {
+            margin-top: 20px;
+        }
+
+        .table thead th {
+            background-color: #007bff;
+            color: #ffffff;
+            border-bottom: 2px solid #0056b3;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .pagination a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .pagination a:hover {
+            text-decoration: underline;
+        }
+
+        .pagination .current {
+            font-weight: bold;
+            color: #333;
+        }
+
+        img {
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Ver Órdenes</h1>
+
+    <!-- Formulario de búsqueda -->
+    <form method="GET" class="form-inline">
+        <div class="form-group">
+            <label for="id">ID</label>
+            <input type="text" id="id" name="id" value="{{ request.GET.id }}" class="form-control">
+        </div>
+        <div class="form-group">
+            <label for="descripcion">Descripción</label>
+            <input type="text" id="descripcion" name="descripcion" value="{{ request.GET.descripcion }}" class="form-control">
+        </div>
+        <div class="form-group">
+            <label for="codigo_cotizacion">Código Cotización</label>
+            <input type="text" id="codigo_cotizacion" name="codigo_cotizacion" value="{{ request.GET.codigo_cotizacion }}" class="form-control">
+        </div>
+        <div class="form-group">
+            <label for="precio">Precio</label>
+            <input type="number" id="precio" name="precio" value="{{ request.GET.precio }}" class="form-control">
+        </div>
+        <div class="form-group">
+            <label for="cantidad">Cantidad</label>
+            <input type="number" id="cantidad" name="cantidad" value="{{ request.GET.cantidad }}" class="form-control">
+        </div>
+        <div class="form-group">
+            <label for="empresa">Empresa</label>
+            <input type="text" id="empresa" name="empresa" value="{{ request.GET.empresa }}" class="form-control">
+        </div>
+        <div class="form-group">
+            <label for="destino">Destino</label>
+            <input type="text" id="destino" name="destino" value="{{ request.GET.destino }}" class="form-control">
+        </div>
+        <div class="form-group">
+            <label for="tiempo_entrega">Tiempo de Entrega</label>
+            <input type="text" id="tiempo_entrega" name="tiempo_entrega" value="{{ request.GET.tiempo_entrega }}" class="form-control">
+        </div>
+        <div class="form-group">
+            <label for="observaciones">Observaciones</label>
+            <input type="text" id="observaciones" name="observaciones" value="{{ request.GET.observaciones }}" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-primary">Buscar</button>
+    </form>
+
+    <!-- Tabla de resultados -->
+    <div class="table-container">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Descripción</th>
+                    <th>Código Cotización</th>
+                    <th>Precio</th>
+                    <th>Cantidad</th>
+                    <th>Empresa</th>
+                    <th>Destino</th>
+                    <th>Tiempo de Entrega</th>
+                    <th>Observaciones</th>
+                    <th>Documento PDF</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for orden in ordenes %}
+                <tr>
+                    <td>{{ orden.id }}</td>
+                    <td>{{ orden.descripcion }}</td>
+                    <td>{{ orden.codigo_cotizacion }}</td>
+                    <td>{{ orden.precio }}</td>
+                    <td>{{ orden.cantidad }}</td>
+                    <td>{{ orden.empresa }}</td>
+                    <td>{{ orden.destino }}</td>
+                    <td>{{ orden.tiempo_entrega }}</td>
+                    <td>{{ orden.observaciones }}</td>
+                    <td>
+                        {% if orden.documento_pdf %}
+                        <a href="{{ orden.documento_pdf.url }}" target="_blank">Ver PDF</a>
+                        {% else %}
+                        No disponible
+                        {% endif %}
+                    </td>
+                    <td>{{ orden.get_estado_display }}</td>
+                    <td>
+                        {% if orden.estado == "PENDIENTE" %}
+                        <form action="{% url 'aprobar_orden' orden.id %}" method="post">
+                            {% csrf_token %}
+                            <input type="submit" value="Aprobar" class="btn btn-success">
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="12" class="text-center">No se encontraron órdenes.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Paginación -->
+        <div class="pagination">
+            <span class="step-links">
+                {% if ordenes.has_previous %}
+                    <a href="?page=1{% if request.GET.id %}&id={{ request.GET.id }}{% endif %}{% if request.GET.descripcion %}&descripcion={{ request.GET.descripcion }}{% endif %}{% if request.GET.codigo_cotizacion %}&codigo_cotizacion={{ request.GET.codigo_cotizacion }}{% endif %}{% if request.GET.precio %}&precio={{ request.GET.precio }}{% endif %}{% if request.GET.cantidad %}&cantidad={{ request.GET.cantidad }}{% endif %}{% if request.GET.empresa %}&empresa={{ request.GET.empresa }}{% endif %}{% if request.GET.destino %}&destino={{ request.GET.destino }}{% endif %}{% if request.GET.tiempo_entrega %}&tiempo_entrega={{ request.GET.tiempo_entrega }}{% endif %}{% if request.GET.observaciones %}&observaciones={{ request.GET.observaciones }}{% endif %}">&laquo; Primera</a>
+                    <a href="?page={{ ordenes.previous_page_number }}{% if request.GET.id %}&id={{ request.GET.id }}{% endif %}{% if request.GET.descripcion %}&descripcion={{ request.GET.descripcion }}{% endif %}{% if request.GET.codigo_cotizacion %}&codigo_cotizacion={{ request.GET.codigo_cotizacion }}{% endif %}{% if request.GET.precio %}&precio={{ request.GET.precio }}{% endif %}{% if request.GET.cantidad %}&cantidad={{ request.GET.cantidad }}{% endif %}{% if request.GET.empresa %}&empresa={{ request.GET.empresa }}{% endif %}{% if request.GET.destino %}&destino={{ request.GET.destino }}{% endif %}{% if request.GET.tiempo_entrega %}&tiempo_entrega={{ request.GET.tiempo_entrega }}{% endif %}{% if request.GET.observaciones %}&observaciones={{ request.GET.observaciones }}{% endif %}">Anterior</a>
+                {% endif %}
+
+                <span class="current">
+                    Página {{ ordenes.number }} de {{ ordenes.paginator.num_pages }}.
+                </span>
+
+                {% if ordenes.has_next %}
+                    <a href="?page={{ ordenes.next_page_number }}{% if request.GET.id %}&id={{ request.GET.id }}{% endif %}{% if request.GET.descripcion %}&descripcion={{ request.GET.descripcion }}{% endif %}{% if request.GET.codigo_cotizacion %}&codigo_cotizacion={{ request.GET.codigo_cotizacion }}{% endif %}{% if request.GET.precio %}&precio={{ request.GET.precio }}{% endif %}{% if request.GET.cantidad %}&cantidad={{ request.GET.cantidad }}{% endif %}{% if request.GET.empresa %}&empresa={{ request.GET.empresa }}{% endif %}{% if request.GET.destino %}&destino={{ request.GET.destino }}{% endif %}{% if request.GET.tiempo_entrega %}&tiempo_entrega={{ request.GET.tiempo_entrega }}{% endif %}{% if request.GET.observaciones %}&observaciones={{ request.GET.observaciones }}{% endif %}">Siguiente</a>
+                    <a href="?page={{ ordenes.paginator.num_pages }}{% if request.GET.id %}&id={{ request.GET.id }}{% endif %}{% if request.GET.descripcion %}&descripcion={{ request.GET.descripcion }}{% endif %}{% if request.GET.codigo_cotizacion %}&codigo_cotizacion={{ request.GET.codigo_cotizacion }}{% endif %}{% if request.GET.precio %}&precio={{ request.GET.precio }}{% endif %}{% if request.GET.cantidad %}&cantidad={{ request.GET.cantidad }}{% endif %}{% if request.GET.empresa %}&empresa={{ request.GET.empresa }}{% endif %}{% if request.GET.destino %}&destino={{ request.GET.destino }}{% endif %}{% if request.GET.tiempo_entrega %}&tiempo_entrega={{ request.GET.tiempo_entrega }}{% endif %}{% if request.GET.observaciones %}&observaciones={{ request.GET.observaciones }}{% endif %}">Última &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>
+    

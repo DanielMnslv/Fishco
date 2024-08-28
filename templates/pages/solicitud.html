@@ -1,0 +1,85 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block content %}
+
+  <!-- [ Main Content ] start -->
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="card">
+        <div class="card-header">
+          <h5>Registrar</h5>
+        </div>
+        <div class="card-body">
+          <h5>Solicitud Producto o Servicio</h5>
+          <hr>
+          <form action="{% url 'solicitud' %}" method="POST" enctype="multipart/form-data" name="solicitud">
+            {% csrf_token %}
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+        <label for="fecha">Fecha</label>
+        <input type="datetime-local" id="fecha" name="fecha" class="form-control" required>
+    </div>
+                <div class="form-group">
+                  <label for="tipo">Tipo</label>
+                  <select id="tipo" name="tipo" class="form-control" required>
+                    <option value="producto">Producto</option>
+                    <option value="servicio">Servicio</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="destino">Destino de Producto o Servicio</label>
+                  <select id="destino" name="destino" class="form-control" required>
+                    <option value="ADMINISTRACIÓN">ADMINISTRACIÓN</option>
+                        <option value="PRODUCCION">PRODUCCION</option>
+                        <option value="ALEVINERA">ALEVINERA</option>
+                        <option value="ECOPEZ">ECOPEZ</option>
+                        <option value="FERRY">FERRY</option>
+                        <option value="CARRO VNS228">CARRO VNS228</option>
+                        <option value="CARRO WGY">CARRO WGY</option>
+                        <option value="CARRO THS 473">CARRO THS 473</option>
+                        <option value="CARRO PESCA SRP 254">CARRO PESCA SRP 254</option>
+                        <option value="TERMOKIN GQZ 727">TERMOKIN GQZ 727</option>
+                        <option value="TERMOKIN GRK 030">TERMOKIN GRK 030</option>
+                        <option value="THERMO KING THS 592">THERMO KING THS 592</option>
+                        <option value="UNIDAD COMERCIALIZACION">UNIDAD COMERCIALIZACION</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                <label for="Imagen">Imagen del Producto o Servicio</label>
+                <input type="file" id="imagen" name="imagen" accept=".png" class="form-control-file">
+                </div>
+                <div class="form-group">
+                  <label for="cantidad">Cantidad</label>
+                  <input type="number" id="cantidad" name="cantidad" class="form-control" min="1" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="nombre">Producto o Servicio</label>
+                  <input type="text" id="nombre" name="nombre" class="form-control" placeholder="Nombre del Producto o Servicio" required>
+                </div>
+                <div class="form-group">
+                  <label for="descripcion">Descripción</label>
+                  <textarea id="descripcion" name="descripcion" class="form-control" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="observaciones">Observaciones de Especificación</label>
+                  <textarea id="observaciones" name="observaciones" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="solicitado">Solicitado Por</label>
+                  <input type="text" id="solicitado" name="solicitado" class="form-control" required>
+                </div>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Submit</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- [ Main Content ] end -->
+
+{% endblock content %}

@@ -1,0 +1,152 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block extrastyle %}
+<style>
+    .iframe-container {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .parent-fit {
+        flex-grow: 1;
+        border: none;
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+    }
+    .table-container {
+        margin-top: 20px;
+    }
+    .pagination {
+        margin-top: 20px;
+    }
+</style>
+{% endblock extrastyle %}
+
+{% block content %}
+<div class="container">
+    <h1>Ver Ordenes</h1>
+
+    <!-- Formulario de búsqueda -->
+    <form method="GET" class="form-inline mb-4">
+        <div class="form-group mr-2">
+            <label for="id">ID</label>
+            <input type="text" id="id" name="id" value="{{ request.GET.id }}" class="form-control">
+        </div>
+        <div class="form-group mr-2">
+            <label for="descripcion">Descripción</label>
+            <input type="text" id="descripcion" name="descripcion" value="{{ request.GET.descripcion }}" class="form-control">
+        </div>
+        <div class="form-group mr-2">
+            <label for="codigo_cotizacion">Código Cotización</label>
+            <input type="text" id="codigo_cotizacion" name="codigo_cotizacion" value="{{ request.GET.codigo_cotizacion }}" class="form-control">
+        </div>
+        <div class="form-group mr-2">
+            <label for="precio">Precio</label>
+            <input type="number" id="precio" name="precio" value="{{ request.GET.precio }}" class="form-control">
+        </div>
+        <div class="form-group mr-2">
+            <label for="cantidad">Cantidad</label>
+            <input type="number" id="cantidad" name="cantidad" value="{{ request.GET.cantidad }}" class="form-control">
+        </div>
+        <div class="form-group mr-2">
+            <label for="empresa">Empresa</label>
+            <input type="text" id="empresa" name="empresa" value="{{ request.GET.empresa }}" class="form-control">
+        </div>
+        <div class="form-group mr-2">
+            <label for="destino">Destino</label>
+            <input type="text" id="destino" name="destino" value="{{ request.GET.destino }}" class="form-control">
+        </div>
+        <div class="form-group mr-2">
+            <label for="tiempo_entrega">Tiempo de Entrega</label>
+            <input type="text" id="tiempo_entrega" name="tiempo_entrega" value="{{ request.GET.tiempo_entrega }}" class="form-control">
+        </div>
+        <div class="form-group mr-2">
+            <label for="observaciones">Observaciones</label>
+            <input type="text" id="observaciones" name="observaciones" value="{{ request.GET.observaciones }}" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-primary">Buscar</button>
+    </form>
+
+    <!-- Tabla de resultados -->
+    <div class="table-container">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Descripción</th>
+                <th>Código Cotización</th>
+                <th>Precio</th>
+                <th>Cantidad</th>
+                <th>Empresa</th>
+                <th>Destino</th>
+                <th>Tiempo de Entrega</th>
+                <th>Observaciones</th>
+                <th>Documento PDF</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for orden in ordenes %}
+            <tr>
+                <td>{{ orden.id }}</td>
+                <td>{{ orden.descripcion }}</td>
+                <td>{{ orden.codigo_cotizacion }}</td>
+                <td>{{ orden.precio }}</td>
+                <td>{{ orden.cantidad }}</td>
+                <td>{{ orden.empresa }}</td>
+                <td>{{ orden.destino }}</td>
+                <td>{{ orden.tiempo_entrega }}</td>
+                <td>{{ orden.observaciones }}</td>
+                <td>
+                    {% if orden.documento_pdf %}
+                    <a href="{{ orden.documento_pdf.url }}" target="_blank">Ver PDF</a>
+                    {% else %}
+                    No disponible
+                    {% endif %}
+                </td>
+                <td>{{ orden.get_estado_display }}</td>
+                <td>
+                    {% if orden.estado == "pendiente" %}
+                    <form action="{% url 'aprobar_orden' orden.id %}" method="post">
+                        {% csrf_token %}
+                        <input type="submit" value="Aprobar" class="btn btn-success">
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="12" class="text-center">No se encontraron órdenes.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        </table>
+
+        <!-- Paginación -->
+        <div class="pagination">
+            <span class="step-links">
+                {% if solicitudes.has_previous %}
+                    <a href="?page=1{% if request.GET.id %}&id={{ request.GET.id }}{% endif %}{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.descripcion %}&descripcion={{ request.GET.descripcion }}{% endif %}{% if request.GET.cantidad %}&cantidad={{ request.GET.cantidad }}{% endif %}{% if request.GET.destino %}&destino={{ request.GET.destino }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.solicitado %}&solicitado={{ request.GET.solicitado }}{% endif %}">&laquo; Primera</a>
+                    <a href="?page={{ solicitudes.previous_page_number }}{% if request.GET.id %}&id={{ request.GET.id }}{% endif %}{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.descripcion %}&descripcion={{ request.GET.descripcion }}{% endif %}{% if request.GET.cantidad %}&cantidad={{ request.GET.cantidad }}{% endif %}{% if request.GET.destino %}&destino={{ request.GET.destino }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.solicitado %}&solicitado={{ request.GET.solicitado }}{% endif %}">Anterior</a>
+                {% endif %}
+
+                <span class="current">
+                    Página {{ solicitudes.number }} de {{ solicitudes.paginator.num_pages }}.
+                </span>
+
+                {% if solicitudes.has_next %}
+                    <a href="?page={{ solicitudes.next_page_number }}{% if request.GET.id %}&id={{ request.GET.id }}{% endif %}{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.descripcion %}&descripcion={{ request.GET.descripcion }}{% endif %}{% if request.GET.cantidad %}&cantidad={{ request.GET.cantidad }}{% endif %}{% if request.GET.destino %}&destino={{ request.GET.destino }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.solicitado %}&solicitado={{ request.GET.solicitado }}{% endif %}">Siguiente</a>
+                    <a href="?page={{ solicitudes.paginator.num_pages }}{% if request.GET.id %}&id={{ request.GET.id }}{% endif %}{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.descripcion %}&descripcion={{ request.GET.descripcion }}{% endif %}{% if request.GET.cantidad %}&cantidad={{ request.GET.cantidad }}{% endif %}{% if request.GET.destino %}&destino={{ request.GET.destino }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.solicitado %}&solicitado={{ request.GET.solicitado }}{% endif %}">Última &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+{% endblock content %}

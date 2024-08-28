@@ -1,0 +1,163 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block content %}
+  <!-- [ Main Content ] start -->
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="card">
+        <div class="card-header">
+          <h5>Registrar</h5>
+        </div>
+        <div class="card-body">
+          <h5>Anticipos</h5>
+          <hr>
+
+          <!-- Mostrar errores generales -->
+          {% if form.errors %}
+            <div class="alert alert-danger">
+              <ul>
+                {% for field in form %}
+                  {% for error in field.errors %}
+                    <li>{{ field.label }}: {{ error }}</li>
+                  {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                  <li>{{ error }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+
+          <!-- Formulario de Anticipo -->
+          <form action="{% url 'anticipo' %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="form-group">
+                  <label for="fecha">Fecha</label>
+                  <input type="datetime-local" id="fecha" name="fecha" class="form-control" required>
+                </div>
+            <div class="form-group">
+                <label for="nit">NIT</label>
+                <input type="text" id="nit" name="nit" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="nombre">Proveedor o Empresa</label>
+                <input type="text" id="nombre" name="nombre" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="cantidad">Cantidad</label>
+                <input type="number" id="cantidad" name="cantidad" min="1" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="centro_costo">Centro de Costo</label>
+                <select id="centro_costo" name="centro_costo" required class="form-control">
+                    <option value="ADMINISTRACIÓN">ADMINISTRACIÓN</option>
+                    <option value="PRODUCCION">PRODUCCION</option>
+                    <option value="ALEVINERA">ALEVINERA</option>
+                    <option value="ECOPEZ">ECOPEZ</option>
+                    <option value="FERRY">FERRY</option>
+                    <option value="CARRO VNS228">CARRO VNS228</option>
+                    <option value="CARRO WGY">CARRO WGY</option>
+                    <option value="CARRO THS 473">CARRO THS 473</option>
+                    <option value="CARRO PESCA SRP 254">CARRO PESCA SRP 254</option>
+                    <option value="TERMOKIN GQZ 727">TERMOKIN GQZ 727</option>
+                    <option value="TERMOKIN GRK 030">TERMOKIN GRK 030</option>
+                    <option value="THERMO KING THS 592">THERMO KING THS 592</option>
+                    <option value="UNIDAD COMERCIALIZACION">UNIDAD COMERCIALIZACION</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="producto_servicio">Producto o Servicio</label>
+                <input type="text" id="producto_servicio" name="producto_servicio" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="vlr_unitario">Valor Unitario</label>
+                <input type="number" id="vlr_unitario" name="vlr_unitario" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="subtotal">Subtotal</label>
+                <input type="number" id="subtotal" name="subtotal" readonly class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="iva">IVA</label>
+                <select id="iva" name="iva" required class="form-control">
+                    <option value="0">Sin IVA</option>
+                    <option value="0.05">5%</option>
+                    <option value="0.19">19%</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="retencion">Retención</label>
+                <select id="retencion" name="retencion" required class="form-control">
+                    <option value="0.00625">0.625%</option>
+                    <option value="0.001">0.1%</option>
+                    <option value="0.02">2%</option>
+                    <option value="0.025">2.5%</option>
+                    <option value="0.035">3.5%</option>
+                    <option value="0.04">4%</option>
+                    <option value="0.06">6%</option>
+                    <option value="0.1">10%</option>
+                    <option value="0.11">11%</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="total_pagar">Total a Pagar</label>
+                <input type="number" id="total_pagar" name="total_pagar" readonly required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="observaciones">Observaciones</label>
+                <textarea id="observaciones" name="observaciones" rows="3" class="form-control"></textarea>
+            </div>
+
+                 <!-- Submit Button -->
+            <div class="text-center">
+              <button type="submit" class="btn btn-primary btn-block">Submit</button>
+            </div>
+        </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- [ Main Content ] end -->
+{% endblock content %}
+
+{% block scripts %}
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function calcularValores() {
+        var cantidad = parseFloat(document.querySelector('input[name="cantidad"]').value) || 0;
+        var vlr_unitario = parseFloat(document.querySelector('input[name="vlr_unitario"]').value) || 0;
+        var iva = parseFloat(document.querySelector('select[name="iva"]').value) || 0;
+        var retencion = parseFloat(document.querySelector('select[name="retencion"]').value) || 0;
+
+        var subtotal = cantidad * vlr_unitario;
+        var valor_iva = subtotal * iva;
+        var valor_retencion = subtotal * retencion;
+        var total_pagar = subtotal + valor_iva - valor_retencion;
+
+        document.querySelector('input[name="subtotal"]').value = subtotal.toFixed(2);
+        document.querySelector('input[name="total_pagar"]').value = total_pagar.toFixed(2);
+    }
+
+    // Añadir eventos a los campos para recalcular los valores
+    document.querySelectorAll('input[name="cantidad"], input[name="vlr_unitario"], select[name="iva"], select[name="retencion"]').forEach(function(element) {
+        element.addEventListener('input', calcularValores);
+    });
+
+    // Calcular valores iniciales si el formulario tiene valores predeterminados
+    calcularValores();
+});
+</script>
+{% endblock scripts %}

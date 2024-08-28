@@ -1,0 +1,162 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Compras Diarias</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+            align-content: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin-top: 30px;
+        }
+        
+        .form-container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            margin-bottom: 20px;
+            font-size: 2rem;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        
+        input[type="submit"], .btn-primary {
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            padding: 12px 20px;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+        
+        input[type="submit"]:hover, .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+        <div class="form-container" style="margin-top: 40px;">
+            <h1 class="text-center">Reporte de Compras Diarias</h1> <!-- Aquí se ha agregado la clase text-center -->
+            <form action="{% url 'diario' %}" method="POST" enctype="multipart/form-data" name="diario">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="tiempo_entrega">Dia</label>
+                    <input type="datetime-local" id="tiempo_entrega" name="tiempo_entrega" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="nombre">Producto o Servicio</label>
+                    <input type="text" id="nombre" name="nombre" required>
+                </div>
+
+                 <div class="form-group">
+                    <label for="empresa">Empresa</label>
+                    <input type="text" id="empresa" name="empresa" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="centro_costo">Centro de Costo</label>
+                    <select id="centro_costo" name="centro_costo" required>
+                        <option value="ADMINISTRACIÓN">ADMINISTRACIÓN</option>
+                        <option value="PRODUCCION">PRODUCCION</option>
+                        <option value="ALEVINERA">ALEVINERA</option>
+                        <option value="ECOPEZ">ECOPEZ</option>
+                        <option value="FERRY">FERRY</option>
+                        <option value="CARRO VNS228">CARRO VNS228</option>
+                        <option value="CARRO WGY">CARRO WGY</option>
+                        <option value="CARRO THS 473">CARRO THS 473</option>
+                        <option value="CARRO PESCA SRP 254">CARRO PESCA SRP 254</option>
+                        <option value="TERMOKIN GQZ 727">TERMOKIN GQZ 727</option>
+                        <option value="TERMOKIN GRK 030">TERMOKIN GRK 030</option>
+                        <option value="THERMO KING THS 592">THERMO KING THS 592</option>
+                        <option value="UNIDAD COMERCIALIZACION">UNIDAD COMERCIALIZACION</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="destino">Destino</label>
+                    <select id="destino" name="destino" required>
+                        <option value="ADMINISTRACIÓN">ADMINISTRACIÓN</option>
+                        <option value="PRODUCCION">PRODUCCION</option>
+                        <option value="ALEVINERA">ALEVINERA</option>
+                        <option value="ECOPEZ">ECOPEZ</option>
+                        <option value="FERRY">FERRY</option>
+                        <option value="CARRO VNS228">CARRO VNS228</option>
+                        <option value="CARRO WGY">CARRO WGY</option>
+                        <option value="CARRO THS 473">CARRO THS 473</option>
+                        <option value="CARRO PESCA SRP 254">CARRO PESCA SRP 254</option>
+                        <option value="TERMOKIN GQZ 727">TERMOKIN GQZ 727</option>
+                        <option value="TERMOKIN GRK 030">TERMOKIN GRK 030</option>
+                        <option value="THERMO KING THS 592">THERMO KING THS 592</option>
+                        <option value="UNIDAD COMERCIALIZACION">UNIDAD COMERCIALIZACION</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="medio_pago">Medio de Pago</label>
+                    <select id="medio_pago" name="medio_pago" required>
+                        <option value="efectivo">Efectivo</option>
+                        <option value="tarjeta">Tarjeta</option>
+                        <option value="transferencia">Transferencia</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                <label for="documento_pdf">Sube tu Documento PDF</label>
+                <input type="file" id="documento_pdf" name="documento_pdf" accept=".pdf">
+                </div>
+
+
+
+                <div class="text-center">
+                    <input type="submit" value="Enviar Compra Diaria">
+                </div>
+
+                <!-- Botón para ver compras diarias -->
+                <div class="text-center" style="margin-top: 20px;">
+                <a href="{% url 'ver_diario' %}" class="btn btn-primary">Ver Compras Diarias</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>
+

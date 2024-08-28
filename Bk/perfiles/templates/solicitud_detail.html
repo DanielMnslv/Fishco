@@ -1,0 +1,16 @@
+{% load static %}
+<!-- solicitud_detail.html -->
+<body>
+<div class="container">
+    <h1>Detalle de Solicitud</h1>
+
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Actualizar Estado</button>
+    </form>
+
+    <a href="{% url 'ver_solicitudes' %}" class="btn btn-secondary mt-3">Volver</a>
+</div>
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+</body>
