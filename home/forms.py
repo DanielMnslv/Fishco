@@ -38,7 +38,7 @@ class SolicitudForm(forms.ModelForm):
             "solicitado": forms.TextInput(
                 attrs={"class": "form-control", "required": True}
             ),
-            "imagen": forms.ClearableFileInput(attrs={"class": "form-control-file"}),
+            "imagen": forms.ClearableFileInput(attrs={"class": "form-control"}),
         }
 
 

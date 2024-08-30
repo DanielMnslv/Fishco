@@ -13,6 +13,9 @@ from .forms import (
 )
 from django.contrib import messages
 from django.utils import timezone
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 
 
 @login_required
@@ -115,7 +118,39 @@ def diario_view(request):
 @login_required
 def ver_solicitudes(request):
     solicitudes = Solicitud.objects.all()
-    solicitudes_page = paginate_and_filter(solicitudes, request)
+
+    # Filtrar por los campos
+    id_filtro = request.GET.get("id")
+    nombre_filtro = request.GET.get("nombre")
+    descripcion_filtro = request.GET.get("descripcion")
+    cantidad_filtro = request.GET.get("cantidad")
+    destino_filtro = request.GET.get("destino")
+    tipo_filtro = request.GET.get("tipo")
+    solicitado_filtro = request.GET.get("solicitado")
+    imagen_filtro = request.GET.get("imagen")
+
+    if id_filtro:
+        solicitudes = solicitudes.filter(id=id_filtro)
+    if nombre_filtro:
+        solicitudes = solicitudes.filter(nombre__icontains=nombre_filtro)
+    if descripcion_filtro:
+        solicitudes = solicitudes.filter(descripcion__icontains=descripcion_filtro)
+    if cantidad_filtro:
+        solicitudes = solicitudes.filter(cantidad=cantidad_filtro)
+    if destino_filtro:
+        solicitudes = solicitudes.filter(destino__icontains=destino_filtro)
+    if tipo_filtro:
+        solicitudes = solicitudes.filter(tipo__icontains=tipo_filtro)
+    if solicitado_filtro:
+        solicitudes = solicitudes.filter(solicitado__icontains=solicitado_filtro)
+    if imagen_filtro:
+        solicitudes = solicitudes.filter(imagen_icontains=imagen_filtro)
+
+    # Paginación
+    paginator = Paginator(solicitudes, 10)  # Muestra 10 solicitudes por página
+    page_number = request.GET.get("page")
+    solicitudes_page = paginator.get_page(page_number)
+
     return render(
         request, "pages/ver_solicitudes.html", {"solicitudes": solicitudes_page}
     )
@@ -207,16 +242,31 @@ def aprobar_anticipo(request, anticipo_id):
     return render(request, "aprobar_anticipo.html", {"anticipo": anticipo})
 
 
-def paginate_and_filter(queryset, request, per_page=10):
-    # Filtrando el queryset
-    filters = {}
-    for key in request.GET:
-        if key in [field.name for field in queryset.model._meta.fields]:
-            filters[key + "__icontains"] = request.GET[key]
+def generar_reporte_orden(request, orden_id):
+    orden = get_object_or_404(Orden, id=orden_id)
 
-    queryset = queryset.filter(**filters)
+    # Crear el objeto HttpResponse con el tipo de contenido PDF
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="orden_{orden_id}.pdf"'
 
-    # Paginando el queryset
-    paginator = Paginator(queryset, per_page)
-    page_number = request.GET.get("page")
-    return paginator.get_page(page_number)
+    # Crear el objeto canvas para generar el PDF
+    p = canvas.Canvas(response, pagesize=letter)
+    width, height = letter
+
+    # Agregar contenido al PDF
+    p.drawString(100, height - 100, f"Orden ID: {orden.id}")
+    p.drawString(100, height - 120, f"Descripción: {orden.descripcion}")
+    p.drawString(100, height - 140, f"Código Cotización: {orden.codigo_cotizacion}")
+    p.drawString(100, height - 160, f"Precio: {orden.precio}")
+    p.drawString(100, height - 180, f"Cantidad: {orden.cantidad}")
+    p.drawString(100, height - 200, f"Empresa: {orden.empresa}")
+    p.drawString(100, height - 220, f"Destino: {orden.destino}")
+    p.drawString(100, height - 240, f"Tiempo de Entrega: {orden.tiempo_entrega}")
+    p.drawString(100, height - 260, f"Observaciones: {orden.observaciones}")
+    p.drawString(100, height - 280, f"Estado: {orden.get_estado_display}")
+
+    # Finalizar el PDF
+    p.showPage()
+    p.save()
+
+    return response

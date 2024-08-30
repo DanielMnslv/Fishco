@@ -17,6 +17,8 @@ from home.views import (
 )
 from django.conf.urls.static import static
 from django.conf import settings
+from home.views import generar_reporte_orden
+
 
 urlpatterns = [
     path("", include("home.urls")),
@@ -31,6 +33,11 @@ urlpatterns = [
         "aprobar_orden/<int:orden_id>/",
         AprobarOrdenView.as_view(),
         name="aprobar_orden",
+    ),
+    path(
+        "generar_reporte_orden/<int:orden_id>/",
+        generar_reporte_orden,
+        name="generar_reporte_orden",
     ),
     path("ver_diario/", ver_diario, name="ver_diario"),
     path("ver_anticipos/", ver_anticipos, name="ver_anticipos"),

@@ -27,10 +27,10 @@ class Solicitud(models.Model):
 
 class Orden(models.Model):
     ESTADO_CHOICES = [
-        ("pendiente", "Pendiente"),
-        ("aprobado", "Aprobado"),
+        ('PENDIENTE', 'Pendiente'),
+        ('APROBADA', 'Aprobada'),
+        ('RECHAZADA', 'Rechazada'),
     ]
-
     descripcion = models.TextField()
     codigo_cotizacion = models.CharField(max_length=100)
     precio = models.DecimalField(max_digits=10, decimal_places=2)
@@ -39,12 +39,7 @@ class Orden(models.Model):
     destino = models.CharField(max_length=255)
     tiempo_entrega = models.CharField(max_length=255)
     observaciones = models.TextField(blank=True, null=True)
-    documento_pdf = models.FileField(upload_to="documentos_pdf/", blank=True, null=True)
-    estado = models.CharField(
-        max_length=50,
-        choices=ESTADO_CHOICES,
-        default="pendiente",
-    )
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')
 
     def __str__(self):
         return f"{self.codigo_cotizacion} - {self.descripcion}"

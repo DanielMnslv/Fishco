@@ -78,7 +78,6 @@
           </ul>
         </li>
         {% endif %}
-
         {% admin_get_menu as app_list %}
         {% if app_list %}
           {% for app in app_list %}
@@ -107,16 +106,7 @@
               </li>
             {% endif %}
           {% endfor %}
-        {% endif %}
-        
-        <li class="nav-item pcoded-menu-caption">
-          <label>Usuario</label>
-        </li>
-        <li data-username="Profile Page" class="nav-item {% if 'profile' in segment %}active{% endif %}">
-          <a href="{% url 'profile' %}" class="nav-link"><span
-                class="pcoded-micon"><i class="feather icon-user"></i></span><span class="pcoded-mtext">Profile
-                Page</span></a>
-        </li>
+        {% endif %}            
       </ul>
     </div>
   </div>
