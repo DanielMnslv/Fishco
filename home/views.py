@@ -16,6 +16,10 @@ from django.utils import timezone
 from django.http import HttpResponse
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 
 
 @login_required
@@ -249,24 +253,108 @@ def generar_reporte_orden(request, orden_id):
     response = HttpResponse(content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="orden_{orden_id}.pdf"'
 
-    # Crear el objeto canvas para generar el PDF
-    p = canvas.Canvas(response, pagesize=letter)
-    width, height = letter
+    # Crear el objeto SimpleDocTemplate para generar el PDF
+    doc = SimpleDocTemplate(response, pagesize=letter)
+    elements = []
 
-    # Agregar contenido al PDF
-    p.drawString(100, height - 100, f"Orden ID: {orden.id}")
-    p.drawString(100, height - 120, f"Descripción: {orden.descripcion}")
-    p.drawString(100, height - 140, f"Código Cotización: {orden.codigo_cotizacion}")
-    p.drawString(100, height - 160, f"Precio: {orden.precio}")
-    p.drawString(100, height - 180, f"Cantidad: {orden.cantidad}")
-    p.drawString(100, height - 200, f"Empresa: {orden.empresa}")
-    p.drawString(100, height - 220, f"Destino: {orden.destino}")
-    p.drawString(100, height - 240, f"Tiempo de Entrega: {orden.tiempo_entrega}")
-    p.drawString(100, height - 260, f"Observaciones: {orden.observaciones}")
-    p.drawString(100, height - 280, f"Estado: {orden.get_estado_display}")
+    # Crear un estilo para los encabezados
+    styles = getSampleStyleSheet()
+    title_style = styles["Title"]
+    header_style = styles["Heading2"]
+    normal_style = styles["Normal"]
 
-    # Finalizar el PDF
-    p.showPage()
-    p.save()
+    # Título del documento
+    title = Paragraph(f"Orden de Compra {orden.id}", title_style)
+    elements.append(title)
+
+    # Espacio después del título
+    elements.append(Paragraph("<br/>", normal_style))
+
+    # Datos de la orden en una tabla
+    data = [
+        ["Campo", "Valor"],
+        ["ID", str(orden.id)],
+        ["Descripción", orden.descripcion],
+        ["Código Cotización", orden.codigo_cotizacion],
+        [
+            "Precio",
+            f"${orden.precio:,.2f}",
+        ],  # Formato de precio con separador de miles y 2 decimales
+        ["Cantidad", str(orden.cantidad)],
+        ["Empresa", orden.empresa],
+        ["Destino", orden.destino],
+        ["Tiempo de Entrega", orden.tiempo_entrega],
+        ["Observaciones", orden.observaciones],
+        ["Estado", orden.get_estado_display()],
+    ]
+
+    table = Table(data)
+    table.setStyle(
+        TableStyle(
+            [
+                (
+                    "BACKGROUND",
+                    (0, 0),
+                    (-1, 0),
+                    "#d0d0d0",
+                ),  # Fondo gris claro para la fila del encabezado
+                (
+                    "TEXTCOLOR",
+                    (0, 0),
+                    (-1, 0),
+                    "#000000",
+                ),  # Texto negro para el encabezado
+                (
+                    "ALIGN",
+                    (0, 0),
+                    (-1, -1),
+                    "LEFT",
+                ),  # Alineación del texto a la izquierda
+                (
+                    "FONTNAME",
+                    (0, 0),
+                    (-1, 0),
+                    "Helvetica-Bold",
+                ),  # Fuente en negrita para el encabezado
+                (
+                    "FONTNAME",
+                    (0, 1),
+                    (-1, -1),
+                    "Helvetica",
+                ),  # Fuente normal para el contenido
+                (
+                    "BACKGROUND",
+                    (0, 1),
+                    (-1, -1),
+                    "#f9f9f9",
+                ),  # Fondo blanco para el resto de las filas
+                (
+                    "GRID",
+                    (0, 0),
+                    (-1, -1),
+                    1,
+                    "#000000",
+                ),  # Rejilla negra alrededor de las celdas
+                ("BOX", (0, 0), (-1, -1), 1, "#000000"),  # Borde exterior negro
+                (
+                    "VALIGN",
+                    (0, 0),
+                    (-1, -1),
+                    "MIDDLE",
+                ),  # Alineación vertical en el medio
+                (
+                    "ALIGN",
+                    (1, 1),
+                    (-1, -1),
+                    "LEFT",
+                ),  # Alineación del texto en el contenido
+            ]
+        )
+    )
+
+    elements.append(table)
+
+    # Construir el documento PDF
+    doc.build(elements)
 
     return response
