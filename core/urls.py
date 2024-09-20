@@ -14,6 +14,8 @@ from home.views import (
     ver_diario,
     ver_anticipos,
     aprobar_anticipo,
+    subir_cotizacion,
+    aprobar_cotizacion,
 )
 from django.conf.urls.static import static
 from django.conf import settings
@@ -28,6 +30,16 @@ urlpatterns = [
     path("solicitud/", SolicitudView.as_view(), name="solicitud"),
     path("ver_solicitudes/", ver_solicitudes, name="ver_solicitudes"),
     path("solicitud/<int:pk>/", SolicitudDetailView.as_view(), name="solicitud_detail"),
+    path(
+        "subir_cotizacion/<int:solicitud_id>/",
+        subir_cotizacion,
+        name="subir_cotizacion",
+    ),
+    path(
+        "aprobar_cotizacion/<int:cotizacion_id>/",
+        aprobar_cotizacion,
+        name="aprobar_cotizacion",
+    ),
     path("ver_ordenes/", ver_ordenes, name="ver_ordenes"),
     path(
         "aprobar_orden/<int:orden_id>/",
@@ -51,11 +63,3 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-
-# Lazy-load on routing is needed
-# During the first build, API is not yet generated
-try:
-    urlpatterns.append(path("api/", include("api.urls")))
-    urlpatterns.append(path("login/jwt/", view=obtain_auth_token))
-except:
-    pass

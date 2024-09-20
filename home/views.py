@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
-from .models import Diario, Solicitud, Orden, Anticipo
+from .models import Diario, Solicitud, Orden, Anticipo, Cotizacion
 from django.core.paginator import Paginator
 from .forms import (
     AprobacionRechazoForm,
@@ -10,12 +10,17 @@ from .forms import (
     DiarioForm,
     AnticipoForm,
     OrdenForm,
+    CotizacionForm,
 )
 from django.contrib import messages
 from django.utils import timezone
 from django.http import HttpResponse
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Image
+from datetime import datetime
+
 
 
 @login_required
@@ -46,10 +51,18 @@ class SolicitudDetailView(LoginRequiredMixin, View):
     def get(self, request, pk):
         solicitud = get_object_or_404(Solicitud, pk=pk)
         form = AprobacionRechazoForm(instance=solicitud)
+        cotizaciones = solicitud.cotizaciones.all()
+        cotizacion_aprobada = cotizaciones.filter(estado="aprobada").exists()  # Obtener las cotizaciones relacionadas
+
         return render(
             request,
             "pages/solicitud_detail.html",
-            {"form": form, "solicitud": solicitud},
+            {
+                "form": form,
+                "solicitud": solicitud,
+                "cotizaciones": cotizaciones,  # Pasar las cotizaciones al contexto
+		"cotizacion_aprobada": cotizacion_aprobada,           
+ },
         )
 
     def post(self, request, pk):
@@ -59,12 +72,55 @@ class SolicitudDetailView(LoginRequiredMixin, View):
             form.save()
             messages.success(request, "Solicitud actualizada con éxito.")
             return redirect("ver_solicitudes")
+
+        cotizaciones = (
+            solicitud.cotizaciones.all()
+        )  # Obtener las cotizaciones relacionadas
+
         return render(
             request,
             "pages/solicitud_detail.html",
-            {"form": form, "solicitud": solicitud},
+            {
+                "form": form,
+                "solicitud": solicitud,
+                "cotizaciones": cotizaciones,  # Pasar las cotizaciones al contexto en caso de error
+            },
         )
 
+def subir_cotizacion(request, solicitud_id):
+    solicitud = get_object_or_404(Solicitud, id=solicitud_id)
+
+    if request.method == "POST":
+        form = CotizacionForm(request.POST, request.FILES)
+        if form.is_valid():
+            cotizacion = form.save(commit=False)
+            cotizacion.solicitud = solicitud
+            cotizacion.cotizacion_imagen = request.FILES.get("cotizacion_imagen")
+            cotizacion.save()
+            messages.success(request, "Cotización subida con éxito.")
+            return redirect("ver_solicitudes")
+    else:
+        form = CotizacionForm()
+
+    return render(
+        request, "subir_cotizacion.html", {"solicitud": solicitud, "form": form}
+    )
+
+def aprobar_cotizacion(request, cotizacion_id):
+    cotizacion = get_object_or_404(Cotizacion, id=cotizacion_id)
+    solicitud = cotizacion.solicitud
+    cotizaciones = solicitud.cotizaciones.all()
+
+    # Aquí puedes implementar tu lógica de "aprobación"
+    # Por ejemplo, podrías usar una lógica personalizada
+    cotizaciones.update(estado_aprobada=False)  # Si añades un campo para estado
+    cotizacion.estado_aprobada = True  # Este campo deberías añadirlo
+    cotizacion.save()
+
+    messages.success(
+        request, f"La cotización de {cotizacion.proveedor} ha sido aprobada."
+    )
+    return redirect("solicitud_detail", pk=solicitud.id)
 
 class OrdenView(LoginRequiredMixin, View):
     def get(self, request):
@@ -117,8 +173,7 @@ def diario_view(request):
 
 @login_required
 def ver_solicitudes(request):
-    solicitudes = Solicitud.objects.all()
-
+    solicitudes = Solicitud.objects.all().order_by('-id')
     # Filtrar por los campos
     id_filtro = request.GET.get("id")
     nombre_filtro = request.GET.get("nombre")
@@ -249,24 +304,60 @@ def generar_reporte_orden(request, orden_id):
     response = HttpResponse(content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="orden_{orden_id}.pdf"'
 
-    # Crear el objeto canvas para generar el PDF
-    p = canvas.Canvas(response, pagesize=letter)
-    width, height = letter
+    # Crear el objeto SimpleDocTemplate para generar el PDF
+    doc = SimpleDocTemplate(response, pagesize=letter)
+    elements = []
 
-    # Agregar contenido al PDF
-    p.drawString(100, height - 100, f"Orden ID: {orden.id}")
-    p.drawString(100, height - 120, f"Descripción: {orden.descripcion}")
-    p.drawString(100, height - 140, f"Código Cotización: {orden.codigo_cotizacion}")
-    p.drawString(100, height - 160, f"Precio: {orden.precio}")
-    p.drawString(100, height - 180, f"Cantidad: {orden.cantidad}")
-    p.drawString(100, height - 200, f"Empresa: {orden.empresa}")
-    p.drawString(100, height - 220, f"Destino: {orden.destino}")
-    p.drawString(100, height - 240, f"Tiempo de Entrega: {orden.tiempo_entrega}")
-    p.drawString(100, height - 260, f"Observaciones: {orden.observaciones}")
-    p.drawString(100, height - 280, f"Estado: {orden.get_estado_display}")
+    # Crear un estilo para los encabezados
+    styles = getSampleStyleSheet()
+    title_style = styles["Title"]
+    header_style = styles["Heading2"]
+    normal_style = styles["Normal"]
 
-    # Finalizar el PDF
-    p.showPage()
-    p.save()
+    # Título del documento
+    title = Paragraph(f"Orden de Compra {orden.id}", title_style)
+    elements.append(title)
+
+    # Espacio después del título
+    elements.append(Paragraph("<br/>", normal_style))
+
+    # Datos de la orden en una tabla
+    data = [
+        ["Descripción", orden.descripcion],
+	["Fecha", datetime.now().strftime('%Y-%m-%d')],
+        ["Código Cotización", orden.codigo_cotizacion],
+        ["Precio", f"${orden.precio:,.2f}"],  # Formato de precio con separador de miles y 2 decimales
+        ["Cantidad", str(orden.cantidad)],
+        ["Empresa", orden.empresa],
+        ["Tiempo de Entrega", orden.tiempo_entrega],
+        ["Observaciones", orden.observaciones],
+        ["Estado", orden.get_estado_display()],
+    ]
+    
+    table = Table(data)
+    table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), "#d0d0d0"),  # Fondo gris claro para la fila del encabezado
+                ("TEXTCOLOR", (0, 0), (-1, 0), "#000000"),  # Texto negro para el encabezado
+                ("ALIGN", (0, 0), (-1, -1), "LEFT"),  # Alineación del texto a la izquierda
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),  # Fuente en negrita para el encabezado
+                ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),  # Fuente normal para el contenido
+                ("BACKGROUND", (0, 1), (-1, -1), "#f9f9f9"),  # Fondo blanco para el resto de las filas
+                ("GRID", (0, 0), (-1, -1), 1, "#000000"),  # Rejilla negra alrededor de las celdas
+                ("BOX", (0, 0), (-1, -1), 1, "#000000"),  # Borde exterior negro
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),  # Alineación vertical en el medio
+                ("ALIGN", (1, 1), (-1, -1), "LEFT"),  # Alineación del texto en el contenido
+            ]
+        )
+    )
+
+    elements.append(table)
+
+
+    # Construir el documento PDF
+    doc.build(elements)
 
     return response
+
+    

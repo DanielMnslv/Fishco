@@ -24,6 +24,24 @@ class Solicitud(models.Model):
     def __str__(self):
         return self.nombre
 
+class Cotizacion(models.Model):
+    solicitud = models.ForeignKey(
+        Solicitud, related_name="cotizaciones", on_delete=models.CASCADE
+    )
+    proveedor = models.CharField(max_length=255)
+    precio = models.DecimalField(max_digits=10, decimal_places=2)
+    detalles = models.TextField(blank=True, null=True)
+    estado = models.CharField(
+        max_length=50,
+        choices=[("pendiente", "Pendiente"), ("aprobada", "Aprobada")],
+        default="pendiente",
+    )
+    cotizacion_imagen = models.FileField(upload_to="cotizaciones/", blank=True, null=True)
+    fecha = models.DateTimeField(default=timezone.now)
+    estado_aprobada = models.BooleanField(default=False)  # Asegúrate de que este campo está aquí
+    def __str__(self):
+        return f"Cotización de {self.proveedor} para {self.solicitud.nombre}"
+
 
 class Orden(models.Model):
     ESTADO_CHOICES = [

@@ -23,6 +23,17 @@
     .pagination {
         margin-top: 20px;
     }
+    /* Truncar texto con puntos suspensivos */
+    .truncate-text {
+        max-width: 300px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    /* Mostrar el contenido completo en un modal */
+    .modal-body {
+        white-space: pre-wrap;
+    }
 </style>
 {% endblock extrastyle %}
 
@@ -69,27 +80,42 @@
             <thead>
                 <tr>
                     <th>ID</th>
+                    <th>Fecha</th>
                     <th>Nombre</th>
                     <th>Descripción</th>
                     <th>Cantidad</th>
                     <th>Destino</th>
                     <th>Tipo</th>
                     <th>Solicitado Por</th>
+                    <th>Observaciones Espec</th>
                     <th>Imagen</th>
-                    <th>Estado</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 {% for solicitud in solicitudes %}
-                <tr>
+                <tr id="solicitud-{{ solicitud.id }}">
                     <td>{{ solicitud.id }}</td>
+                    <td>{{ solicitud.fecha|date:"d/m/Y g:i a" }}</td>
                     <td>{{ solicitud.nombre }}</td>
-                    <td>{{ solicitud.descripcion }}</td>
+                    <!-- Descripción truncada y modal -->
+                    <td class="truncate-text">
+                        {{ solicitud.descripcion|slice:":30" }} <!-- Mostrar solo los primeros 30 caracteres -->
+                        {% if solicitud.descripcion|length > 30 %}
+                        <a href="#" data-toggle="modal" data-target="#modalDescripcion{{ solicitud.id }}">...</a>
+                        {% endif %}
+                    </td>
                     <td>{{ solicitud.cantidad }}</td>
                     <td>{{ solicitud.destino }}</td>
                     <td>{{ solicitud.tipo }}</td>
                     <td>{{ solicitud.solicitado }}</td>
+                    <!-- Observaciones truncadas y modal -->
+                    <td class="truncate-text">
+                        {{ solicitud.observaciones|slice:":30" }} <!-- Mostrar solo los primeros 30 caracteres -->
+                        {% if solicitud.observaciones|length > 30 %}
+                        <a href="#" data-toggle="modal" data-target="#modalObservaciones{{ solicitud.id }}">...</a>
+                        {% endif %}
+                    </td>
                     <td>
                         {% if solicitud.imagen %}
                         <img src="{{ solicitud.imagen.url }}" alt="Imagen del Producto" style="width: 50px; height: 50px;">
@@ -97,14 +123,54 @@
                         No disponible
                         {% endif %}
                     </td>
-                    <td>{{ solicitud.get_estado_display }}</td>
                     <td>
+                        <a href="{% url 'subir_cotizacion' solicitud.id %}" class="btn btn-secondary">Subir Cotización</a>
                         <a href="{% url 'solicitud_detail' solicitud.id %}" class="btn btn-primary">Detalle</a>
+			<button class="btn btn-danger" onclick="ocultarSolicitud({{ solicitud.id }})">Ocultar</button>
                     </td>
                 </tr>
+		<!-- Modal para mostrar la descripción completa -->
+                <div class="modal fade" id="modalDescripcion{{ solicitud.id }}" tabindex="-1" role="dialog" aria-labelledby="modalLabelDescripcion{{ solicitud.id }}" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalLabelDescripcion{{ solicitud.id }}">Descripción Completa</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                {{ solicitud.descripcion }}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal para mostrar las observaciones completas -->
+                <div class="modal fade" id="modalObservaciones{{ solicitud.id }}" tabindex="-1" role="dialog" aria-labelledby="modalLabelObservaciones{{ solicitud.id }}" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalLabelObservaciones{{ solicitud.id }}">Observaciones Completas</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                {{ solicitud.observaciones }}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 {% empty %}
                 <tr>
-                    <td colspan="10">No hay solicitudes disponibles.</td>
+                    <td colspan="12">No hay solicitudes disponibles.</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -114,17 +180,15 @@
         <div class="pagination">
             <span class="step-links">
                 {% if solicitudes.has_previous %}
-                    <a href="?page=1{% if request.GET.id %}&id={{ request.GET.id }}{% endif %}{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.descripcion %}&descripcion={{ request.GET.descripcion }}{% endif %}{% if request.GET.cantidad %}&cantidad={{ request.GET.cantidad }}{% endif %}{% if request.GET.destino %}&destino={{ request.GET.destino }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.solicitado %}&solicitado={{ request.GET.solicitado }}{% endif %}">&laquo; Primera</a>
-                    <a href="?page={{ solicitudes.previous_page_number }}{% if request.GET.id %}&id={{ request.GET.id }}{% endif %}{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.descripcion %}&descripcion={{ request.GET.descripcion }}{% endif %}{% if request.GET.cantidad %}&cantidad={{ request.GET.cantidad }}{% endif %}{% if request.GET.destino %}&destino={{ request.GET.destino }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.solicitado %}&solicitado={{ request.GET.solicitado }}{% endif %}">Anterior</a>
+                    <a href="?page=1">&laquo; Primera</a>
+                    <a href="?page={{ solicitudes.previous_page_number }}">Anterior</a>
                 {% endif %}
-
                 <span class="current">
                     Página {{ solicitudes.number }} de {{ solicitudes.paginator.num_pages }}.
                 </span>
-
                 {% if solicitudes.has_next %}
-                    <a href="?page={{ solicitudes.next_page_number }}{% if request.GET.id %}&id={{ request.GET.id }}{% endif %}{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.descripcion %}&descripcion={{ request.GET.descripcion }}{% endif %}{% if request.GET.cantidad %}&cantidad={{ request.GET.cantidad }}{% endif %}{% if request.GET.destino %}&destino={{ request.GET.destino }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.solicitado %}&solicitado={{ request.GET.solicitado }}{% endif %}">Siguiente</a>
-                    <a href="?page={{ solicitudes.paginator.num_pages }}{% if request.GET.id %}&id={{ request.GET.id }}{% endif %}{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.descripcion %}&descripcion={{ request.GET.descripcion }}{% endif %}{% if request.GET.cantidad %}&cantidad={{ request.GET.cantidad }}{% endif %}{% if request.GET.destino %}&destino={{ request.GET.destino }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.solicitado %}&solicitado={{ request.GET.solicitado }}{% endif %}">Última &raquo;</a>
+                    <a href="?page={{ solicitudes.next_page_number }}">Siguiente</a>
+                    <a href="?page={{ solicitudes.paginator.num_pages }}">Última &raquo;</a>
                 {% endif %}
             </span>
         </div>
@@ -132,4 +196,13 @@
 </div>
 
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script>
+    function ocultarSolicitud(id) {
+        var solicitudRow = document.getElementById('solicitud-' + id);
+        if (solicitudRow) {
+            solicitudRow.style.display = 'none';
+        }
+    }
+</script>
 {% endblock content %}
+

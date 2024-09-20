@@ -1,5 +1,5 @@
 from django import forms
-from .models import Solicitud, Orden, Anticipo, Diario
+from .models import Solicitud, Orden, Anticipo, Diario,Cotizacion
 from decimal import Decimal, ROUND_HALF_UP
 
 
@@ -53,6 +53,26 @@ class AprobacionRechazoForm(forms.ModelForm):
         widgets = {
             "estado": forms.Select(attrs={"class": "form-control"}),
         }
+
+
+class CotizacionForm(forms.ModelForm):
+    class Meta:
+        model = Cotizacion
+        fields = [
+            "proveedor",
+            "precio",
+            "detalles",
+            "estado",
+            "cotizacion_imagen",
+        ]
+        widgets = {
+        "proveedor": forms.TextInput(attrs={"class": "form-control"}),
+        "precio": forms.NumberInput(attrs={"class": "form-control"}),
+        "detalles": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+        "cotizacion_imagen": forms.ClearableFileInput(
+        attrs={"class": "form-control"}
+    ),
+}
 
 
 class OrdenForm(forms.ModelForm):

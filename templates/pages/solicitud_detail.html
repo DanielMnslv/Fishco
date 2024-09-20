@@ -1,16 +1,63 @@
+{% extends 'layouts/base.html' %}
 {% load static %}
-<!-- solicitud_detail.html -->
-<body>
+
+{% block content %}
 <div class="container">
-    <h1>Detalle de Solicitud</h1>
+    <h1>Detalles de la Solicitud: {{ solicitud.nombre }}</h1>
+    
+    <p><strong>Descripción:</strong> {{ solicitud.descripcion }}</p>
+    <p><strong>Solicitado por:</strong> {{ solicitud.solicitado }}</p>
+    <p><strong>Cantidad:</strong> {{ solicitud.cantidad }}</p>
+    <p><strong>Destino:</strong> {{ solicitud.destino }}</p>
+    <p><strong>Estado:</strong> {{ solicitud.get_estado_display }}</p>
+    
+    <hr>
 
-    <form method="POST">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Actualizar Estado</button>
-    </form>
+    <h3>Cotizaciones Subidas:</h3>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Proveedor</th>
+                <th>Precio</th>
+                <th>Detalles</th>
+                <th>Estado</th>
+                <th>Cotización</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cotizacion in cotizaciones %}
+            <tr>
+                <td>{{ cotizacion.proveedor }}</td>
+                <td>{{ cotizacion.precio }}</td>
+                <td>{{ cotizacion.detalles }}</td>
+                <td>{{ cotizacion.get_estado_display }}</td>
+                <td>
+                    {% if cotizacion.cotizacion_imagen %}
+                    <a href="{{ cotizacion.cotizacion_imagen.url }}" target="_blank">Ver Cotización 1</a>
+                    {% else %}
+                    No disponible
+                    {% endif %}
+                </td>
+                <td>
+    {% if cotizacion.estado == 'aprobada' %}
+        <span class="badge bg-secondary">Aprobada</span>
+    {% else %}
+        <form method="post" action="{% url 'aprobar_cotizacion' cotizacion.id %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">Aprobar</button>
+        </form>
+    {% endif %}
+</td>
 
-    <a href="{% url 'ver_solicitudes' %}" class="btn btn-secondary mt-3">Volver</a>
+</tr>
+{% endfor %}
+
+</tbody>
+
+</table>
+
+    <a href="{% url 'ver_solicitudes' %}" class="btn btn-secondary mt-3">Volver a Solicitudes</a>
 </div>
-<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
-</body>
+{% endblock %}
+

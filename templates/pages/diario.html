@@ -11,7 +11,7 @@
           <h5>Registrar</h5>
         </div>
         <div class="card-body">
-          <h5>Anticipos</h5>
+          <h5>Compras Diarias</h5>
           <hr>
           <form action="{% url 'diario' %}" method="POST" enctype="multipart/form-data" name="diario">
                 {% csrf_token %}
@@ -32,8 +32,8 @@
                 </div>
 
                 <div class="form-group">
-                  <label for="destino">Destino de Producto o Servicio</label>
-                  <select id="destino" name="destino" class="form-control" required>
+                  <label for="centro_costo">Centro de Costo</label>
+                  <select id="centro_costo" name="centro_costo" class="form-control" required>
                     <option value="ADMINISTRACIÓN">ADMINISTRACIÓN</option>
                     <option value="PRODUCCION">PRODUCCIÓN</option>
                     <option value="ALEVINERA">ALEVINERA</option>
@@ -89,7 +89,7 @@
 
                 <!-- Submit Button -->
             <div class="text-center">
-              <button type="submit" class="btn btn-primary btn-block">Submit</button>
+              <button type="submit" class="btn btn-primary btn-block">Enviar</button>
             </div>
             </form>       </div> <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
       </div>

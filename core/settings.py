@@ -10,11 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
-import os, random, string, inspect
+import os, random, string
 from pathlib import Path
 from dotenv import load_dotenv
 from str2bool import str2bool
-
+import inspect
 import django_dyn_dt
 
 load_dotenv()  # take environment variables from .env.
@@ -34,10 +34,10 @@ if not SECRET_KEY:
 DEBUG = str2bool(os.environ.get("DEBUG"))
 # print(' DEBUG -> ' + str(DEBUG) )
 
-ALLOWED_HOSTS = ["44.204.195.130", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["89.117.147.197", "localhost", "127.0.0.1"]
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://44.204.195.130:8000",
+    "http://89.117.147.197:8000",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
 ]
@@ -160,9 +160,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "es-es"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = 'America/Bogota'
 
 USE_I18N = True
 
@@ -174,9 +174,7 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-
-DYN_DB_PKG_ROOT = os.path.dirname(inspect.getfile(django_dyn_dt))  # <-- NEW: Dynamic_DT
-
+DYN_DB_PKG_ROOT = os.path.dirname(inspect.getfile(django_dyn_dt))
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static"),
     os.path.join(DYN_DB_PKG_ROOT, "templates/static"),  # <-- NEW: Dynamic_DT

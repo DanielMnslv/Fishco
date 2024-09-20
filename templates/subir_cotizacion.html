@@ -1,0 +1,56 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <h1>Subir Cotización para la Solicitud: {{ solicitud.nombre }}</h1>
+    
+    <p><strong>Descripción:</strong> {{ solicitud.descripcion }}</p>
+    <p><strong>Solicitado por:</strong> {{ solicitud.solicitado }}</p>
+    <p><strong>Cantidad:</strong> {{ solicitud.cantidad }}</p>
+    <p><strong>Destino:</strong> {{ solicitud.destino }}</p>
+    
+    <hr>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <!-- Campo para el proveedor -->
+        <div class="form-group">
+            <label for="proveedor">Proveedor</label>
+            <input type="text" id="proveedor" name="proveedor" class="form-control" placeholder="Nombre del proveedor" required>
+        </div>
+        
+        <!-- Campo para el precio -->
+        <div class="form-group">
+            <label for="precio">Precio</label>
+            <input type="number" id="precio" name="precio" class="form-control" placeholder="Precio de la cotización" required>
+        </div>
+        
+        <!-- Detalles adicionales -->
+        <div class="form-group">
+            <label for="detalles">Detalles adicionales</label>
+            <textarea id="detalles" name="detalles" class="form-control" rows="3" placeholder="Detalles adicionales de la cotización (opcional)"></textarea>
+        </div>
+        
+        <!-- Campo para el estado de la cotización -->
+        <div class="form-group">
+            <label for="estado">Estado</label>
+            <select id="estado" name="estado" class="form-control">
+                <option value="pendiente">Pendiente</option>
+                <option value="aprobada">Aprobada</option>
+            </select>
+        </div>
+        <!-- Campos para subir las tres cotizaciones en PDF -->
+        <div class="form-group">
+            <label for="cotizacion_imagen">Cotización (IMAGEN)</label>
+            <input type="file" id="cotizacion_imagen" name="cotizacion_imagen" class="form-control-file" accept="image/*" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Subir Cotización</button>
+    </form>
+
+    <a href="{% url 'ver_solicitudes' %}" class="btn btn-secondary mt-3">Volver a Solicitudes</a>
+</div>
+{% endblock %}
+
