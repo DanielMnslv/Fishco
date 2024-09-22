@@ -14,7 +14,7 @@ from .forms import (
 )
 from django.contrib import messages
 from django.utils import timezone
-from django.http import HttpResponse
+from django.http import HttpResponse,JsonResponse
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -121,6 +121,15 @@ def aprobar_cotizacion(request, cotizacion_id):
         request, f"La cotización de {cotizacion.proveedor} ha sido aprobada."
     )
     return redirect("solicitud_detail", pk=solicitud.id)
+def ocultar_solicitud(request, id):
+    # Obtener la solicitud por su ID
+    solicitud = get_object_or_404(Solicitud, id=id)
+    # Marcar la solicitud como oculta
+    solicitud.oculto = True
+    solicitud.save()
+    # Retornar una respuesta JSON para confirmar la acción
+    return JsonResponse({"success": True})
+
 
 class OrdenView(LoginRequiredMixin, View):
     def get(self, request):
@@ -173,7 +182,7 @@ def diario_view(request):
 
 @login_required
 def ver_solicitudes(request):
-    solicitudes = Solicitud.objects.all().order_by('-id')
+    solicitudes = Solicitud.objects.filter(oculto=False)
     # Filtrar por los campos
     id_filtro = request.GET.get("id")
     nombre_filtro = request.GET.get("nombre")

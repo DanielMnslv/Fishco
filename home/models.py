@@ -15,6 +15,9 @@ class Solicitud(models.Model):
     observaciones = models.TextField(blank=True, null=True)
     solicitado = models.CharField(max_length=255)
     imagen = models.ImageField(upload_to="imagenes/", blank=True, null=True)
+    oculto = models.BooleanField(
+        default=False
+    )  # Nuevo campo para marcar solicitudes ocultas
     estado = models.CharField(
         max_length=50,
         choices=[("pendiente", "Pendiente"), ("aprobado", "Aprobado")],

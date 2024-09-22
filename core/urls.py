@@ -16,6 +16,7 @@ from home.views import (
     aprobar_anticipo,
     subir_cotizacion,
     aprobar_cotizacion,
+    ocultar_solicitud,
 )
 from django.conf.urls.static import static
 from django.conf import settings
@@ -59,6 +60,7 @@ urlpatterns = [
         "aprobar_anticipo/<int:anticipo_id>/", aprobar_anticipo, name="aprobar_anticipo"
     ),
     path("diario/", diario_view, name="diario"),
+    path("ocultar_solicitud/<int:id>/", ocultar_solicitud, name="ocultar_solicitud"),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

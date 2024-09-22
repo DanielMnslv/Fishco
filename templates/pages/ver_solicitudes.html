@@ -126,7 +126,7 @@
                     <td>
                         <a href="{% url 'subir_cotizacion' solicitud.id %}" class="btn btn-secondary">Subir Cotización</a>
                         <a href="{% url 'solicitud_detail' solicitud.id %}" class="btn btn-primary">Detalle</a>
-			<button class="btn btn-danger" onclick="ocultarSolicitud({{ solicitud.id }})">Ocultar</button>
+			<button class="btn btn-danger" onclick="ocultarSolicitud({{ solicitud.id }})">Archivar</button>
                     </td>
                 </tr>
 		<!-- Modal para mostrar la descripción completa -->
@@ -196,12 +196,30 @@
 </div>
 
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     function ocultarSolicitud(id) {
-        var solicitudRow = document.getElementById('solicitud-' + id);
-        if (solicitudRow) {
-            solicitudRow.style.display = 'none';
+        // Asegúrate de que el 'id' no esté vacío
+        if (!id) {
+            console.error("ID de solicitud no encontrado");
+            return;
         }
+
+        // Enviar una solicitud AJAX para ocultar la solicitud
+        $.ajax({
+            url: "/ocultar_solicitud/" + id + "/",  // Generar la URL manualmente usando el ID
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'  // Necesario para solicitudes POST en Django
+            },
+            success: function(response) {
+                // Ocultar la fila de la tabla
+                $('#solicitud-' + id).hide();
+            },
+            error: function(xhr, status, error) {
+                console.error("Error ocultando solicitud: ", error);
+            }
+        });
     }
 </script>
 {% endblock content %}
