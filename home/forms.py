@@ -63,13 +63,13 @@ class CotizacionForm(forms.ModelForm):
             "precio",
             "detalles",
             "estado",
-            "cotizacion_imagen",
+            "cotizacion_pdf",
         ]
         widgets = {
         "proveedor": forms.TextInput(attrs={"class": "form-control"}),
         "precio": forms.NumberInput(attrs={"class": "form-control"}),
         "detalles": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
-        "cotizacion_imagen": forms.ClearableFileInput(
+        "cotizacion_pdf": forms.ClearableFileInput(
         attrs={"class": "form-control"}
     ),
 }
@@ -154,8 +154,8 @@ class DiarioForm(forms.ModelForm):
             "documento_pdf",
         ]
         widgets = {
-            "tiempo_entrega": forms.TimeInput(
-                attrs={"class": "form-control", "type": "time"}
+            "tiempo_entrega": forms.DateTimeInput(
+                attrs={"class": "form-control", "type": "datetime-local"}
             ),
             "nombre": forms.TextInput(attrs={"class": "form-control"}),
             "empresa": forms.TextInput(attrs={"class": "form-control"}),
@@ -164,3 +164,4 @@ class DiarioForm(forms.ModelForm):
             "medio_pago": forms.Select(attrs={"class": "form-control"}),
             "documento_pdf": forms.ClearableFileInput(attrs={"class": "form-control"}),
         }
+

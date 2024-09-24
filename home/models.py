@@ -3,6 +3,7 @@ from django import forms
 from decimal import Decimal, ROUND_HALF_UP
 from datetime import datetime
 from django.utils import timezone
+from django.core.validators import FileExtensionValidator
 
 
 class Solicitud(models.Model):
@@ -28,22 +29,20 @@ class Solicitud(models.Model):
         return self.nombre
 
 class Cotizacion(models.Model):
-    solicitud = models.ForeignKey(
-        Solicitud, related_name="cotizaciones", on_delete=models.CASCADE
-    )
+    ESTADO_CHOICES = [
+        ("pendiente", "Pendiente"),
+        ("aprobada", "Aprobada"),
+    ]
+
+    solicitud = models.ForeignKey(Solicitud, related_name="cotizaciones", on_delete=models.CASCADE)
     proveedor = models.CharField(max_length=255)
     precio = models.DecimalField(max_digits=10, decimal_places=2)
     detalles = models.TextField(blank=True, null=True)
-    estado = models.CharField(
-        max_length=50,
-        choices=[("pendiente", "Pendiente"), ("aprobada", "Aprobada")],
-        default="pendiente",
-    )
-    cotizacion_imagen = models.FileField(upload_to="cotizaciones/", blank=True, null=True)
+    estado = models.CharField(max_length=50, choices=ESTADO_CHOICES, default="pendiente")
+    cotizacion_pdf = models.FileField(upload_to="cotizaciones_pdfs/", blank=True, null=True)
+    estado_aprobada = models.BooleanField(default=False)
     fecha = models.DateTimeField(default=timezone.now)
-    estado_aprobada = models.BooleanField(default=False)  # Asegúrate de que este campo está aquí
-    def __str__(self):
-        return f"Cotización de {self.proveedor} para {self.solicitud.nombre}"
+
 
 
 class Orden(models.Model):
@@ -106,7 +105,7 @@ class Anticipo(models.Model):
 class Diario(models.Model):
     TIEMPO_ENTREGA_CHOICES = [(f"{i:02d}:00", f"{i:02d}:00") for i in range(24)]
 
-    tiempo_entrega = models.TimeField("Hora de Entrega")  # Changed to TimeField
+    tiempo_entrega = models.DateTimeField("Hora de Entrega")  # Changed to TimeField
     nombre = models.CharField(max_length=200)
     empresa = models.CharField(max_length=200)
     centro_costo = models.CharField(
@@ -148,9 +147,10 @@ class Diario(models.Model):
     medio_pago = models.CharField(
         max_length=200,
         choices=[
-            ("efectivo", "Efectivo"),
-            ("tarjeta", "Tarjeta"),
-            ("transferencia", "Transferencia"),
+            ("cuentas_por_pagar", "Cuentas por Pagar"),
+            ("caja_compra", "Caja de Compra"),
+            ("tarjeta_debito", "Tarjeta Débito"),
+            ("caja_paula", "Caja de Paula"),
         ],
     )
     documento_pdf = models.FileField(upload_to="documentos_pdf/", blank=True, null=True)

@@ -29,14 +29,14 @@
             {% for cotizacion in cotizaciones %}
             <tr>
                 <td>{{ cotizacion.proveedor }}</td>
-                <td>{{ cotizacion.precio }}</td>
+                <td>{{ cotizacion.precio_formateado }}</td>
                 <td>{{ cotizacion.detalles }}</td>
                 <td>{{ cotizacion.get_estado_display }}</td>
-                <td>
-                    {% if cotizacion.cotizacion_imagen %}
-                    <a href="{{ cotizacion.cotizacion_imagen.url }}" target="_blank">Ver Cotización 1</a>
+               	<td>
+                    {% if cotizacion.cotizacion_pdf %}
+                        <a href="{{ cotizacion.cotizacion_pdf.url }}" target="_blank">Ver Cotización</a>
                     {% else %}
-                    No disponible
+                        No disponible
                     {% endif %}
                 </td>
                 <td>

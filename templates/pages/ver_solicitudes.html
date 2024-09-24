@@ -89,6 +89,7 @@
                     <th>Solicitado Por</th>
                     <th>Observaciones Espec</th>
                     <th>Imagen</th>
+		    <th>Cotizacion Aprobada</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -123,11 +124,28 @@
                         No disponible
                         {% endif %}
                     </td>
-                    <td>
-                        <a href="{% url 'subir_cotizacion' solicitud.id %}" class="btn btn-secondary">Subir Cotización</a>
-                        <a href="{% url 'solicitud_detail' solicitud.id %}" class="btn btn-primary">Detalle</a>
-			<button class="btn btn-danger" onclick="ocultarSolicitud({{ solicitud.id }})">Archivar</button>
+		    <td>
+                        {% if solicitud.cotizacion_aprobada %}
+                            {% if solicitud.cotizacion_aprobada.cotizacion_pdf %}
+                                <a href="{{ solicitud.cotizacion_aprobada.cotizacion_pdf.url }}" target="_blank">Ver Cotización</a>
+                            {% else %}
+                                No disponible
+                            {% endif %}
+                        {% else %}
+                            No Aprobada
+                        {% endif %}
                     </td>
+                    <td>
+    {% if solicitud.cotizaciones.count > 0 %}
+        <!-- Cambiar el botón a verde si tiene cotizaciones -->
+        <a href="{% url 'subir_cotizacion' solicitud.id %}" class="btn btn-success">Cotización Subida</a>
+    {% else %}
+        <!-- Mantener el botón con el color normal si no tiene cotización -->
+        <a href="{% url 'subir_cotizacion' solicitud.id %}" class="btn btn-secondary">Subir Cotización</a>
+    {% endif %}
+    <a href="{% url 'solicitud_detail' solicitud.id %}" class="btn btn-primary">Detalle</a>
+    <button class="btn btn-danger" onclick="ocultarSolicitud({{ solicitud.id }})">Archivar</button>
+</td>
                 </tr>
 		<!-- Modal para mostrar la descripción completa -->
                 <div class="modal fade" id="modalDescripcion{{ solicitud.id }}" tabindex="-1" role="dialog" aria-labelledby="modalLabelDescripcion{{ solicitud.id }}" aria-hidden="true">

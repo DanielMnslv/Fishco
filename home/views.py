@@ -52,6 +52,9 @@ class SolicitudDetailView(LoginRequiredMixin, View):
         solicitud = get_object_or_404(Solicitud, pk=pk)
         form = AprobacionRechazoForm(instance=solicitud)
         cotizaciones = solicitud.cotizaciones.all()
+	# Formatear el precio de las cotizaciones
+        for cotizacion in cotizaciones:
+            cotizacion.precio_formateado = "${:,.2f}".format(cotizacion.precio).replace(',', 'X').replace('.', ',').replace('X', '.')
         cotizacion_aprobada = cotizaciones.filter(estado="aprobada").exists()  # Obtener las cotizaciones relacionadas
 
         return render(
@@ -76,6 +79,10 @@ class SolicitudDetailView(LoginRequiredMixin, View):
         cotizaciones = (
             solicitud.cotizaciones.all()
         )  # Obtener las cotizaciones relacionadas
+	
+	# Formatear el precio de las cotizaciones
+        for cotizacion in cotizaciones:
+            cotizacion.precio_formateado = "${:,.2f}".format(cotizacion.precio).replace(',', 'X').replace('.', ',').replace('X', '.')
 
         return render(
             request,
@@ -111,16 +118,20 @@ def aprobar_cotizacion(request, cotizacion_id):
     solicitud = cotizacion.solicitud
     cotizaciones = solicitud.cotizaciones.all()
 
-    # Aquí puedes implementar tu lógica de "aprobación"
-    # Por ejemplo, podrías usar una lógica personalizada
-    cotizaciones.update(estado_aprobada=False)  # Si añades un campo para estado
-    cotizacion.estado_aprobada = True  # Este campo deberías añadirlo
+    # Cambiar el estado de todas las cotizaciones a "Pendiente" excepto la aprobada
+    cotizaciones.update(estado="pendiente", estado_aprobada=False)
+
+    # Actualizar la cotización aprobada
+    cotizacion.estado_aprobada = True  # Marca que esta cotización está aprobada
+    cotizacion.estado = "aprobada"  # Cambia el estado a "aprobada"
     cotizacion.save()
 
     messages.success(
         request, f"La cotización de {cotizacion.proveedor} ha sido aprobada."
     )
     return redirect("solicitud_detail", pk=solicitud.id)
+
+
 def ocultar_solicitud(request, id):
     # Obtener la solicitud por su ID
     solicitud = get_object_or_404(Solicitud, id=id)
@@ -192,6 +203,9 @@ def ver_solicitudes(request):
     tipo_filtro = request.GET.get("tipo")
     solicitado_filtro = request.GET.get("solicitado")
     imagen_filtro = request.GET.get("imagen")
+    
+    for solicitud in solicitudes:
+        solicitud.cotizacion_aprobada = solicitud.cotizaciones.filter(estado="aprobada").first()
 
     if id_filtro:
         solicitudes = solicitudes.filter(id=id_filtro)
