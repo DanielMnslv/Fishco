@@ -30,59 +30,21 @@
 <div class="container">
     <h1>Ver Ordenes Diarias</h1>
 
-    <!-- Formulario de búsqueda -->
+    <!-- Formulario de búsqueda por rango de fechas -->
     <form method="GET" action="">
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="id">ID:</label>
-                            <input type="text" id="id" name="id" class="form-control" value="{{ request.GET.id }}">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="tiempo_entrega">Tiempo de Entrega:</label>
-                            <input type="text" id="tiempo_entrega" name="tiempo_entrega" class="form-control" value="{{ request.GET.tiempo_entrega }}">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="nombre">Nombre:</label>
-                            <input type="text" id="nombre" name="nombre" class="form-control" value="{{ request.GET.nombre }}">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="empresa">Empresa:</label>
-                            <input type="text" id="empresa" name="empresa" class="form-control" value="{{ request.GET.empresa }}">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                        <label for="centro_costo">Centro de Costo:</label>
-                        <select id="centro_costo" name="centro_costo" class="form-control">
-                        <option value="">Seleccionar</option>
-                        {% for value, display in form.fields.centro_costo.choices %}
-                        <option value="{{ value }}" {% if value == request.GET.centro_costo %}selected{% endif %}>{{ display }}</option>
-                        {% endfor %}
-                        </select>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                        <label for="destino">Destino:</label>
-                        <select id="destino" name="destino" class="form-control">
-                        <option value="">Seleccionar</option>
-                        {% for value, display in form.fields.destino.choices %}
-                        <option value="{{ value }}" {% if value == request.GET.destino %}selected{% endif %}>{{ display }}</option>
-                        {% endfor %}
-                        </select>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                        <label for="medio_pago">Medio de Pago:</label>
-                        <select id="medio_pago" name="medio_pago" class="form-control">
-                        <option value="">Seleccionar</option>
-                        {% for value, display in form.fields.medio_pago.choices %}
-                        <option value="{{ value }}" {% if value == request.GET.medio_pago %}selected{% endif %}>{{ display }}</option>
-                        {% endfor %}
-                        </select>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="documento_pdf">Documento PDF:</label>
-                            <input type="text" id="documento_pdf" name="documento_pdf" class="form-control" value="{{ request.GET.documento_pdf }}">
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Buscar</button>
-                </form>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label for="fecha_inicio">Fecha Inicio:</label>
+                <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-control" value="{{ request.GET.fecha_inicio }}">
+            </div>
+            <div class="col-md-4 mb-3">
+                <label for="fecha_fin">Fecha Fin:</label>
+                <input type="date" id="fecha_fin" name="fecha_fin" class="form-control" value="{{ request.GET.fecha_fin }}">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Buscar</button>
+    </form>
+
 
     <!-- Tabla de resultados -->
     <div class="table-container">

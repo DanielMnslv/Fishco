@@ -1,5 +1,5 @@
 {% load i18n static admin_datta %}
-
+{% admin_get_menu as app_list %}
 <nav class="pcoded-navbar">
   <div class="navbar-wrapper">
     <div class="navbar-brand header-logo">
@@ -14,100 +14,103 @@
     <div class="navbar-content scroll-div">
       <ul class="nav pcoded-inner-navbar">
         <li class="nav-item pcoded-menu-caption">
-          <label></label>
+          <label>Modulos</label>
         </li>
 
-        <div class="navbar-content scroll-div">
-          <ul class="nav pcoded-inner-navbar">
-            <li class="nav-item pcoded-menu-caption">
-              <label>Modulos</label>
-            </li>
-            
-            <li data-username="dashboard Default Ecommerce CRM Analytics Crypto Project" class="nav-item {% if 'index' in segment %}active{% endif %}">
-              <a href="{% url 'solicitud' %}" class="nav-link ">
-                <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Crear Solicitud</span>
-              </a>
-            </li>
-            
-            {% if request.user.is_superuser or request.user.is_staff %}
-              <li data-username="dashboard Default Ecommerce CRM Analytics Crypto Project" class="nav-item {% if 'index' in segment %}active{% endif %}">
-                <a href="{% url 'orden' %}" class="nav-link ">
-                  <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Crear Orden</span>
-                </a>
-              </li>
-              <li data-username="dashboard Default Ecommerce CRM Analytics Crypto Project" class="nav-item {% if 'index' in segment %}active{% endif %}">
-                <a href="{% url 'anticipo' %}" class="nav-link ">
-                  <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Crear Anticipo</span>
-                </a>
-              </li>
-              <li data-username="dashboard Default Ecommerce CRM Analytics Crypto Project" class="nav-item {% if 'index' in segment %}active{% endif %}">
-                <a href="{% url 'diario' %}" class="nav-link ">
-                  <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Crear Diario</span>
-                </a>
-              </li>
-              <li data-username="dashboard Default Ecommerce CRM Analytics Crypto Project" class="nav-item {% if 'index' in segment %}active{% endif %}">
-                <a href="{% url 'ver_solicitudes' %}" class="nav-link ">
-                  <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Ver Solicitudes</span>
-                </a>
-              </li>
-              <li data-username="dashboard Default Ecommerce CRM Analytics Crypto Project" class="nav-item {% if 'index' in segment %}active{% endif %}">
-                <a href="{% url 'ver_ordenes' %}" class="nav-link ">
-                  <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Ver Ordenes</span>
-                </a>
-              </li>
-              <li data-username="dashboard Default Ecommerce CRM Analytics Crypto Project" class="nav-item {% if 'index' in segment %}active{% endif %}">
-                <a href="{% url 'ver_anticipos' %}" class="nav-link ">
-                  <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Ver Anticipos</span>
-                </a>
-              </li>
-              <li data-username="dashboard Default Ecommerce CRM Analytics Crypto Project" class="nav-item {% if 'index' in segment %}active{% endif %}">
-                <a href="{% url 'ver_diario' %}" class="nav-link ">
-                  <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Ver Ordenes Diarias</span>
-                </a>
-              </li>
-            {% endif %}            
-        {% if not request.user.is_authenticated %}
-        <li
-          data-username="Authentication Sign up Sign in reset password Change password Personal information profile settings map form subscribe"
-          class="nav-item pcoded-hasmenu">
-          <a href="javascript:" class="nav-link "><span class="pcoded-micon"><i
-                class="feather icon-lock"></i></span><span class="pcoded-mtext">Authentication</span></a>
-          <ul class="pcoded-submenu">
-            <li class=""><a href="{% url 'login' %}" class="">Sign IN</a></li>
-            <li class=""><a href="{% url 'register' %}" class="">Sign UP</a></li>
-          </ul>
+        <!-- Visible para todos los usuarios (superusuario, staff y usuarios regulares) -->
+        <li class="nav-item {% if 'solicitud' in segment %}active{% endif %}">
+          <a href="{% url 'solicitud' %}" class="nav-link">
+            <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Crear Solicitud</span>
+          </a>
         </li>
+
+        <!-- Opciones exclusivas para superusuarios -->
+        {% if request.user.is_superuser %}
+          <li class="nav-item {% if 'orden' in segment %}active{% endif %}">
+            <a href="{% url 'orden' %}" class="nav-link">
+              <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Crear Orden</span>
+            </a>
+          </li>
+          <li class="nav-item {% if 'anticipo' in segment %}active{% endif %}">
+            <a href="{% url 'anticipo' %}" class="nav-link">
+              <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Crear Anticipo</span>
+            </a>
+          </li>
+          <li class="nav-item {% if 'diario' in segment %}active{% endif %}">
+            <a href="{% url 'diario' %}" class="nav-link">
+              <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Crear Diario</span>
+            </a>
+          </li>
+          <li class="nav-item {% if 'ver_solicitudes' in segment %}active{% endif %}">
+            <a href="{% url 'ver_solicitudes' %}" class="nav-link">
+              <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Ver Solicitudes</span>
+            </a>
+          </li>
+          <li class="nav-item {% if 'ver_ordenes' in segment %}active{% endif %}">
+            <a href="{% url 'ver_ordenes' %}" class="nav-link">
+              <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Ver Ordenes</span>
+            </a>
+          </li>
+          <li class="nav-item {% if 'ver_anticipos' in segment %}active{% endif %}">
+            <a href="{% url 'ver_anticipos' %}" class="nav-link">
+              <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Ver Anticipos</span>
+            </a>
+          </li>
+          <li class="nav-item {% if 'ver_diario' in segment %}active{% endif %}">
+            <a href="{% url 'ver_diario' %}" class="nav-link">
+              <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Ver Ordenes Diarias</span>
+            </a>
+          </li>
+        {% elif request.user.is_staff %}
+          <!-- Opciones visibles para usuarios staff -->
+          <li class="nav-item {% if 'ver_anticipos' in segment %}active{% endif %}">
+            <a href="{% url 'ver_anticipos' %}" class="nav-link">
+              <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Ver Anticipos</span>
+            </a>
+          </li>
+          <li class="nav-item {% if 'ver_diario' in segment %}active{% endif %}">
+            <a href="{% url 'ver_diario' %}" class="nav-link">
+              <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Ver Ordenes Diarias</span>
+            </a>
+          </li>
         {% endif %}
-        {% admin_get_menu as app_list %}
         {% if app_list %}
-          {% for app in app_list %}
-            {% if app.has_perms and not app.pinned %}
-              <li 
-                data-username="basic components Button Alert Badges breadcrumb Paggination progress Tooltip popovers Carousel Cards Collapse Tabs pills Modal Grid System Typography Extra Shadows Embeds"
-                class="nav-item pcoded-hasmenu"
-              >
-                <a href="javascript:" class="nav-link ">
-                  <span class="pcoded-micon"><i class=" {% if app.icon %}{{ app.icon }} {% else %} feather icon-box {% endif %}"></i></span>
-                  <span class="pcoded-mtext">{{ app.label|slice:10 }}{% if app.label|length > 10 %}..{% endif %}</span>
-                </a>
-                {% if app.models %}
-                  <ul class="pcoded-submenu">
-                    {% for model in app.models %}
-                      {% if model.url %}
-                        <li class="nav-item {% if 'bootstrap-tables' in segment or model.url in request.path|urlencode %} active {% endif %}">
-                          <a class="nav-link" href="{{ model.url }}">{{ model.label }}</a>
-                        </li>
-                      {% else %}
-                        <li class="nav-item">{{ model.label }}</li>
-                      {% endif %}
-                    {% endfor %}
-                  </ul>
-                {% endif %}
-              </li>
-            {% endif %}
-          {% endfor %}
-        {% endif %}            
+  {% for app in app_list %}
+    {% if app.has_perms and not app.pinned %}
+      <li class="nav-item pcoded-hasmenu">
+        <a href="javascript:" class="nav-link">
+          <span class="pcoded-micon"><i class="{% if app.icon %}{{ app.icon }}{% else %}feather icon-box{% endif %}"></i></span>
+          <span class="pcoded-mtext">{{ app.label|slice:10 }}{% if app.label|length > 10 %}..{% endif %}</span>
+        </a>
+        {% if app.models %}
+          <ul class="pcoded-submenu">
+            {% for model in app.models %}
+              {% if model.url %}
+                <li class="nav-item {% if 'bootstrap-tables' in segment or model.url in request.path|urlencode %} active {% endif %}">
+                  <a class="nav-link" href="{{ model.url }}">{{ model.label }}</a>
+                </li>
+              {% else %}
+                <li class="nav-item">{{ model.label }}</li>
+              {% endif %}
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </li>
+    {% endif %}
+  {% endfor %}
+{% endif %}
+        <!-- Opciones para usuarios no autenticados -->
+        {% if not request.user.is_authenticated %}
+          <li class="nav-item pcoded-hasmenu">
+            <a href="javascript:" class="nav-link"><span class="pcoded-micon"><i class="feather icon-lock"></i></span><span class="pcoded-mtext">Authentication</span></a>
+            <ul class="pcoded-submenu">
+              <li><a href="{% url 'login' %}">Sign IN</a></li>
+              <li><a href="{% url 'register' %}">Sign UP</a></li>
+            </ul>
+          </li>
+        {% endif %}
       </ul>
     </div>
   </div>
 </nav>
+

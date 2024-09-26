@@ -26,7 +26,7 @@ class Solicitud(models.Model):
     )
 
     def __str__(self):
-        return self.nombre
+        return  f"{self.nombre} - {self.cantidad}"
 
 class Cotizacion(models.Model):
     ESTADO_CHOICES = [
@@ -34,14 +34,24 @@ class Cotizacion(models.Model):
         ("aprobada", "Aprobada"),
     ]
 
-    solicitud = models.ForeignKey(Solicitud, related_name="cotizaciones", on_delete=models.CASCADE)
+    solicitud = models.ForeignKey(
+        Solicitud, related_name="cotizaciones", on_delete=models.CASCADE
+    )
     proveedor = models.CharField(max_length=255)
     precio = models.DecimalField(max_digits=10, decimal_places=2)
     detalles = models.TextField(blank=True, null=True)
-    estado = models.CharField(max_length=50, choices=ESTADO_CHOICES, default="pendiente")
-    cotizacion_pdf = models.FileField(upload_to="cotizaciones_pdfs/", blank=True, null=True)
+    estado = models.CharField(
+        max_length=50, choices=ESTADO_CHOICES, default="pendiente"
+    )
+    cotizacion_pdf = models.FileField(
+        upload_to="cotizaciones_pdfs/", blank=True, null=True
+    )
     estado_aprobada = models.BooleanField(default=False)
     fecha = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.proveedor} - {self.precio}"
+
 
 
 
@@ -92,6 +102,7 @@ class Anticipo(models.Model):
     )
     observaciones = models.TextField(blank=True, null=True)
     aprobado = models.BooleanField(default=False)
+    oculto = models.BooleanField(default=False)  # Nuevo campo para ocultar anticipos
 
     def save(self, *args, **kwargs):
         if self.subtotal:
@@ -111,11 +122,15 @@ class Anticipo(models.Model):
 
         super(Anticipo, self).save(*args, **kwargs)
 
+    def __str__(self):
+        return f"{self.nombre} - Total a Pagar: {self.total_pagar}"
+
+
 
 class Diario(models.Model):
     TIEMPO_ENTREGA_CHOICES = [(f"{i:02d}:00", f"{i:02d}:00") for i in range(24)]
 
-    tiempo_entrega = models.DateTimeField("Hora de Entrega")  # Changed to TimeField
+    tiempo_entrega = models.DateField("Hora de Entrega") 
     nombre = models.CharField(max_length=200)
     empresa = models.CharField(max_length=200)
     centro_costo = models.CharField(

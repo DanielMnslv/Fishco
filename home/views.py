@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views import View
 from .models import Diario, Solicitud, Orden, Anticipo, Cotizacion
 from django.core.paginator import Paginator
@@ -26,6 +26,8 @@ from reportlab.lib.units import inch
 from datetime import datetime
 from django.views.generic import ListView
 from django.views.decorators.csrf import csrf_exempt
+from django.utils.dateparse import parse_date
+
 
 
 @login_required
@@ -36,6 +38,24 @@ def index(request):
 @login_required
 def tables(request):
     return render(request, "pages/ver_solicitudes.html", {"segment": "tables"})
+
+# Vista para superusuarios
+class SuperUserRequiredMixin(UserPassesTestMixin):
+    def test_func(self):
+        return self.request.user.is_superuser
+
+# Vista para usuarios con rol de staff
+class StaffRequiredMixin(UserPassesTestMixin):
+    def test_func(self):
+        return self.request.user.is_staff
+
+# Decorador para superusuarios
+def superuser_required(function):
+    return user_passes_test(lambda u: u.is_superuser)(function)
+
+# Decorador para staff
+def staff_required(function):
+    return user_passes_test(lambda u: u.is_staff)(function)
 
 
 class SolicitudView(LoginRequiredMixin, View):
@@ -52,7 +72,9 @@ class SolicitudView(LoginRequiredMixin, View):
         return render(request, "pages/solicitud.html", {"form": form})
 
 
-class SolicitudDetailView(LoginRequiredMixin, View):
+class SolicitudDetailView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_superuser or self.request.user.is_staff
     def get(self, request, pk):
         solicitud = get_object_or_404(Solicitud, pk=pk)
         form = AprobacionRechazoForm(instance=solicitud)
@@ -99,6 +121,8 @@ class SolicitudDetailView(LoginRequiredMixin, View):
             },
         )
 
+@superuser_required  # solo superusuarios deben subir cotizaciones
+@login_required
 def subir_cotizacion(request, solicitud_id):
     solicitud = get_object_or_404(Solicitud, id=solicitud_id)
 
@@ -118,6 +142,9 @@ def subir_cotizacion(request, solicitud_id):
         request, "subir_cotizacion.html", {"solicitud": solicitud, "form": form}
     )
 
+# Vista para aprobar cotización (solo usuarios con permisos específicos)
+@user_passes_test(lambda u: u.id in [31, 33])  # IDs permitidos
+@login_required
 @login_required
 def aprobar_cotizacion(request, cotizacion_id):
     # Verificar si el usuario tiene los ID permitidos
@@ -143,7 +170,8 @@ def aprobar_cotizacion(request, cotizacion_id):
     return redirect("solicitud_detail", pk=solicitud.id)
 
 
-
+@superuser_required  # O @staff_required, dependiendo de quién deba poder ocultar solicitudes
+@login_required
 def ocultar_solicitud(request, id):
     # Obtener la solicitud por su ID
     solicitud = get_object_or_404(Solicitud, id=id)
@@ -154,7 +182,7 @@ def ocultar_solicitud(request, id):
     return JsonResponse({"success": True})
 
 
-class OrdenView(LoginRequiredMixin, View):
+class OrdenView(LoginRequiredMixin, SuperUserRequiredMixin, View):
     def get(self, request):
         form = OrdenForm()
         return render(request, "pages/orden.html", {"form": form})
@@ -168,7 +196,7 @@ class OrdenView(LoginRequiredMixin, View):
         return render(request, "pages/orden.html", {"form": form})
 
 
-class AprobarOrdenView(LoginRequiredMixin, View):
+class AprobarOrdenView(LoginRequiredMixin, UserPassesTestMixin, View):
     def post(self, request, orden_id):
         # Verificar si el usuario tiene los ID permitidos
         if request.user.id not in [31, 33, 32]:
@@ -182,6 +210,7 @@ class AprobarOrdenView(LoginRequiredMixin, View):
         return redirect("ver_ordenes")
 
 
+@staff_required
 @login_required
 def anticipo_view(request):
     if request.method == "POST":
@@ -194,7 +223,7 @@ def anticipo_view(request):
         form = AnticipoForm()
     return render(request, "pages/anticipo.html", {"form": form})
 
-
+@staff_required
 @login_required
 def diario_view(request):
     if request.method == "POST":
@@ -207,7 +236,8 @@ def diario_view(request):
         form = DiarioForm()
     return render(request, "pages/diario.html", {"form": form})
 
-
+# Vista para ver solicitudes (solo superusuarios)
+@superuser_required
 @login_required
 def ver_solicitudes(request):
     solicitudes = Solicitud.objects.filter(oculto=False)
@@ -250,7 +280,8 @@ def ver_solicitudes(request):
     )
 
 
-
+# Vista para ver órdenes (solo superusuarios)
+@superuser_required
 @login_required
 def ver_ordenes(request):
     ordenes = Orden.objects.all()
@@ -275,45 +306,50 @@ def ver_ordenes(request):
     return render(request, "pages/ver_ordenes.html", {"ordenes": ordenes_page})
 
 
+@staff_required
 @login_required
 def ver_diario(request):
     diario = Diario.objects.all()
-    filters = {
-        "id": request.GET.get("id"),
-        "tiempo_entrega__icontains": request.GET.get("tiempo_entrega"),
-        "nombre__icontains": request.GET.get("nombre"),
-        "empresa": request.GET.get("empresa"),
-        "centro_costo": request.GET.get("centro_costo"),
-        "destino__icontains": request.GET.get("destino"),
-        "medio_pago__icontains": request.GET.get("medio_pago"),
-        "documento_pdf__icontains": request.GET.get("documento_pdf"),
-    }
-    for key, value in filters.items():
-        if value:
-            diario = diario.filter(**{key: value})
 
-    paginator = Paginator(diario, 10)
-    page_number = request.GET.get("page")
-    diario_page = paginator.get_page(page_number)
-    return render(request, "pages/ver_diario.html", {"diario": diario_page})
-
-
-@login_required
-def ver_anticipos(request):
-    anticipos = Anticipo.objects.all()
+    # Obtener fechas de inicio y fin de los filtros
     fecha_inicio = request.GET.get("fecha_inicio")
     fecha_fin = request.GET.get("fecha_fin")
 
-    # Filtrar por rango de fechas
+    # Verificar que las fechas sean válidas y no nulas
+    if fecha_inicio and fecha_fin:
+        try:
+            # Convertir las fechas a objetos datetime
+            fecha_inicio = parse_date(fecha_inicio)
+            fecha_fin = parse_date(fecha_fin)
+
+            # Filtrar usando las fechas
+            if fecha_inicio and fecha_fin:
+                diario = diario.filter(tiempo_entrega__range=[fecha_inicio, fecha_fin])
+        except ValueError:
+            pass  # Si ocurre un error con las fechas, no filtrar
+
+    # Paginación si es necesario
+    paginator = Paginator(diario, 10)
+    page_number = request.GET.get("page")
+    diario_page = paginator.get_page(page_number)
+
+    return render(request, "pages/ver_diario.html", {"diario": diario_page})
+
+
+@staff_required
+@login_required
+def ver_anticipos(request):
+    anticipos = Anticipo.objects.filter(oculto=False)  # Filtrar anticipos no ocultos
+    fecha_inicio = request.GET.get("fecha_inicio")
+    fecha_fin = request.GET.get("fecha_fin")
+
     if fecha_inicio and fecha_fin:
         try:
             fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
             fecha_fin = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
             anticipos = anticipos.filter(fecha__range=(fecha_inicio, fecha_fin))
         except ValueError:
-            anticipos = (
-                anticipos.none()
-            )  # Devolver queryset vacío si hay error en fechas
+            anticipos = anticipos.none()
     elif fecha_inicio:
         try:
             fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
@@ -327,11 +363,11 @@ def ver_anticipos(request):
         except ValueError:
             anticipos = anticipos.none()
 
-    # Ya no utilizamos paginación, devolvemos todos los registros filtrados
     return render(request, "pages/ver_anticipos.html", {"anticipos": anticipos})
 
 
-
+# Vista para aprobar anticipo (solo usuarios con permisos específicos)
+@user_passes_test(lambda u: u.id in [31, 33])  # IDs permitidos
 @login_required
 def aprobar_anticipo(request, anticipo_id):
     # Verificar si el usuario tiene los ID permitidos
@@ -350,6 +386,8 @@ def aprobar_anticipo(request, anticipo_id):
     return render(request, "aprobar_anticipo.html", {"anticipo": anticipo})
 
 
+# Vista para aprobar anticipos masivamente (solo usuarios con permisos específicos)
+@user_passes_test(lambda u: u.id in [31, 33])  # IDs permitidos
 @login_required
 def aprobar_anticipos_masivamente(request):
     # Verificar si el usuario tiene los ID permitidos
@@ -366,7 +404,7 @@ def aprobar_anticipos_masivamente(request):
     return redirect("ver_anticipos")
 
 
-class AnticipoListView(ListView):
+class AnticipoListView(LoginRequiredMixin, StaffRequiredMixin, ListView):
     model = Anticipo
     template_name = "anticipo_list.html"
     context_object_name = "anticipos"
@@ -406,20 +444,20 @@ class AnticipoListView(ListView):
         context["search_form"] = AnticipoSearchForm(self.request.GET)
         return context
 
-@csrf_exempt  # Permitir solicitudes AJAX sin el token CSRF en este caso
+@staff_required  # O @superuser_required, dependiendo del nivel de restricción
 @login_required
+@csrf_exempt
 def ocultar_anticipo(request, anticipo_id):
     try:
-        anticipo = Anticipo.objects.get(id=anticipo_id)
+        anticipo = get_object_or_404(Anticipo, id=anticipo_id)
         anticipo.oculto = True  # Cambiar el estado del anticipo a "oculto"
         anticipo.save()
-        return JsonResponse({"status": "success"}, status=200)
+        return JsonResponse({"success": True}, status=200)
     except Anticipo.DoesNotExist:
-        return JsonResponse(
-            {"status": "error", "message": "Anticipo no encontrado"}, status=404
-        )
+        return JsonResponse({"error": "Anticipo no encontrado"}, status=404)
 
 
+@superuser_required  # O @staff_required, dependiendo del nivel de restricción
 def generar_reporte_orden(request, orden_id):
     orden = get_object_or_404(Orden, id=orden_id)
 
@@ -483,7 +521,8 @@ def generar_reporte_orden(request, orden_id):
 
     return response
 
-    
+
+@staff_required  # O @superuser_required, dependiendo del nivel de restricción    
 @login_required
 def generar_pdf_anticipos_aprobados(request):
     # Obtener las fechas de inicio y fin del filtro

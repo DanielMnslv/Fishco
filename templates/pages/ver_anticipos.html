@@ -129,31 +129,27 @@ document.getElementById('select_all').addEventListener('change', function() {
     }
 });
 </script>
-
 <script>
     function ocultarAnticipo(id) {
-        // Asegúrate de que el 'id' no esté vacío
-        if (!id) {
-            console.error("ID de anticipo no encontrado");
-            return;
-        }
-
-        // Enviar una solicitud AJAX para archivar el anticipo
-        $.ajax({
-            url: "/ocultar_anticipo/" + id + "/",  // Generar la URL manualmente usando el ID
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}'  // Necesario para solicitudes POST en Django
-            },
-            success: function(response) {
-                // Ocultar la fila de la tabla
-                $('#anticipo-' + id).hide();
-            },
-            error: function(xhr, status, error) {
-                console.error("Error ocultando anticipo: ", error);
-            }
-        });
+    if (!id) {
+        console.error("ID de anticipo no encontrado");
+        return;
     }
+
+    $.ajax({
+        url: "/ocultar_anticipo/" + id + "/",
+        method: "POST",
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'  // Asegúrate de incluir el token CSRF para solicitudes POST
+        },
+        success: function(response) {
+            $('#anticipo-' + id).hide();  // Ocultar la fila de la tabla
+        },
+        error: function(xhr, status, error) {
+            console.error("Error ocultando anticipo: ", error);
+        }
+    });
+}
 </script>
 
 {% endblock content %}
