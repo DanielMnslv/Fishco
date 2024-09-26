@@ -11,6 +11,7 @@ from .forms import (
     AnticipoForm,
     OrdenForm,
     CotizacionForm,
+    AnticipoSearchForm,
 )
 from django.contrib import messages
 from django.utils import timezone
@@ -19,8 +20,12 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Image
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4,landscape
+from reportlab.lib.units import inch
 from datetime import datetime
-
+from django.views.generic import ListView
+from django.views.decorators.csrf import csrf_exempt
 
 
 @login_required
@@ -113,7 +118,13 @@ def subir_cotizacion(request, solicitud_id):
         request, "subir_cotizacion.html", {"solicitud": solicitud, "form": form}
     )
 
+@login_required
 def aprobar_cotizacion(request, cotizacion_id):
+    # Verificar si el usuario tiene los ID permitidos
+    if request.user.id not in [31, 33]:
+        messages.error(request, "No tienes permiso para aprobar cotizaciones.")
+        return redirect("ver_solicitudes")
+
     cotizacion = get_object_or_404(Cotizacion, id=cotizacion_id)
     solicitud = cotizacion.solicitud
     cotizaciones = solicitud.cotizaciones.all()
@@ -130,6 +141,7 @@ def aprobar_cotizacion(request, cotizacion_id):
         request, f"La cotización de {cotizacion.proveedor} ha sido aprobada."
     )
     return redirect("solicitud_detail", pk=solicitud.id)
+
 
 
 def ocultar_solicitud(request, id):
@@ -158,6 +170,11 @@ class OrdenView(LoginRequiredMixin, View):
 
 class AprobarOrdenView(LoginRequiredMixin, View):
     def post(self, request, orden_id):
+        # Verificar si el usuario tiene los ID permitidos
+        if request.user.id not in [31, 33, 32]:
+            messages.error(request, "No tienes permiso para aprobar órdenes.")
+            return redirect("ver_ordenes")
+        
         orden = get_object_or_404(Orden, id=orden_id)
         orden.estado = "APROBADA"
         orden.save()
@@ -194,6 +211,7 @@ def diario_view(request):
 @login_required
 def ver_solicitudes(request):
     solicitudes = Solicitud.objects.filter(oculto=False)
+
     # Filtrar por los campos
     id_filtro = request.GET.get("id")
     nombre_filtro = request.GET.get("nombre")
@@ -203,9 +221,11 @@ def ver_solicitudes(request):
     tipo_filtro = request.GET.get("tipo")
     solicitado_filtro = request.GET.get("solicitado")
     imagen_filtro = request.GET.get("imagen")
-    
+
     for solicitud in solicitudes:
-        solicitud.cotizacion_aprobada = solicitud.cotizaciones.filter(estado="aprobada").first()
+        solicitud.cotizacion_aprobada = solicitud.cotizaciones.filter(
+            estado="aprobada"
+        ).first()
 
     if id_filtro:
         solicitudes = solicitudes.filter(id=id_filtro)
@@ -224,14 +244,11 @@ def ver_solicitudes(request):
     if imagen_filtro:
         solicitudes = solicitudes.filter(imagen_icontains=imagen_filtro)
 
-    # Paginación
-    paginator = Paginator(solicitudes, 10)  # Muestra 10 solicitudes por página
-    page_number = request.GET.get("page")
-    solicitudes_page = paginator.get_page(page_number)
-
+    # Aquí removemos la lógica de paginación para que se muestren todas las solicitudes
     return render(
-        request, "pages/ver_solicitudes.html", {"solicitudes": solicitudes_page}
+        request, "pages/ver_solicitudes.html", {"solicitudes": solicitudes}
     )
+
 
 
 @login_required
@@ -283,41 +300,124 @@ def ver_diario(request):
 
 @login_required
 def ver_anticipos(request):
-    anticipo = Anticipo.objects.all()
-    filters = {
-        "id": request.GET.get("id"),
-        "centro_costo__icontains": request.GET.get("centro_costo"),
-        "nit__icontains": request.GET.get("nit"),
-        "nombre": request.GET.get("nombre"),
-        "producto_servicio": request.GET.get("producto_servicio"),
-        "cantidad__icontains": request.GET.get("cantidad"),
-        "vlr_unitario__icontains": request.GET.get("vlr_unitario"),
-        "subtotal__icontains": request.GET.get("subtotal"),
-        "iva__icontains": request.GET.get("iva"),
-        "retencion__icontains": request.GET.get("retencion"),
-        "total_pagar__icontains": request.GET.get("total_pagar"),
-        "observaciones__icontains": request.GET.get("observaciones"),
-        "documento_pdf__icontains": request.GET.get("documento_pdf"),
-    }
-    for key, value in filters.items():
-        if value:
-            anticipo = anticipo.filter(**{key: value})
+    anticipos = Anticipo.objects.all()
+    fecha_inicio = request.GET.get("fecha_inicio")
+    fecha_fin = request.GET.get("fecha_fin")
 
-    paginator = Paginator(anticipo, 10)
-    page_number = request.GET.get("page")
-    anticipo_page = paginator.get_page(page_number)
-    return render(request, "pages/ver_anticipos.html", {"anticipo": anticipo_page})
+    # Filtrar por rango de fechas
+    if fecha_inicio and fecha_fin:
+        try:
+            fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
+            fecha_fin = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
+            anticipos = anticipos.filter(fecha__range=(fecha_inicio, fecha_fin))
+        except ValueError:
+            anticipos = (
+                anticipos.none()
+            )  # Devolver queryset vacío si hay error en fechas
+    elif fecha_inicio:
+        try:
+            fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
+            anticipos = anticipos.filter(fecha__gte=fecha_inicio)
+        except ValueError:
+            anticipos = anticipos.none()
+    elif fecha_fin:
+        try:
+            fecha_fin = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
+            anticipos = anticipos.filter(fecha__lte=fecha_fin)
+        except ValueError:
+            anticipos = anticipos.none()
+
+    # Ya no utilizamos paginación, devolvemos todos los registros filtrados
+    return render(request, "pages/ver_anticipos.html", {"anticipos": anticipos})
+
 
 
 @login_required
 def aprobar_anticipo(request, anticipo_id):
+    # Verificar si el usuario tiene los ID permitidos
+    if request.user.id not in [31, 33]:
+        messages.error(request, "No tienes permiso para aprobar anticipos.")
+        return redirect("ver_anticipos")
+
     anticipo = get_object_or_404(Anticipo, id=anticipo_id)
+
     if request.method == "POST":
         anticipo.aprobado = True
         anticipo.save()
         messages.success(request, "Anticipo aprobado con éxito.")
         return redirect("ver_anticipos")
+
     return render(request, "aprobar_anticipo.html", {"anticipo": anticipo})
+
+
+@login_required
+def aprobar_anticipos_masivamente(request):
+    # Verificar si el usuario tiene los ID permitidos
+    if request.user.id not in [31, 33]:
+        messages.error(request, "No tienes permiso para aprobar anticipos.")
+        return redirect("ver_anticipos")
+    
+    if request.method == "POST":
+        anticipo_ids = request.POST.getlist("anticipo_ids")
+        # Aprobamos los anticipos seleccionados
+        Anticipo.objects.filter(id__in=anticipo_ids).update(aprobado=True)
+
+        messages.success(request, "Anticipos aprobados con éxito.")
+    return redirect("ver_anticipos")
+
+
+class AnticipoListView(ListView):
+    model = Anticipo
+    template_name = "anticipo_list.html"
+    context_object_name = "anticipos"
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        fecha_inicio = self.request.GET.get("fecha_inicio")
+        fecha_fin = self.request.GET.get("fecha_fin")
+
+        # Filtrar por rango de fechas
+        if fecha_inicio and fecha_fin:
+            try:
+                fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
+                fecha_fin = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
+                queryset = queryset.filter(fecha__range=(fecha_inicio, fecha_fin))
+            except ValueError:
+                queryset = (
+                    queryset.none()
+                )  # Devolver queryset vacío si hay error en fechas
+        elif fecha_inicio:
+            try:
+                fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
+                queryset = queryset.filter(fecha__gte=fecha_inicio)
+            except ValueError:
+                queryset = queryset.none()
+        elif fecha_fin:
+            try:
+                fecha_fin = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
+                queryset = queryset.filter(fecha__lte=fecha_fin)
+            except ValueError:
+                queryset = queryset.none()
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["search_form"] = AnticipoSearchForm(self.request.GET)
+        return context
+
+@csrf_exempt  # Permitir solicitudes AJAX sin el token CSRF en este caso
+@login_required
+def ocultar_anticipo(request, anticipo_id):
+    try:
+        anticipo = Anticipo.objects.get(id=anticipo_id)
+        anticipo.oculto = True  # Cambiar el estado del anticipo a "oculto"
+        anticipo.save()
+        return JsonResponse({"status": "success"}, status=200)
+    except Anticipo.DoesNotExist:
+        return JsonResponse(
+            {"status": "error", "message": "Anticipo no encontrado"}, status=404
+        )
 
 
 def generar_reporte_orden(request, orden_id):
@@ -384,3 +484,114 @@ def generar_reporte_orden(request, orden_id):
     return response
 
     
+@login_required
+def generar_pdf_anticipos_aprobados(request):
+    # Obtener las fechas de inicio y fin del filtro
+    fecha_inicio = request.GET.get("fecha_inicio")
+    fecha_fin = request.GET.get("fecha_fin")
+
+    # Verificar que se proporcionen las fechas
+    if not fecha_inicio or not fecha_fin:
+        messages.error(
+            request, "Debes seleccionar un rango de fechas para descargar el PDF."
+        )
+        return redirect("ver_anticipos")
+
+    try:
+        fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
+        fecha_fin = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
+    except ValueError:
+        messages.error(request, "Formato de fecha inválido.")
+        return redirect("ver_anticipos")
+
+    # Filtrar anticipos aprobados por las fechas
+    anticipos_aprobados = Anticipo.objects.filter(
+        fecha__range=(fecha_inicio, fecha_fin), aprobado=True
+    )
+
+    if not anticipos_aprobados.exists():
+        messages.error(
+            request, "No hay anticipos aprobados en el rango de fechas seleccionado."
+        )
+        return redirect("ver_anticipos")
+
+    # Crear la respuesta HTTP para descargar el PDF
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = (
+        f'attachment; filename="anticipos_aprobados_{fecha_inicio}_{fecha_fin}.pdf"'
+    )
+
+    # Crear el documento PDF con formato apaisado
+    doc = SimpleDocTemplate(response, pagesize=landscape(A4))
+    elements = []
+
+    # Encabezado del PDF
+    styles = getSampleStyleSheet()
+    elements.append(
+        Paragraph(
+            f"Anticipos Aprobados desde {fecha_inicio} hasta {fecha_fin}",
+            styles["Title"],
+        )
+    )
+
+    # Crear una tabla con los datos de los anticipos aprobados
+    data = [
+        [
+            "Centro de Costo",
+            "NIT",
+            "Nombre",
+            "Producto/Servicio",
+            "Cantidad",
+            "Subtotal",
+            "IVA",
+            "Retención",
+            "Total a Pagar",
+            "Observaciones",
+        ]
+    ]
+
+    # Llenar la tabla con los datos
+    for anticipo in anticipos_aprobados:
+        data.append(
+            [
+                anticipo.centro_costo,
+                anticipo.nit,
+                anticipo.nombre,
+                anticipo.producto_servicio,
+                str(anticipo.cantidad),
+                f"${anticipo.subtotal:,.2f}",
+                f"${anticipo.valor_iva:,.2f}",
+                f"${anticipo.valor_retencion:,.2f}",
+                f"${anticipo.total_pagar:,.2f}",
+                anticipo.observaciones or "N/A",
+            ]
+        )
+
+    # Crear la tabla sin especificar colWidths para que ajuste automáticamente
+    table = Table(data)
+    
+    table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),  # Fondo gris para el encabezado
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),  # Color de texto blanco en el encabezado
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),  # Alinear todo al centro
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),  # Fuente en negrita para el encabezado
+                ("FONTSIZE", (0, 0), (-1, 0), 10),  # Tamaño de fuente para el encabezado
+                ("FONTSIZE", (0, 1), (-1, -1), 8),  # Tamaño de fuente reducido para el contenido
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),  # Espacio debajo del encabezado
+                ("BACKGROUND", (0, 1), (-1, -1), colors.beige),  # Fondo beige para el resto de las filas
+                ("GRID", (0, 0), (-1, -1), 1, colors.black),  # Cuadrícula negra
+            ]
+        )
+    )
+
+    # Añadir la tabla a los elementos
+    elements.append(table)
+
+    # Construir el PDF
+    doc.build(elements)
+
+    return response
+
+           

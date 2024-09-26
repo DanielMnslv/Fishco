@@ -66,40 +66,50 @@ class Orden(models.Model):
 
 
 class Anticipo(models.Model):
-    fecha = models.DateTimeField(default=timezone.now)
+    fecha = models.DateField()
     nit = models.CharField(max_length=20)
     nombre = models.CharField(max_length=100)
     cantidad = models.PositiveIntegerField()
     centro_costo = models.CharField(max_length=50)
     producto_servicio = models.CharField(max_length=100)
-    vlr_unitario = models.DecimalField(max_digits=10, decimal_places=3)
     subtotal = models.DecimalField(
-        max_digits=10, decimal_places=3, blank=True, null=True
+        max_digits=10, decimal_places=2, blank=True, null=True
     )
-    iva = models.DecimalField(max_digits=10, decimal_places=3, blank=True, null=True)
+    iva = models.DecimalField(
+        max_digits=5, decimal_places=2, blank=True, null=True
+    )  # Porcentaje de IVA
+    valor_iva = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )  # Valor calculado del IVA
     retencion = models.DecimalField(
-        max_digits=10, decimal_places=3, blank=True, null=True
-    )
+        max_digits=5, decimal_places=2, blank=True, null=True
+    )  # Porcentaje de retención
+    valor_retencion = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )  # Valor calculado de retención
     total_pagar = models.DecimalField(
-        max_digits=10, decimal_places=3, blank=True, null=True
+        max_digits=10, decimal_places=2, blank=True, null=True
     )
     observaciones = models.TextField(blank=True, null=True)
     aprobado = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
-        self.subtotal = Decimal(self.cantidad) * Decimal(self.vlr_unitario)
-        if self.iva is not None:
-            self.iva = self.subtotal * Decimal(self.iva) / Decimal("100")
-        else:
-            self.iva = Decimal("0.00")
+        if self.subtotal:
+            # Calcular el valor del IVA y la retención redondeados a enteros
+            self.valor_iva = (
+                self.subtotal * (self.iva or Decimal("0")) / Decimal("100")
+            ).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
 
-        if self.retencion is not None:
-            self.retencion = self.subtotal * Decimal(self.retencion) / Decimal("100")
-        else:
-            self.retencion = Decimal("0.00")
+            self.valor_retencion = (
+                self.subtotal * (self.retencion or Decimal("0")) / Decimal("100")
+            ).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
 
-        self.total_pagar = self.subtotal + self.iva - self.retencion
-        super().save(*args, **kwargs)
+            # Calcular el total a pagar redondeado a enteros
+            self.total_pagar = (
+                self.subtotal + self.valor_iva - self.valor_retencion
+            ).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+
+        super(Anticipo, self).save(*args, **kwargs)
 
 
 class Diario(models.Model):

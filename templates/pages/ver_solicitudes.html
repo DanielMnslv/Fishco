@@ -127,7 +127,7 @@
 		    <td>
                         {% if solicitud.cotizacion_aprobada %}
                             {% if solicitud.cotizacion_aprobada.cotizacion_pdf %}
-                                <a href="{{ solicitud.cotizacion_aprobada.cotizacion_pdf.url }}" target="_blank">Ver Cotización</a>
+                                <a href="{{ solicitud.cotizacion_aprobada.cotizacion_pdf.url }}" target="_blank"class="text-success">Aprobado</a>
                             {% else %}
                                 No disponible
                             {% endif %}
@@ -193,23 +193,6 @@
                 {% endfor %}
             </tbody>
         </table>
-
-        <!-- Paginación -->
-        <div class="pagination">
-            <span class="step-links">
-                {% if solicitudes.has_previous %}
-                    <a href="?page=1">&laquo; Primera</a>
-                    <a href="?page={{ solicitudes.previous_page_number }}">Anterior</a>
-                {% endif %}
-                <span class="current">
-                    Página {{ solicitudes.number }} de {{ solicitudes.paginator.num_pages }}.
-                </span>
-                {% if solicitudes.has_next %}
-                    <a href="?page={{ solicitudes.next_page_number }}">Siguiente</a>
-                    <a href="?page={{ solicitudes.paginator.num_pages }}">Última &raquo;</a>
-                {% endif %}
-            </span>
-        </div>
     </div>
 </div>
 

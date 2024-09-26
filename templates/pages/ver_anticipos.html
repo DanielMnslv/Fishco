@@ -20,154 +20,140 @@
     .table-container {
         margin-top: 20px;
     }
-    .pagination {
-        margin-top: 20px;
-    }
 </style>
 {% endblock extrastyle %}
 
 {% block content %}
 <div class="container">
     <h1>Ver Anticipos</h1>
+    
 
-    <!-- Formulario de búsqueda -->
     <form method="GET" action="">
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="id">ID:</label>
-                            <input type="text" id="id" name="id" class="form-control" value="{{ request.GET.id }}">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="centro_costo">Centro de Costo:</label>
-                            <input type="text" id="centro_costo" name="centro_costo" class="form-control" value="{{ request.GET.centro_costo }}">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="nit">NIT:</label>
-                            <input type="text" id="nit" name="nit" class="form-control" value="{{ request.GET.nit }}">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="nombre">Nombre:</label>
-                            <input type="text" id="nombre" name="nombre" class="form-control" value="{{ request.GET.nombre }}">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="producto_servicio">Producto/Servicio:</label>
-                            <input type="text" id="producto_servicio" name="producto_servicio" class="form-control" value="{{ request.GET.producto_servicio }}">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="cantidad">Cantidad:</label>
-                            <input type="text" id="cantidad" name="cantidad" class="form-control" value="{{ request.GET.cantidad }}">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="vlr_unitario">Valor Unitario:</label>
-                            <input type="text" id="vlr_unitario" name="vlr_unitario" class="form-control" value="{{ request.GET.vlr_unitario }}">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="subtotal">Subtotal:</label>
-                            <input type="text" id="subtotal" name="subtotal" class="form-control" value="{{ request.GET.subtotal }}">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="iva">IVA:</label>
-                            <input type="text" id="iva" name="iva" class="form-control" value="{{ request.GET.iva }}">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="retencion">Retención:</label>
-                            <input type="text" id="retencion" name="retencion" class="form-control" value="{{ request.GET.retencion }}">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="total_pagar">Total a Pagar:</label>
-                            <input type="text" id="total_pagar" name="total_pagar" class="form-control" value="{{ request.GET.total_pagar }}">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="observaciones">Observaciones:</label>
-                            <input type="text" id="observaciones" name="observaciones" class="form-control" value="{{ request.GET.observaciones }}">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="documento_pdf">Documento PDF:</label>
-                            <input type="text" id="documento_pdf" name="documento_pdf" class="form-control" value="{{ request.GET.documento_pdf }}">
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Buscar</button>
-                </form>
-
-    <!-- Tabla de resultados -->
-    <div class="table-container">
-        <table class="table table-striped">
-            <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Centro de Costo</th>
-                            <th>NIT</th>
-                            <th>Nombre</th>
-                            <th>Producto/Servicio</th>
-                            <th>Cantidad</th>
-                            <th>Valor Unitario</th>
-                            <th>Subtotal</th>
-                            <th>IVA</th>
-                            <th>Retención</th>
-                            <th>Total a Pagar</th>
-                            <th>Observaciones</th>
-                            <th>Documento PDF</th>
-			    <th>Acciones</th>
-                        </tr>
-                    </thead>
-            <tbody>
-                        {% for item in anticipo %}
-                        <tr>
-                            <td>{{ item.id }}</td>
-                            <td>{{ item.centro_costo }}</td>
-                            <td>{{ item.nit }}</td>
-                            <td>{{ item.nombre }}</td>
-                            <td>{{ item.producto_servicio }}</td>
-                            <td>{{ item.cantidad }}</td>
-                            <td>{{ item.vlr_unitario }}</td>
-                            <td>{{ item.subtotal }}</td>
-                            <td>{{ item.iva }}</td>
-                            <td>{{ item.retencion|floatformat:3 }}</td>
-                            <td>{{ item.total_pagar }}</td>
-                            <td>{{ item.observaciones }}</td>
-                            <td>
-                                {% if item.documento_pdf %}
-                                    <a href="{{ item.documento_pdf.url }}" target="_blank">Ver PDF</a>
-                                {% else %}
-                                    No disponible
-                                {% endif %}
-                            </td>
-                            <td>
-    {% if not item.aprobado %}
-        <a href="{% url 'aprobar_anticipo' item.id %}" class="btn btn-success">Aprobar</a>
-    {% else %}
-        Aprobado
-    {% endif %}
-</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="13" class="text-center">No se encontraron registros.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-        </table>
-
-        <!-- Paginación -->
-        <div class="pagination">
-            <span class="step-links">
-                {% if anticipo.has_previous %}
-                    <a href="?page=1{% if anticipo.GET.id %}&id={{ request.GET.id }}{% endif %}{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.descripcion %}&descripcion={{ request.GET.descripcion }}{% endif %}{% if request.GET.cantidad %}&cantidad={{ request.GET.cantidad }}{% endif %}{% if request.GET.destino %}&destino={{ request.GET.destino }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.solicitado %}&solicitado={{ request.GET.solicitado }}{% endif %}">&laquo; Primera</a>
-                    <a href="?page={{ anticipo.previous_page_number }}{% if request.GET.id %}&id={{ request.GET.id }}{% endif %}{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.descripcion %}&descripcion={{ request.GET.descripcion }}{% endif %}{% if request.GET.cantidad %}&cantidad={{ request.GET.cantidad }}{% endif %}{% if request.GET.destino %}&destino={{ request.GET.destino }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.solicitado %}&solicitado={{ request.GET.solicitado }}{% endif %}">Anterior</a>
-                {% endif %}
-
-                <span class="current">
-                    Página {{ anticipo.number }} de {{ anticipo.paginator.num_pages }}.
-                </span>
-
-                {% if anticipo.has_next %}
-                    <a href="?page={{ anticipo.next_page_number }}{% if request.GET.id %}&id={{ request.GET.id }}{% endif %}{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.descripcion %}&descripcion={{ request.GET.descripcion }}{% endif %}{% if request.GET.cantidad %}&cantidad={{ request.GET.cantidad }}{% endif %}{% if request.GET.destino %}&destino={{ request.GET.destino }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.solicitado %}&solicitado={{ request.GET.solicitado }}{% endif %}">Siguiente</a>
-                    <a href="?page={{ anticipo.paginator.num_pages }}{% if request.GET.id %}&id={{ request.GET.id }}{% endif %}{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.descripcion %}&descripcion={{ request.GET.descripcion }}{% endif %}{% if request.GET.cantidad %}&cantidad={{ request.GET.cantidad }}{% endif %}{% if request.GET.destino %}&destino={{ request.GET.destino }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.solicitado %}&solicitado={{ request.GET.solicitado }}{% endif %}">Última &raquo;</a>
-                {% endif %}
-            </span>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label for="fecha_inicio">Fecha Inicio:</label>
+                <input type="date" name="fecha_inicio" class="form-control" value="{{ request.GET.fecha_inicio }}">
+            </div>
+            <div class="col-md-4 mb-3">
+                <label for="fecha_fin">Fecha Fin:</label>
+                <input type="date" name="fecha_fin" class="form-control" value="{{ request.GET.fecha_fin }}">
+            </div>
+            <div class="col-md-4 mb-3 align-self-end">
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+            </div>
         </div>
+    </form>
+    <!-- Formulario separado para generar PDF -->
+    <form method="GET" action="{% url 'generar_pdf_anticipos_aprobados' %}">
+        <input type="hidden" name="fecha_inicio" value="{{ request.GET.fecha_inicio }}">
+        <input type="hidden" name="fecha_fin" value="{{ request.GET.fecha_fin }}">
+        <button type="submit" class="btn btn-warning mb-3">Descargar PDF de Anticipos Aprobados</button>
+    </form>
     </div>
+    <!-- Botón para aprobar todos los anticipos filtrados -->
+    <form method="POST" action="{% url 'aprobar_anticipos_masivamente' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success mb-3">Aprobar todos los anticipos Seleccionados</button>
+
+        <!-- Tabla de resultados -->
+        <div class="table-container">
+            <table class="table table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>
+                <input type="checkbox" id="select_all" /> <!-- Checkbox para seleccionar todos -->
+            </th>
+            <th>ID</th>
+            <th>Fecha</th>
+            <th>Centro de Costo</th>
+            <th>NIT</th>
+            <th>Nombre</th>
+            <th>Producto/Servicio</th>
+            <th>Cantidad</th>
+            <th>Subtotal</th>
+            <th>IVA</th>
+            <th>Retención</th>
+            <th>Total a Pagar</th>
+            <th>Observaciones</th>
+            <th>Aprobado</th>
+            <th>Acciones</th> <!-- Nueva columna para acciones -->
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in anticipos %}
+        <tr id="anticipo-{{ item.id }}">
+            <td><input type="checkbox" name="anticipo_ids" value="{{ item.id }}" checked></td>
+            <td>{{ item.id }}</td>
+            <td>{{ item.fecha|date:"Y-m-d" }}</td>
+            <td>{{ item.centro_costo }}</td>
+            <td>{{ item.nit }}</td>
+            <td>{{ item.nombre }}</td>
+            <td>{{ item.producto_servicio }}</td>
+            <td>{{ item.cantidad }}</td>
+            <td>{{ item.subtotal }}</td>
+            <td>{{ item.valor_iva }}</td>
+            <td>{{ item.valor_retencion }}</td>
+            <td>{{ item.total_pagar }}</td>
+            <td>{{ item.observaciones }}</td>
+            <td>
+                {% if item.aprobado %}
+                    <span class="btn btn-success">Aprobado</span>
+                {% else %}
+                    <span class="btn btn-primary">Pendiente</span>
+                {% endif %}
+            </td>
+            <td>
+                <button class="btn btn-danger" onclick="ocultarAnticipo({{ item.id }})">Facturado y Archivado</button>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="14" class="text-center">No se encontraron registros.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+        </div>
+    </form>
 </div>
 
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+
+<!-- Script para seleccionar todos los checkboxes -->
+<script>
+document.getElementById('select_all').addEventListener('change', function() {
+    let checkboxes = document.querySelectorAll('input[name="anticipo_ids"]');
+    for (let checkbox of checkboxes) {
+        checkbox.checked = this.checked;
+    }
+});
+</script>
+
+<script>
+    function ocultarAnticipo(id) {
+        // Asegúrate de que el 'id' no esté vacío
+        if (!id) {
+            console.error("ID de anticipo no encontrado");
+            return;
+        }
+
+        // Enviar una solicitud AJAX para archivar el anticipo
+        $.ajax({
+            url: "/ocultar_anticipo/" + id + "/",  // Generar la URL manualmente usando el ID
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'  // Necesario para solicitudes POST en Django
+            },
+            success: function(response) {
+                // Ocultar la fila de la tabla
+                $('#anticipo-' + id).hide();
+            },
+            error: function(xhr, status, error) {
+                console.error("Error ocultando anticipo: ", error);
+            }
+        });
+    }
+</script>
+
 {% endblock content %}

@@ -110,35 +110,82 @@ class AnticipoForm(forms.ModelForm):
             "cantidad",
             "centro_costo",
             "producto_servicio",
-            "vlr_unitario",
+            "subtotal",
             "iva",
+            "valor_iva",  # Mostrar el valor calculado del IVA
             "retencion",
+            "valor_retencion",  # Mostrar el valor calculado de la retención
             "total_pagar",
             "observaciones",
-            "aprobado",
         ]
         widgets = {
             "fecha": forms.DateTimeInput(
-                attrs={"class": "form-control", "type": "datetime-local"}
+                attrs={"class": "form-control", "type": "date"}
             ),
             "nit": forms.TextInput(attrs={"class": "form-control"}),
             "nombre": forms.TextInput(attrs={"class": "form-control"}),
             "cantidad": forms.NumberInput(attrs={"class": "form-control", "min": 1}),
-            "centro_costo": forms.Select(attrs={"class": "form-control"}),
+            "centro_costo": forms.Select(
+                choices=[
+                    ("ADMINISTRACIÓN", "ADMINISTRACIÓN"),
+                    ("PRODUCCION", "PRODUCCIÓN"),
+                    ("ALEVINERA", "ALEVINERA"),
+                    ("ECOPEZ", "ECOPEZ"),
+                    ("FERRY", "FERRY"),
+                    ("CARRO VNS228", "CARRO VNS228"),
+                    ("CARRO WGY", "CARRO WGY"),
+                    ("CARRO THS 473", "CARRO THS 473"),
+                    ("CARRO PESCA SRP 254", "CARRO PESCA SRP 254"),
+                    ("TERMOKIN GQZ 727", "TERMOKIN GQZ 727"),
+                    ("TERMOKIN GRK 030", "TERMOKIN GRK 030"),
+                    ("THERMO KING THS 592", "THERMO KING THS 592"),
+                    ("UNIDAD COMERCIALIZACION", "UNIDAD COMERCIALIZACIÓN"),
+                ],
+                attrs={"class": "form-control"},
+            ),
             "producto_servicio": forms.TextInput(attrs={"class": "form-control"}),
-            "vlr_unitario": forms.NumberInput(
-                attrs={"class": "form-control", "min": 0, "step": "0.01"}
+            "subtotal": forms.NumberInput(attrs={"class": "form-control"}),
+            "iva": forms.Select(
+                choices=[(0, "Sin IVA"), (5, "5%"), (19, "19%")],
+                attrs={"class": "form-control"},
             ),
-            "iva": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
-            "retencion": forms.NumberInput(
-                attrs={"class": "form-control", "step": "0.01"}
+            "valor_iva": forms.NumberInput(
+                attrs={"class": "form-control", "readonly": True}
+            ),  # Solo lectura
+            "retencion": forms.Select(
+                choices=[
+                    (0, "Sin Retención"),
+                    (0.625, "0.625%"),
+                    (0.1, "0.1%"),
+                    (2, "2%"),
+                    (2.5, "2.5%"),
+                    (3.5, "3.5%"),
+                    (4, "4%"),
+                    (6, "6%"),
+                    (10, "10%"),
+                    (11, "11%"),
+                ],
+                attrs={"class": "form-control"},
             ),
+            "valor_retencion": forms.NumberInput(
+                attrs={"class": "form-control", "readonly": True}
+            ),  # Solo lectura
             "total_pagar": forms.NumberInput(
                 attrs={"class": "form-control", "readonly": True}
             ),
-            "observaciones": forms.Textarea(attrs={"class": "form-control", "rows": 2}),
-            "aprobado": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "observaciones": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
         }
+
+
+class AnticipoSearchForm(forms.Form):
+    fecha_inicio = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+    )
+    fecha_fin = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+    )
 
 
 class DiarioForm(forms.ModelForm):
