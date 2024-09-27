@@ -9,7 +9,6 @@
     <p><strong>Solicitado por:</strong> {{ solicitud.solicitado }}</p>
     <p><strong>Cantidad:</strong> {{ solicitud.cantidad }}</p>
     <p><strong>Destino:</strong> {{ solicitud.destino }}</p>
-    <p><strong>Estado:</strong> {{ solicitud.get_estado_display }}</p>
     
     <hr>
 
@@ -20,7 +19,6 @@
                 <th>Proveedor</th>
                 <th>Precio</th>
                 <th>Detalles</th>
-                <th>Estado</th>
                 <th>Cotización</th>
                 <th>Acciones</th>
             </tr>
@@ -31,7 +29,6 @@
                 <td>{{ cotizacion.proveedor }}</td>
                 <td>{{ cotizacion.precio_formateado }}</td>
                 <td>{{ cotizacion.detalles }}</td>
-                <td>{{ cotizacion.get_estado_display }}</td>
                 <td>
                     {% if cotizacion.cotizacion_pdf %}
                         <a href="{{ cotizacion.cotizacion_pdf.url }}" target="_blank">Ver Cotización</a>
@@ -60,7 +57,7 @@
         <ul class="list-group">
             {% for mensaje in mensajes %}
             <li class="list-group-item">
-                <strong>{{ mensaje.autor.username }}:</strong> {{ mensaje.contenido }}
+                <strong>{{ mensaje.remitente.username }}:</strong> {{ mensaje.contenido }}
                 <span class="text-muted float-right">{{ mensaje.fecha_envio }}</span>
             </li>
             {% endfor %}
