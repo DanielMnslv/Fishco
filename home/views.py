@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views import View
-from .models import Diario, Solicitud, Orden, Anticipo, Cotizacion
+from .models import Diario, Solicitud, Orden, Anticipo, Cotizacion, Mensaje
 from django.core.paginator import Paginator
 from .forms import (
     AprobacionRechazoForm,
@@ -12,6 +12,7 @@ from .forms import (
     OrdenForm,
     CotizacionForm,
     AnticipoSearchForm,
+    MensajeForm,
 )
 from django.contrib import messages
 from django.utils import timezone
@@ -27,6 +28,8 @@ from datetime import datetime
 from django.views.generic import ListView
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.dateparse import parse_date
+import os
+from django.conf import settings
 
 
 
@@ -73,51 +76,86 @@ class SolicitudView(LoginRequiredMixin, View):
 
 
 class SolicitudDetailView(LoginRequiredMixin, UserPassesTestMixin, View):
+    # Solo superusuario o staff pueden acceder a esta vista
     def test_func(self):
         return self.request.user.is_superuser or self.request.user.is_staff
+
     def get(self, request, pk):
         solicitud = get_object_or_404(Solicitud, pk=pk)
         form = AprobacionRechazoForm(instance=solicitud)
+        mensaje_form = MensajeForm()
+        mensajes = solicitud.mensajes.all().order_by("fecha_envio")
         cotizaciones = solicitud.cotizaciones.all()
-	# Formatear el precio de las cotizaciones
+
+        # Formatear el precio de las cotizaciones
         for cotizacion in cotizaciones:
-            cotizacion.precio_formateado = "${:,.2f}".format(cotizacion.precio).replace(',', 'X').replace('.', ',').replace('X', '.')
-        cotizacion_aprobada = cotizaciones.filter(estado="aprobada").exists()  # Obtener las cotizaciones relacionadas
+            cotizacion.precio_formateado = (
+                "${:,.2f}".format(cotizacion.precio)
+                .replace(",", "X")
+                .replace(".", ",")
+                .replace("X", ".")
+            )
+
+        cotizacion_aprobada = cotizaciones.filter(estado="aprobada").exists()
 
         return render(
             request,
             "pages/solicitud_detail.html",
             {
                 "form": form,
+                "mensaje_form": mensaje_form,
+                "mensajes": mensajes,
                 "solicitud": solicitud,
-                "cotizaciones": cotizaciones,  # Pasar las cotizaciones al contexto
-		"cotizacion_aprobada": cotizacion_aprobada,           
- },
+                "cotizaciones": cotizaciones,
+                "cotizacion_aprobada": cotizacion_aprobada,
+            },
         )
 
     def post(self, request, pk):
         solicitud = get_object_or_404(Solicitud, pk=pk)
         form = AprobacionRechazoForm(request.POST, instance=solicitud)
+        mensaje_form = MensajeForm(request.POST)
+
+        # Guardar el formulario de mensaje
+        if mensaje_form.is_valid():
+            nuevo_mensaje = mensaje_form.save(commit=False)
+            nuevo_mensaje.solicitud = solicitud
+            nuevo_mensaje.autor = request.user
+            nuevo_mensaje.save()
+            messages.success(request, "Mensaje enviado con éxito.")
+            return redirect("solicitud_detail", pk=solicitud.id)
+
         if form.is_valid():
-            form.save()
-            messages.success(request, "Solicitud actualizada con éxito.")
-            return redirect("ver_solicitudes")
+            try:
+                form.save()
+                messages.success(request, "Solicitud actualizada con éxito.")
+                return redirect("ver_solicitudes")
+            except Exception as e:
+                messages.error(request, f"Ocurrió un error al guardar: {str(e)}")
+        else:
+            messages.error(
+                request, "Hubo un error en el formulario. Por favor verifica los datos."
+            )
 
-        cotizaciones = (
-            solicitud.cotizaciones.all()
-        )  # Obtener las cotizaciones relacionadas
-	
-	# Formatear el precio de las cotizaciones
+        cotizaciones = solicitud.cotizaciones.all()
         for cotizacion in cotizaciones:
-            cotizacion.precio_formateado = "${:,.2f}".format(cotizacion.precio).replace(',', 'X').replace('.', ',').replace('X', '.')
+            cotizacion.precio_formateado = (
+                "${:,.2f}".format(cotizacion.precio)
+                .replace(",", "X")
+                .replace(".", ",")
+                .replace("X", ".")
+            )
 
+        mensajes = solicitud.mensajes.all().order_by("fecha_envio")
         return render(
             request,
             "pages/solicitud_detail.html",
             {
                 "form": form,
+                "mensaje_form": mensaje_form,
+                "mensajes": mensajes,
                 "solicitud": solicitud,
-                "cotizaciones": cotizaciones,  # Pasar las cotizaciones al contexto en caso de error
+                "cotizaciones": cotizaciones,
             },
         )
 
@@ -475,6 +513,22 @@ def generar_reporte_orden(request, orden_id):
     header_style = styles["Heading2"]
     normal_style = styles["Normal"]
 
+    # Añadir el logo al encabezado
+    logo_path = os.path.join(
+        settings.MEDIA_ROOT, "imagenes/Logo.png"
+    )  # Asegúrate de que la imagen del logo esté en esta ruta
+    logo = Image(logo_path, width=100, height=50)  # Ajusta el tamaño del logo
+    elements.append(logo)
+
+    # Añadir el texto del encabezado
+    header_text = Paragraph(
+        "ORDEN DE COMPRA O SERVICIO - C.I. PISCÍCOLA FISHCO S.A.S.", header_style
+    )
+    elements.append(header_text)
+
+    # Espacio después del encabezado
+    elements.append(Paragraph("<br/>", normal_style))
+
     # Título del documento
     title = Paragraph(f"Orden de Compra {orden.id}", title_style)
     elements.append(title)
@@ -485,41 +539,104 @@ def generar_reporte_orden(request, orden_id):
     # Datos de la orden en una tabla
     data = [
         ["Descripción", orden.descripcion],
-	["Fecha", datetime.now().strftime('%Y-%m-%d')],
+        ["Fecha", datetime.now().strftime("%Y-%m-%d")],
         ["Código Cotización", orden.codigo_cotizacion],
-        ["Precio", f"${orden.precio:,.2f}"],  # Formato de precio con separador de miles y 2 decimales
+        [
+            "Precio",
+            f"${orden.precio:,.2f}",
+        ],  # Formato de precio con separador de miles y 2 decimales
         ["Cantidad", str(orden.cantidad)],
         ["Empresa", orden.empresa],
         ["Tiempo de Entrega", orden.tiempo_entrega],
         ["Observaciones", orden.observaciones],
         ["Estado", orden.get_estado_display()],
     ]
-    
+
     table = Table(data)
     table.setStyle(
         TableStyle(
             [
-                ("BACKGROUND", (0, 0), (-1, 0), "#d0d0d0"),  # Fondo gris claro para la fila del encabezado
-                ("TEXTCOLOR", (0, 0), (-1, 0), "#000000"),  # Texto negro para el encabezado
-                ("ALIGN", (0, 0), (-1, -1), "LEFT"),  # Alineación del texto a la izquierda
-                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),  # Fuente en negrita para el encabezado
-                ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),  # Fuente normal para el contenido
-                ("BACKGROUND", (0, 1), (-1, -1), "#f9f9f9"),  # Fondo blanco para el resto de las filas
-                ("GRID", (0, 0), (-1, -1), 1, "#000000"),  # Rejilla negra alrededor de las celdas
+                (
+                    "BACKGROUND",
+                    (0, 0),
+                    (-1, 0),
+                    "#d0d0d0",
+                ),  # Fondo gris claro para la fila del encabezado
+                (
+                    "TEXTCOLOR",
+                    (0, 0),
+                    (-1, 0),
+                    "#000000",
+                ),  # Texto negro para el encabezado
+                (
+                    "ALIGN",
+                    (0, 0),
+                    (-1, -1),
+                    "LEFT",
+                ),  # Alineación del texto a la izquierda
+                (
+                    "FONTNAME",
+                    (0, 0),
+                    (-1, 0),
+                    "Helvetica-Bold",
+                ),  # Fuente en negrita para el encabezado
+                (
+                    "FONTNAME",
+                    (0, 1),
+                    (-1, -1),
+                    "Helvetica",
+                ),  # Fuente normal para el contenido
+                (
+                    "BACKGROUND",
+                    (0, 1),
+                    (-1, -1),
+                    "#f9f9f9",
+                ),  # Fondo blanco para el resto de las filas
+                (
+                    "GRID",
+                    (0, 0),
+                    (-1, -1),
+                    1,
+                    "#000000",
+                ),  # Rejilla negra alrededor de las celdas
                 ("BOX", (0, 0), (-1, -1), 1, "#000000"),  # Borde exterior negro
-                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),  # Alineación vertical en el medio
-                ("ALIGN", (1, 1), (-1, -1), "LEFT"),  # Alineación del texto en el contenido
+                (
+                    "VALIGN",
+                    (0, 0),
+                    (-1, -1),
+                    "MIDDLE",
+                ),  # Alineación vertical en el medio
+                (
+                    "ALIGN",
+                    (1, 1),
+                    (-1, -1),
+                    "LEFT",
+                ),  # Alineación del texto en el contenido
             ]
         )
     )
 
     elements.append(table)
 
+    # Añadir espacio antes de la firma
+    elements.append(Paragraph("<br/><br/>", normal_style))
+
+    # Incluir la imagen de la firma
+    firma_path = os.path.join(settings.MEDIA_ROOT, "imagenes/Firma.jpeg")
+    firma = Image(
+        firma_path, width=150, height=75
+    )  # Ajustar tamaño para ser más proporcional
+    elements.append(firma)
+
+    # Espacio y nombre del responsable de la firma
+    elements.append(Paragraph("", header_style))
 
     # Construir el documento PDF
     doc.build(elements)
 
     return response
+
+
 
 
 @staff_required  # O @superuser_required, dependiendo del nivel de restricción    

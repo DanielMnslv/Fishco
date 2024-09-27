@@ -1,5 +1,5 @@
 from django import forms
-from .models import Solicitud, Orden, Anticipo, Diario,Cotizacion
+from .models import Solicitud, Orden, Anticipo, Diario,Cotizacion,Mensaje
 from decimal import Decimal, ROUND_HALF_UP
 
 
@@ -73,6 +73,21 @@ class CotizacionForm(forms.ModelForm):
         attrs={"class": "form-control"}
     ),
 }
+
+
+class MensajeForm(forms.ModelForm):
+    class Meta:
+        model = Mensaje
+        fields = ["contenido"]
+        widgets = {
+            "contenido": forms.Textarea(
+                attrs={
+                    "rows": 3,
+                    "class": "form-control",
+                    "placeholder": "Escribe tu mensaje...",
+                }
+            ),
+        }
 
 
 class OrdenForm(forms.ModelForm):

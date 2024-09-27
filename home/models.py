@@ -4,6 +4,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from datetime import datetime
 from django.utils import timezone
 from django.core.validators import FileExtensionValidator
+from django.contrib.auth.models import User
 
 
 class Solicitud(models.Model):
@@ -52,7 +53,19 @@ class Cotizacion(models.Model):
     def __str__(self):
         return f"{self.proveedor} - {self.precio}"
 
+class Mensaje(models.Model):
+    solicitud = models.ForeignKey(
+        Solicitud, related_name="mensajes", on_delete=models.CASCADE
+    )
+    cotizacion = models.ForeignKey(
+        Cotizacion, on_delete=models.CASCADE, null=True, blank=True
+    )
+    remitente = models.ForeignKey(User, on_delete=models.CASCADE)
+    contenido = models.TextField()
+    fecha_envio = models.DateTimeField(default=timezone.now)
 
+    def __str__(self):
+        return f"Mensaje de {self.remitente.username} en {self.solicitud.nombre}"
 
 
 class Orden(models.Model):

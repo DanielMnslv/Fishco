@@ -8,7 +8,9 @@
     <p><strong>Descripción:</strong> {{ solicitud.descripcion }}</p>
     <p><strong>Solicitado por:</strong> {{ solicitud.solicitado }}</p>
     <p><strong>Cantidad:</strong> {{ solicitud.cantidad }}</p>
-    <p><strong>Destino:</strong> {{ solicitud.destino }}</p>    
+    <p><strong>Destino:</strong> {{ solicitud.destino }}</p>
+    <p><strong>Estado:</strong> {{ solicitud.get_estado_display }}</p>
+    
     <hr>
 
     <h3>Cotizaciones Subidas:</h3>
@@ -18,6 +20,7 @@
                 <th>Proveedor</th>
                 <th>Precio</th>
                 <th>Detalles</th>
+                <th>Estado</th>
                 <th>Cotización</th>
                 <th>Acciones</th>
             </tr>
@@ -29,7 +32,7 @@
                 <td>{{ cotizacion.precio_formateado }}</td>
                 <td>{{ cotizacion.detalles }}</td>
                 <td>{{ cotizacion.get_estado_display }}</td>
-               	<td>
+                <td>
                     {% if cotizacion.cotizacion_pdf %}
                         <a href="{{ cotizacion.cotizacion_pdf.url }}" target="_blank">Ver Cotización</a>
                     {% else %}
@@ -37,22 +40,38 @@
                     {% endif %}
                 </td>
                 <td>
-    {% if cotizacion.estado == 'aprobada' %}
-        <span class="badge bg-secondary">Aprobada</span>
-    {% else %}
-        <form method="post" action="{% url 'aprobar_cotizacion' cotizacion.id %}" style="display:inline;">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-success">Aprobar</button>
-        </form>
-    {% endif %}
-</td>
+                    {% if cotizacion.estado == 'aprobada' %}
+                        <span class="badge bg-secondary">Aprobada</span>
+                    {% else %}
+                        <form method="post" action="{% url 'aprobar_cotizacion' cotizacion.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success">Aprobar</button>
+                        </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-</tr>
-{% endfor %}
+    <hr>
+    <h3>Comentarios y Sugerencias</h3>
+    <div class="chat-box">
+        <ul class="list-group">
+            {% for mensaje in mensajes %}
+            <li class="list-group-item">
+                <strong>{{ mensaje.autor.username }}:</strong> {{ mensaje.contenido }}
+                <span class="text-muted float-right">{{ mensaje.fecha_envio }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
 
-</tbody>
-
-</table>
+    <form method="post">
+        {% csrf_token %}
+        {{ mensaje_form.as_p }}
+        <button type="submit" class="btn btn-primary">Enviar Mensaje</button>
+    </form>
 
     <a href="{% url 'ver_solicitudes' %}" class="btn btn-secondary mt-3">Volver a Solicitudes</a>
 </div>
