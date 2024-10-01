@@ -30,6 +30,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.dateparse import parse_date
 import os
 from django.conf import settings
+from django.db.models import Max
+
 
 
 
@@ -120,7 +122,7 @@ class SolicitudDetailView(LoginRequiredMixin, UserPassesTestMixin, View):
         if mensaje_form.is_valid():
             nuevo_mensaje = mensaje_form.save(commit=False)
             nuevo_mensaje.solicitud = solicitud
-            nuevo_mensaje.autor = request.user
+            nuevo_mensaje.remitente = request.user  # Aquí asignas el remitente
             nuevo_mensaje.save()
             messages.success(request, "Mensaje enviado con éxito.")
             return redirect("solicitud_detail", pk=solicitud.id)
@@ -311,7 +313,10 @@ def ver_solicitudes(request):
         solicitudes = solicitudes.filter(solicitado__icontains=solicitado_filtro)
     if imagen_filtro:
         solicitudes = solicitudes.filter(imagen_icontains=imagen_filtro)
-
+     
+     # Añadir el último mensaje de cada solicitud
+    for solicitud in solicitudes:
+        solicitud.ultimo_mensaje = solicitud.mensajes.order_by('-fecha_envio').first()
     # Aquí removemos la lógica de paginación para que se muestren todas las solicitudes
     return render(
         request, "pages/ver_solicitudes.html", {"solicitudes": solicitudes}
@@ -549,7 +554,6 @@ def generar_reporte_orden(request, orden_id):
         ["Empresa", orden.empresa],
         ["Tiempo de Entrega", orden.tiempo_entrega],
         ["Observaciones", orden.observaciones],
-        ["Estado", orden.get_estado_display()],
     ]
 
     table = Table(data)

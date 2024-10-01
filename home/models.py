@@ -60,7 +60,7 @@ class Mensaje(models.Model):
     cotizacion = models.ForeignKey(
         Cotizacion, on_delete=models.CASCADE, null=True, blank=True
     )
-    remitente = models.ForeignKey(User, on_delete=models.CASCADE)
+    remitente = models.ForeignKey(User, on_delete=models.CASCADE, null=False)
     contenido = models.TextField()
     fecha_envio = models.DateTimeField(default=timezone.now)
 
