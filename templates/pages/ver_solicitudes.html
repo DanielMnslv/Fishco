@@ -24,6 +24,14 @@
     .btn-mostaza:hover {
         background-color: #E0A800; /* Color más oscuro para hover */
     }
+    .lazyload {
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .lazyload.lazyloaded {
+        opacity: 1;
+    }
 </style>
 {% endblock extrastyle %}
 
@@ -193,6 +201,7 @@
                             <a href="#" target="_blank" class="btn btn-danger">No Aprobado</a>
                         {% endif %}
                     </td>
+
                     <td>
                         {% if solicitud.cotizaciones.count > 0 %}
                             <a href="{% url 'subir_cotizacion' solicitud.id %}" class="btn btn-mostaza">Cotización Subida</a>
@@ -281,7 +290,7 @@
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
 <script>
     function ocultarSolicitud(id) {
         if (!id) {
@@ -302,6 +311,27 @@
             }
         });
     }
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    let lazyImages = [].slice.call(document.querySelectorAll("img.lazyload"));
+
+    if ("IntersectionObserver" in window) {
+      let lazyImageObserver = new IntersectionObserver(function(entries, observer) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            let lazyImage = entry.target;
+            lazyImage.src = lazyImage.dataset.src;
+            lazyImageObserver.unobserve(lazyImage);
+          }
+        });
+      });
+
+      lazyImages.forEach(function(lazyImage) {
+        lazyImageObserver.observe(lazyImage);
+      });
+    }
+  });
 </script>
 {% endblock content %}
 
