@@ -711,26 +711,28 @@ def generar_pdf_anticipos_aprobados(request):
         ]
     ]
 
-    # Llenar la tabla con los datos
+    # Llenar la tabla con los datos y aplicar saltos de línea en las columnas largas
     for anticipo in anticipos_aprobados:
         data.append(
             [
                 anticipo.centro_costo,
                 anticipo.nit,
-                anticipo.nombre,
-                anticipo.producto_servicio,
+                Paragraph(anticipo.nombre, styles["Normal"]),  # Salto de línea para nombre
+                Paragraph(anticipo.producto_servicio, styles["Normal"]),  # Salto de línea para producto/servicio
                 str(anticipo.cantidad),
                 f"${anticipo.subtotal:,.2f}",
                 f"${anticipo.valor_iva:,.2f}",
                 f"${anticipo.valor_retencion:,.2f}",
                 f"${anticipo.total_pagar:,.2f}",
-                anticipo.observaciones or "N/A",
+                Paragraph(anticipo.observaciones or "N/A", styles["Normal"]),  # Salto de línea para observaciones
             ]
         )
 
-    # Crear la tabla sin especificar colWidths para que ajuste automáticamente
-    table = Table(data)
-    
+    # Ajustar el ancho de las columnas
+    col_widths = [80, 80, 100, 100, 60, 80, 80, 80, 80, 100]
+    table = Table(data, colWidths=col_widths)
+
+    # Estilos de la tabla
     table.setStyle(
         TableStyle(
             [
@@ -754,5 +756,3 @@ def generar_pdf_anticipos_aprobados(request):
     doc.build(elements)
 
     return response
-
-           
