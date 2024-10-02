@@ -34,12 +34,14 @@ if not SECRET_KEY:
 DEBUG = str2bool(os.environ.get("DEBUG"))
 # print(' DEBUG -> ' + str(DEBUG) )
 
-ALLOWED_HOSTS = ["89.117.147.197", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["89.117.147.197", "localhost", "127.0.0.1", "193.203.175.151", "193.19.106.53"]
 
 CSRF_TRUSTED_ORIGINS = [
     "http://89.117.147.197:8000",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
+    "http://193.203.175.151:8000",
+    "http://193.19.106.53:8000",
 ]
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
@@ -130,10 +132,10 @@ else:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.mysql",
-            "NAME": "u502315669_compras",
-            "USER": "u502315669_root",
-            "PASSWORD": "Fishco2024*",
-            "HOST": "fishcoadministrativo.com",
+            "NAME": "u997404903_compras",
+            "USER": "u997404903_root",
+            "PASSWORD": "@Fishco2024*",
+            "HOST": "193.203.175.151",
             "PORT": "3306",
         }
     }

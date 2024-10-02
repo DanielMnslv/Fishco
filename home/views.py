@@ -31,7 +31,7 @@ from django.utils.dateparse import parse_date
 import os
 from django.conf import settings
 from django.db.models import Max
-
+from django.core.cache import cache
 
 
 
@@ -280,7 +280,8 @@ def diario_view(request):
 @superuser_required
 @login_required
 def ver_solicitudes(request):
-    solicitudes = Solicitud.objects.filter(oculto=False)
+    solicitudes = Solicitud.objects.filter(oculto=False).prefetch_related('mensajes', 'cotizaciones')
+    cache.set('solicitudes', solicitudes, 300)  # Cache for 5 minutes
 
     # Filtrar por los campos
     id_filtro = request.GET.get("id")
