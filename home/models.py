@@ -35,23 +35,25 @@ class Cotizacion(models.Model):
         ("aprobada", "Aprobada"),
     ]
 
-    solicitud = models.ForeignKey(
-        Solicitud, related_name="cotizaciones", on_delete=models.CASCADE
-    )
+    solicitud = models.ForeignKey(Solicitud, related_name="cotizaciones", on_delete=models.CASCADE)
     proveedor = models.CharField(max_length=255)
     precio = models.DecimalField(max_digits=10, decimal_places=2)
     detalles = models.TextField(blank=True, null=True)
-    estado = models.CharField(
-        max_length=50, choices=ESTADO_CHOICES, default="pendiente"
-    )
-    cotizacion_pdf = models.FileField(
-        upload_to="cotizaciones_pdfs/", blank=True, null=True
-    )
+    estado = models.CharField(max_length=50, choices=ESTADO_CHOICES, default="pendiente")
+    cotizacion_pdf = models.FileField(upload_to="cotizaciones_pdfs/", blank=True, null=True)
     estado_aprobada = models.BooleanField(default=False)
     fecha = models.DateTimeField(default=timezone.now)
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Si la cotización ha sido aprobada, actualizar el estado de la solicitud
+        if self.estado == "aprobada":
+            self.solicitud.estado = "aprobado"
+            self.solicitud.save()
+
     def __str__(self):
         return f"{self.proveedor} - {self.precio}"
+
 
 class Mensaje(models.Model):
     solicitud = models.ForeignKey(

@@ -26,7 +26,7 @@ from reportlab.lib.pagesizes import A4,landscape
 from reportlab.lib.units import inch
 from datetime import datetime
 from django.views.generic import ListView
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt,csrf_protect
 from django.utils.dateparse import parse_date
 import os
 from django.conf import settings
@@ -37,7 +37,47 @@ from django.core.cache import cache
 
 @login_required
 def index(request):
-    return render(request, "pages/index.html", {"segment": "index"})
+    # Obtener estadísticas de Solicitudes
+    total_solicitudes = Solicitud.objects.count()
+    solicitudes_aprobadas = Solicitud.objects.filter(estado="aprobado").count()
+
+    # Obtener estadísticas de Cotizaciones
+    total_cotizaciones = Cotizacion.objects.count()
+    cotizaciones_aprobadas = Cotizacion.objects.filter(estado="aprobada").count()
+
+    # Obtener estadísticas de Anticipos
+    total_anticipos = Anticipo.objects.count()
+    anticipos_aprobados = Anticipo.objects.filter(aprobado=True).count()
+
+    # Obtener estadísticas de Órdenes
+    total_ordenes = Orden.objects.count()
+    ordenes_aprobadas = Orden.objects.filter(estado="APROBADA").count()
+
+    # Calcular porcentajes
+    porcentaje_solicitudes_aprobadas = (solicitudes_aprobadas / total_solicitudes * 100) if total_solicitudes > 0 else 0
+    porcentaje_cotizaciones_aprobadas = (cotizaciones_aprobadas / total_cotizaciones * 100) if total_cotizaciones > 0 else 0
+    porcentaje_anticipos_aprobados = (anticipos_aprobados / total_anticipos * 100) if total_anticipos > 0 else 0
+    porcentaje_ordenes_aprobadas = (ordenes_aprobadas / total_ordenes * 100) if total_ordenes > 0 else 0
+
+    context = {
+        'total_solicitudes': total_solicitudes,
+        'solicitudes_aprobadas': solicitudes_aprobadas,
+        'porcentaje_solicitudes_aprobadas': porcentaje_solicitudes_aprobadas,
+
+        'total_cotizaciones': total_cotizaciones,
+        'cotizaciones_aprobadas': cotizaciones_aprobadas,
+        'porcentaje_cotizaciones_aprobadas': porcentaje_cotizaciones_aprobadas,
+
+        'total_anticipos': total_anticipos,
+        'anticipos_aprobados': anticipos_aprobados,
+        'porcentaje_anticipos_aprobados': porcentaje_anticipos_aprobados,
+
+        'total_ordenes': total_ordenes,
+        'ordenes_aprobadas': ordenes_aprobadas,
+        'porcentaje_ordenes_aprobadas': porcentaje_ordenes_aprobadas,
+    }
+
+    return render(request, "pages/index.html", context)
 
 
 @login_required
@@ -488,17 +528,19 @@ class AnticipoListView(LoginRequiredMixin, StaffRequiredMixin, ListView):
         context["search_form"] = AnticipoSearchForm(self.request.GET)
         return context
 
-@staff_required  # O @superuser_required, dependiendo del nivel de restricción
+
+
 @login_required
-@csrf_exempt
-def ocultar_anticipo(request, anticipo_id):
-    try:
-        anticipo = get_object_or_404(Anticipo, id=anticipo_id)
-        anticipo.oculto = True  # Cambiar el estado del anticipo a "oculto"
-        anticipo.save()
-        return JsonResponse({"success": True}, status=200)
-    except Anticipo.DoesNotExist:
-        return JsonResponse({"error": "Anticipo no encontrado"}, status=404)
+@csrf_protect
+def ocultar_anticipos(request):
+    if request.method == 'POST':
+        anticipos_ids = request.POST.get("anticipos_ids", "").split(",")
+        if anticipos_ids:
+            Anticipo.objects.filter(id__in=anticipos_ids).update(oculto=True)
+            return JsonResponse({"success": True})
+        return JsonResponse({"success": False, "error": "No se seleccionaron anticipos"})
+
+
 
 
 @superuser_required  # O @staff_required, dependiendo del nivel de restricción

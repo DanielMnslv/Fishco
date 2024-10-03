@@ -19,7 +19,7 @@ from home.views import (
     ocultar_solicitud,
     aprobar_anticipos_masivamente,
     generar_pdf_anticipos_aprobados,
-    ocultar_anticipo,
+    ocultar_anticipos,
 )
 from django.conf.urls.static import static
 from django.conf import settings
@@ -74,9 +74,7 @@ urlpatterns = [
     ),
     path("diario/", diario_view, name="diario"),
     path("ocultar_solicitud/<int:id>/", ocultar_solicitud, name="ocultar_solicitud"),
-    path(
-        "ocultar_anticipo/<int:anticipo_id>/", ocultar_anticipo, name="ocultar_anticipo"
-    ),
+    path('ocultar_anticipos/', ocultar_anticipos, name='ocultar_anticipos'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
