@@ -24,6 +24,14 @@
           </a>
         </li>
 
+        <!-- Nueva opción para ver solicitudes personales -->
+<li class="nav-item {% if 'mis_solicitudes' in segment %}active{% endif %}">
+  <a href="{% url 'mis_solicitudes' %}" class="nav-link">
+    <span class="pcoded-micon"><i class="feather icon-file-text"></i></span>
+    <span class="pcoded-mtext">Mis Solicitudes</span>
+  </a>
+</li>
+
         <!-- Opciones exclusivas para superusuarios -->
         {% if request.user.is_superuser %}
           <li class="nav-item {% if 'orden' in segment %}active{% endif %}">
@@ -113,4 +121,5 @@
     </div>
   </div>
 </nav>
+
 

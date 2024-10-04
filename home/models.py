@@ -5,6 +5,7 @@ from datetime import datetime
 from django.utils import timezone
 from django.core.validators import FileExtensionValidator
 from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 
 class Solicitud(models.Model):
@@ -17,17 +18,25 @@ class Solicitud(models.Model):
     observaciones = models.TextField(blank=True, null=True)
     solicitado = models.CharField(max_length=255)
     imagen = models.ImageField(upload_to="imagenes/", blank=True, null=True)
-    oculto = models.BooleanField(
-        default=False
-    )  # Nuevo campo para marcar solicitudes ocultas
+    oculto = models.BooleanField(default=False)
     estado = models.CharField(
         max_length=50,
-        choices=[("pendiente", "Pendiente"), ("aprobado", "Aprobado")],
+        choices=[
+            ("pendiente", "Pendiente"),
+            ("aprobado", "Aprobado"),
+            ("rechazado", "Rechazado")  # Puedes agregar más estados si los necesitas
+        ],
         default="pendiente",
+    )
+    usuario = models.ForeignKey(
+        get_user_model(), 
+        on_delete=models.CASCADE, 
+        default=50  # ID del usuario por defecto
     )
 
     def __str__(self):
-        return  f"{self.nombre} - {self.cantidad}"
+        return f"{self.nombre} - {self.cantidad}"
+
 
 class Cotizacion(models.Model):
     ESTADO_CHOICES = [
@@ -197,3 +206,4 @@ class Diario(models.Model):
 
     def __str__(self):
         return f"Diario {self.nombre} - {self.empresa}"
+

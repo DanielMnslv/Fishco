@@ -20,6 +20,7 @@ from home.views import (
     aprobar_anticipos_masivamente,
     generar_pdf_anticipos_aprobados,
     ocultar_anticipos,
+    mis_solicitudes,
 )
 from django.conf.urls.static import static
 from django.conf import settings
@@ -34,6 +35,7 @@ urlpatterns = [
     path("solicitud/", SolicitudView.as_view(), name="solicitud"),
     path("ver_solicitudes/", ver_solicitudes, name="ver_solicitudes"),
     path("solicitud/<int:pk>/", SolicitudDetailView.as_view(), name="solicitud_detail"),
+    path('mis-solicitudes/', mis_solicitudes, name='mis_solicitudes'),
     path(
         "subir_cotizacion/<int:solicitud_id>/",
         subir_cotizacion,

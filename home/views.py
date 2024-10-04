@@ -111,7 +111,9 @@ class SolicitudView(LoginRequiredMixin, View):
     def post(self, request):
         form = SolicitudForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            solicitud = form.save(commit=False)  # No guardar aún, para asignar el usuario
+            solicitud.usuario = request.user  # Asignar el usuario autenticado
+            solicitud.save()  # Ahora sí, guardar con el usuario asignado
             messages.success(request, "Solicitud creada con éxito.")
             return redirect("index")
         return render(request, "pages/solicitud.html", {"form": form})
@@ -224,7 +226,6 @@ def subir_cotizacion(request, solicitud_id):
 
 # Vista para aprobar cotización (solo usuarios con permisos específicos)
 @user_passes_test(lambda u: u.id in [31, 33])  # IDs permitidos
-@login_required
 @login_required
 def aprobar_cotizacion(request, cotizacion_id):
     # Verificar si el usuario tiene los ID permitidos
@@ -363,6 +364,20 @@ def ver_solicitudes(request):
         request, "pages/ver_solicitudes.html", {"solicitudes": solicitudes}
     )
 
+@login_required
+def mis_solicitudes(request):
+    # Obtener las solicitudes del usuario autenticado
+    solicitudes = Solicitud.objects.filter(usuario=request.user).prefetch_related('mensajes')
+
+    # Para cada solicitud, obtener el último mensaje (si existe)
+    for solicitud in solicitudes:
+        solicitud.ultimo_mensaje = solicitud.mensajes.order_by('-fecha_envio').first()  # Obtiene el mensaje más reciente
+
+    context = {
+        'solicitudes': solicitudes,
+    }
+
+    return render(request, 'pages/mis_solicitudes.html', context)
 
 # Vista para ver órdenes (solo superusuarios)
 @superuser_required
@@ -797,4 +812,3 @@ def generar_pdf_anticipos_aprobados(request):
     # Construir el PDF
     doc.build(elements)
 
-    return response
