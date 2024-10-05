@@ -440,7 +440,7 @@ def ver_diario(request):
             pass  # Si ocurre un error con las fechas, no filtrar
 
     # Paginación si es necesario
-    paginator = Paginator(diario, 10)
+    paginator = Paginator(diario, 50)
     page_number = request.GET.get("page")
     diario_page = paginator.get_page(page_number)
 
@@ -497,23 +497,21 @@ def aprobar_anticipo(request, anticipo_id):
     return render(request, "aprobar_anticipo.html", {"anticipo": anticipo})
 
 
-# Vista para aprobar anticipos masivamente (solo usuarios con permisos específicos)
 @user_passes_test(lambda u: u.id in [31, 33])  # IDs permitidos
 @login_required
 def aprobar_anticipos_masivamente(request):
-    # Verificar si el usuario tiene los ID permitidos
-    if request.user.id not in [31, 33]:
-        messages.error(request, "No tienes permiso para aprobar anticipos.")
-        return redirect("ver_anticipos")
-    
     if request.method == "POST":
+        # Obtener la lista de IDs seleccionados
         anticipo_ids = request.POST.getlist("anticipo_ids")
-        # Aprobamos los anticipos seleccionados
-        Anticipo.objects.filter(id__in=anticipo_ids).update(aprobado=True)
-
-        messages.success(request, "Anticipos aprobados con éxito.")
+        
+        if anticipo_ids:
+            # Actualizar los anticipos seleccionados para marcarlos como aprobados
+            Anticipo.objects.filter(id__in=anticipo_ids).update(aprobado=True)
+            messages.success(request, "Anticipos aprobados con éxito.")
+        else:
+            messages.error(request, "No se seleccionaron anticipos para aprobar.")
+    
     return redirect("ver_anticipos")
-
 
 class AnticipoListView(LoginRequiredMixin, StaffRequiredMixin, ListView):
     model = Anticipo
@@ -563,9 +561,14 @@ def ocultar_anticipos(request):
     if request.method == 'POST':
         anticipos_ids = request.POST.get("anticipos_ids", "").split(",")
         if anticipos_ids:
-            Anticipo.objects.filter(id__in=anticipos_ids).update(oculto=True)
-            return JsonResponse({"success": True})
+            # Verificar si se encontraron anticipos con esos IDs
+            updated_count = Anticipo.objects.filter(id__in=anticipos_ids).update(oculto=True)
+            if updated_count > 0:
+                return JsonResponse({"success": True})
+            else:
+                return JsonResponse({"success": False, "error": "No se encontraron anticipos con los IDs proporcionados"})
         return JsonResponse({"success": False, "error": "No se seleccionaron anticipos"})
+
 
 
 
@@ -712,7 +715,6 @@ def generar_reporte_orden(request, orden_id):
 
 
 
-
 @staff_required  # O @superuser_required, dependiendo del nivel de restricción    
 @login_required
 def generar_pdf_anticipos_aprobados(request):
@@ -780,26 +782,28 @@ def generar_pdf_anticipos_aprobados(request):
         ]
     ]
 
-    # Llenar la tabla con los datos
+    # Llenar la tabla con los datos y aplicar saltos de línea en las columnas largas
     for anticipo in anticipos_aprobados:
         data.append(
             [
                 anticipo.centro_costo,
                 anticipo.nit,
-                anticipo.nombre,
-                anticipo.producto_servicio,
+                Paragraph(anticipo.nombre, styles["Normal"]),  # Salto de línea para nombre
+                Paragraph(anticipo.producto_servicio, styles["Normal"]),  # Salto de línea para producto/servicio
                 str(anticipo.cantidad),
                 f"${anticipo.subtotal:,.2f}",
                 f"${anticipo.valor_iva:,.2f}",
                 f"${anticipo.valor_retencion:,.2f}",
                 f"${anticipo.total_pagar:,.2f}",
-                anticipo.observaciones or "N/A",
+                Paragraph(anticipo.observaciones or "N/A", styles["Normal"]),  # Salto de línea para observaciones
             ]
         )
 
-    # Crear la tabla sin especificar colWidths para que ajuste automáticamente
-    table = Table(data)
-    
+    # Ajustar el ancho de las columnas
+    col_widths = [80, 80, 100, 100, 60, 80, 80, 80, 80, 100]
+    table = Table(data, colWidths=col_widths)
+
+    # Estilos de la tabla
     table.setStyle(
         TableStyle(
             [
@@ -822,4 +826,5 @@ def generar_pdf_anticipos_aprobados(request):
     # Construir el PDF
     doc.build(elements)
 
-    return response
+    # Devolver la respuesta
+    return response  # Este es el return que faltaba
