@@ -18,36 +18,37 @@
                 </tr>
             </thead>
             <tbody>
-                {% for solicitud in solicitudes %}
-                <tr>
-                    <td>{{ solicitud.id }}</td>
-                    <td>{{ solicitud.fecha|date:"d/m/Y" }}</td>
-                    <td>{{ solicitud.nombre }}</td>
-                    <td>{{ solicitud.cantidad }}</td>
-                    <td>
-                        {% if solicitud.estado == "aprobado" %}
-                            <span class="badge badge-success">Aprobado</span>
-                        {% elif solicitud.estado == "rechazado" %}
-                            <span class="badge badge-danger">Rechazado</span>
-                        {% elif solicitud.estado == "pendiente" %}
-                            <span class="badge badge-warning">Pendiente</span>
-                        {% else %}
-                            <span class="badge badge-secondary">{{ solicitud.estado|capfirst }}</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if solicitud.ultimo_mensaje %}
-                           {{ solicitud.ultimo_mensaje.remitente.username }}: {{ solicitud.ultimo_mensaje.contenido }}
-                        {% else %}
-                            No hay observaciones
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
+    {% for solicitud in solicitudes %}
+    <tr>
+        <td>{{ solicitud.id }}</td>
+        <td>{{ solicitud.fecha|date:"d/m/Y" }}</td>
+        <td>{{ solicitud.nombre }}</td>
+        <td>{{ solicitud.cantidad }}</td>
+        <td>
+            {% if solicitud.estado == "aprobado" %}
+                <span class="badge badge-success">Aprobado</span>
+            {% elif solicitud.estado == "revisado por compras" %}
+                <span class="badge badge-info">Revisado por Compras</span>
+            {% elif solicitud.estado == "pendiente" %}
+                <span class="badge badge-warning">Pendiente</span>
+            {% else %}
+                <span class="badge badge-secondary">{{ solicitud.estado|capfirst }}</span>
+            {% endif %}
+        </td>
+        <td>
+            {% if solicitud.ultimo_mensaje %}
+                {{ solicitud.ultimo_mensaje.remitente.username }}: {{ solicitud.ultimo_mensaje.contenido }}
+            {% else %}
+                No hay observaciones
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
         </table>
     </div>
 
     </div>
 {% endblock %}
+
 

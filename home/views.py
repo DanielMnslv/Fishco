@@ -367,17 +367,29 @@ def ver_solicitudes(request):
 @login_required
 def mis_solicitudes(request):
     # Obtener las solicitudes del usuario autenticado
-    solicitudes = Solicitud.objects.filter(usuario=request.user).prefetch_related('mensajes')
+    solicitudes = Solicitud.objects.filter(usuario=request.user).prefetch_related('mensajes', 'cotizaciones')
 
-    # Para cada solicitud, obtener el último mensaje (si existe)
+    # Para cada solicitud, obtener el último mensaje y el estado calculado
     for solicitud in solicitudes:
-        solicitud.ultimo_mensaje = solicitud.mensajes.order_by('-fecha_envio').first()  # Obtiene el mensaje más reciente
+        solicitud.ultimo_mensaje = solicitud.mensajes.order_by('-fecha_envio').first()  # Obtener el mensaje más reciente
+        
+        # Lógica para calcular el estado de la solicitud basado en las cotizaciones
+        cotizaciones = solicitud.cotizaciones.all()
+        
+        if cotizaciones.exists():  # Si tiene cotizaciones
+            if cotizaciones.filter(estado='aprobada').exists():
+                solicitud.estado = "aprobado"
+            else:
+                solicitud.estado = "revisado por compras"
+        else:
+            solicitud.estado = "pendiente"
 
     context = {
         'solicitudes': solicitudes,
     }
 
     return render(request, 'pages/mis_solicitudes.html', context)
+
 
 # Vista para ver órdenes (solo superusuarios)
 @superuser_required
@@ -768,28 +780,26 @@ def generar_pdf_anticipos_aprobados(request):
         ]
     ]
 
-    # Llenar la tabla con los datos y aplicar saltos de línea en las columnas largas
+    # Llenar la tabla con los datos
     for anticipo in anticipos_aprobados:
         data.append(
             [
                 anticipo.centro_costo,
                 anticipo.nit,
-                Paragraph(anticipo.nombre, styles["Normal"]),  # Salto de línea para nombre
-                Paragraph(anticipo.producto_servicio, styles["Normal"]),  # Salto de línea para producto/servicio
+                anticipo.nombre,
+                anticipo.producto_servicio,
                 str(anticipo.cantidad),
                 f"${anticipo.subtotal:,.2f}",
                 f"${anticipo.valor_iva:,.2f}",
                 f"${anticipo.valor_retencion:,.2f}",
                 f"${anticipo.total_pagar:,.2f}",
-                Paragraph(anticipo.observaciones or "N/A", styles["Normal"]),  # Salto de línea para observaciones
+                anticipo.observaciones or "N/A",
             ]
         )
 
-    # Ajustar el ancho de las columnas
-    col_widths = [80, 80, 100, 100, 60, 80, 80, 80, 80, 100]
-    table = Table(data, colWidths=col_widths)
-
-    # Estilos de la tabla
+    # Crear la tabla sin especificar colWidths para que ajuste automáticamente
+    table = Table(data)
+    
     table.setStyle(
         TableStyle(
             [
@@ -812,3 +822,4 @@ def generar_pdf_anticipos_aprobados(request):
     # Construir el PDF
     doc.build(elements)
 
+    return response
