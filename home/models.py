@@ -16,7 +16,12 @@ class Solicitud(models.Model):
     destino = models.CharField(max_length=255)
     tipo = models.CharField(max_length=50)
     observaciones = models.TextField(blank=True, null=True)
-    imagen = models.ImageField(upload_to="imagenes/", blank=True, null=True)
+    archivo = models.FileField(
+        upload_to='archivos/', 
+        blank=True, 
+        null=True,
+        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'pdf', 'xlsx', 'xls'])]
+    )
     oculto = models.BooleanField(default=False)
     estado = models.CharField(
         max_length=50,

@@ -14,7 +14,7 @@ class SolicitudForm(forms.ModelForm):
             "destino",
             "tipo",
             "observaciones",
-            "imagen",
+            "archivo",
         ]
         widgets = {
             "fecha": forms.DateTimeInput(
@@ -34,7 +34,7 @@ class SolicitudForm(forms.ModelForm):
             ),
             "tipo": forms.TextInput(attrs={"class": "form-control", "required": True}),
             "observaciones": forms.Textarea(attrs={"class": "form-control", "rows": 2}),
-            "imagen": forms.ClearableFileInput(attrs={"class": "form-control"}),
+            "archivo": forms.ClearableFileInput(attrs={"class": "form-control", "accept": ".jpg,.jpeg,.png,.pdf,.xls,.xlsx"}),
         }
 
 

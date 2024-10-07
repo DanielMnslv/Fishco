@@ -359,10 +359,17 @@ def ver_solicitudes(request):
      # Añadir el último mensaje de cada solicitud
     for solicitud in solicitudes:
         solicitud.ultimo_mensaje = solicitud.mensajes.order_by('-fecha_envio').first()
-    # Aquí removemos la lógica de paginación para que se muestren todas las solicitudes
-    return render(
-        request, "pages/ver_solicitudes.html", {"solicitudes": solicitudes}
-    )
+        solicitud.cotizacion_aprobada = solicitud.cotizaciones.filter(estado="aprobada").first()
+        # Determinar si el archivo es una imagen
+        if solicitud.archivo and solicitud.archivo.url:
+            extension = os.path.splitext(solicitud.archivo.url)[1].lower()
+            solicitud.is_image = extension in ['.jpg', '.jpeg', '.png']
+            solicitud.is_pdf = extension == '.pdf'
+        else:
+            solicitud.is_image = False
+            solicitud.is_pdf = False
+
+    return render(request, "pages/ver_solicitudes.html", {"solicitudes": solicitudes})
 
 @login_required
 def mis_solicitudes(request):

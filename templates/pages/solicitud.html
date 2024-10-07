@@ -46,13 +46,14 @@
                         <option value="UNIDAD COMERCIALIZACION">UNIDAD COMERCIALIZACION</option>
                   </select>
                 </div>
+                <!-- Modificar para aceptar imágenes, PDFs y archivos Excel -->
                 <div class="form-group">
-                  <label for="imagen">Imagen del Producto o Servicio</label>
-                  <input type="file" id="imagen" name="imagen" class="form-control" accept="image/*">
+                  <label for="archivo">Archivo del Producto o Servicio</label>
+                  <input type="file" id="archivo" name="archivo" class="form-control" accept=".jpg,.jpeg,.png,.pdf,.xls,.xlsx,.csv">
                 </div>
                 <div class="form-group">
                   <label for="cantidad">Cantidad</label>
-                  <input type="number" id="cantidad" name="cantidad" class="form-control" min="1" required>
+                  <input type="number" id="cantidad" name="cantidad" class="form-control" min="1">
                 </div>
               </div>
               <div class="col-md-6">
