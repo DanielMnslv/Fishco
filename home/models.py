@@ -203,7 +203,7 @@ class Diario(models.Model):
         ],
     )
     documento_pdf = models.FileField(upload_to="documentos_pdf/", blank=True, null=True)
-
+    oculto = models.BooleanField(default=False)
     def __str__(self):
         return f"Diario {self.nombre} - {self.empresa}"
 

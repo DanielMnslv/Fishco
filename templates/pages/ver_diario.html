@@ -20,9 +20,6 @@
     .table-container {
         margin-top: 20px;
     }
-    .pagination {
-        margin-top: 20px;
-    }
 </style>
 {% endblock extrastyle %}
 
@@ -30,26 +27,47 @@
 <div class="container">
     <h1>Ver Órdenes Diarias</h1>
 
-    <!-- Formulario de búsqueda por rango de fechas -->
+    <!-- Filtros por fechas -->
     <form method="GET" action="">
         <div class="row">
             <div class="col-md-4 mb-3">
                 <label for="fecha_inicio">Fecha Inicio:</label>
-                <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-control" value="{{ request.GET.fecha_inicio }}">
+                <input type="date" name="fecha_inicio" class="form-control" value="{{ request.GET.fecha_inicio }}">
             </div>
             <div class="col-md-4 mb-3">
                 <label for="fecha_fin">Fecha Fin:</label>
-                <input type="date" id="fecha_fin" name="fecha_fin" class="form-control" value="{{ request.GET.fecha_fin }}">
+                <input type="date" name="fecha_fin" class="form-control" value="{{ request.GET.fecha_fin }}">
+            </div>
+            <div class="col-md-4 mb-3 align-self-end">
+                <button type="submit" class="btn btn-primary">Filtrar</button>
             </div>
         </div>
-        <button type="submit" class="btn btn-primary">Buscar</button>
     </form>
 
-    <!-- Tabla de resultados -->
+    <!-- Tabla de botones -->
+    <div class="table-container mb-3">
+        <table class="table table-borderless">
+            <tr>
+                <td>
+                    <form method="GET" action="{% url 'generar_pdf_diarios' %}">
+                        <input type="hidden" name="fecha_inicio" value="{{ request.GET.fecha_inicio }}">
+                        <input type="hidden" name="fecha_fin" value="{{ request.GET.fecha_fin }}">
+                        <button type="submit" class="btn btn-warning">Descargar PDF de Órdenes Diarias</button>
+                    </form>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-danger" id="ocultar-seleccionados-btn">Facturado y Archivado</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Tabla de diarios -->
     <div class="table-container">
-        <table class="table table-striped">
+        <table class="table table-striped table-bordered">
             <thead>
                 <tr>
+                    <th><input type="checkbox" id="select_all" /></th>
                     <th>ID</th>
                     <th>Tiempo de Entrega</th>
                     <th>Nombre</th>
@@ -58,12 +76,13 @@
                     <th>Destino</th>
                     <th>Medio de Pago</th>
                     <th>Documento PDF</th>
+                    <th>Aprobado</th>
                 </tr>
             </thead>
             <tbody>
-                {% for item in diario %}
-                <tr>
-                    <td>{{ item.id }}</td>
+                {% for item in diarios %}
+                <tr id="diario-{{ item.id }}">
+                    <td><input type="checkbox" name="diario_ids" value="{{ item.id }}"></td>
                     <td>{{ item.tiempo_entrega }}</td>
                     <td>{{ item.nombre }}</td>
                     <td>{{ item.empresa }}</td>
@@ -77,36 +96,90 @@
                             No disponible
                         {% endif %}
                     </td>
+                    <td>
+                        {% if item.aprobado %}
+                            <span class="btn btn-success">Aprobado</span>
+                        {% else %}
+                            <span class="btn btn-primary">Pendiente</span>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="8" class="text-center">No se encontraron registros.</td>
+                    <td colspan="10" class="text-center">No se encontraron registros.</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+    </div>
 
-        <!-- Paginación -->
-        <div class="pagination">
-            <span class="step-links">
-                {% if diario.has_previous %}
-                    <a href="?page=1{% if request.GET.fecha_inicio %}&fecha_inicio={{ request.GET.fecha_inicio }}{% endif %}{% if request.GET.fecha_fin %}&fecha_fin={{ request.GET.fecha_fin }}{% endif %}">&laquo; Primera</a>
-                    <a href="?page={{ diario.previous_page_number }}{% if request.GET.fecha_inicio %}&fecha_inicio={{ request.GET.fecha_inicio }}{% endif %}{% if request.GET.fecha_fin %}&fecha_fin={{ request.GET.fecha_fin }}{% endif %}">Anterior</a>
-                {% endif %}
+    <!-- Paginación -->
+    <div class="pagination">
+        <span class="step-links">
+            {% if diarios.has_previous %}
+                <a href="?page=1">&laquo; Primera</a>
+                <a href="?page={{ diarios.previous_page_number }}">Anterior</a>
+            {% endif %}
 
-                <span class="current">
-                    Página {{ diario.number }} de {{ diario.paginator.num_pages }}.
-                </span>
-
-                {% if diario.has_next %}
-                    <a href="?page={{ diario.next_page_number }}{% if request.GET.fecha_inicio %}&fecha_inicio={{ request.GET.fecha_inicio }}{% endif %}{% if request.GET.fecha_fin %}&fecha_fin={{ request.GET.fecha_fin }}{% endif %}">Siguiente</a>
-                    <a href="?page={{ diario.paginator.num_pages }}{% if request.GET.fecha_inicio %}&fecha_inicio={{ request.GET.fecha_inicio }}{% endif %}{% if request.GET.fecha_fin %}&fecha_fin={{ request.GET.fecha_fin }}{% endif %}">Última &raquo;</a>
-                {% endif %}
+            <span class="current">
+                Página {{ diarios.number }} de {{ diarios.paginator.num_pages }}.
             </span>
-        </div>
+
+            {% if diarios.has_next %}
+                <a href="?page={{ diarios.next_page_number }}">Siguiente</a>
+                <a href="?page={{ diarios.paginator.num_pages }}">Última &raquo;</a>
+            {% endif %}
+        </span>
     </div>
 </div>
 
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script>
+    // Función para seleccionar todos los checkboxes
+    document.getElementById('select_all').addEventListener('change', function() {
+        let checkboxes = document.querySelectorAll('input[name="diario_ids"]');
+        for (let checkbox of checkboxes) {
+            checkbox.checked = this.checked;
+        }
+    });
+
+    // Función para ocultar diarios seleccionados mediante AJAX
+    document.getElementById('ocultar-seleccionados-btn').addEventListener('click', function() {
+        let seleccionados = [];
+        document.querySelectorAll('input[name="diario_ids"]:checked').forEach((checkbox) => {
+            seleccionados.push(checkbox.value);
+        });
+
+        if (seleccionados.length === 0) {
+            alert("No has seleccionado ningún diario.");
+            return;
+        }
+
+        // Realizar una petición AJAX para ocultar los diarios seleccionados
+        $.ajax({
+            url: "{% url 'ocultar_diario' %}",
+            method: "POST",
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            data: {
+                "diarios_ids": seleccionados.join(",")
+            },
+            success: function(response) {
+                if (response.success) {
+                    seleccionados.forEach(id => {
+                        $('#diario-' + id).fadeOut();  // Ocultar las filas seleccionadas
+                    });
+                } else {
+                    alert(response.error || "Error al ocultar diarios seleccionados.");
+                }
+            },
+            error: function() {
+                alert("Ocurrió un error al intentar ocultar los diarios seleccionados.");
+            }
+        });
+    });
+</script>
+
 {% endblock content %}
 

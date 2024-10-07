@@ -21,6 +21,8 @@ from home.views import (
     generar_pdf_anticipos_aprobados,
     ocultar_anticipos,
     mis_solicitudes,
+    ocultar_diario,
+    generar_pdf_diarios,
 )
 from django.conf.urls.static import static
 from django.conf import settings
@@ -75,9 +77,12 @@ urlpatterns = [
         name="generar_pdf_anticipos_aprobados",
     ),
     path("diario/", diario_view, name="diario"),
+    path('generar_pdf_diarios/', generar_pdf_diarios, name='generar_pdf_diarios'),
     path("ocultar_solicitud/<int:id>/", ocultar_solicitud, name="ocultar_solicitud"),
     path('ocultar_anticipos/', ocultar_anticipos, name='ocultar_anticipos'),
+    path('ocultar_diario/', ocultar_diario, name='ocultar_diario'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 

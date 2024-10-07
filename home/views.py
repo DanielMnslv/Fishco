@@ -420,7 +420,7 @@ def ver_ordenes(request):
 @staff_required
 @login_required
 def ver_diario(request):
-    diario = Diario.objects.all()
+    diarios = Diario.objects.all()
 
     # Obtener fechas de inicio y fin de los filtros
     fecha_inicio = request.GET.get("fecha_inicio")
@@ -435,17 +435,26 @@ def ver_diario(request):
 
             # Filtrar usando las fechas
             if fecha_inicio and fecha_fin:
-                diario = diario.filter(tiempo_entrega__range=[fecha_inicio, fecha_fin])
+                diarios = diarios.filter(tiempo_entrega__range=[fecha_inicio, fecha_fin])
         except ValueError:
             pass  # Si ocurre un error con las fechas, no filtrar
 
     # Paginación si es necesario
-    paginator = Paginator(diario, 50)
+    paginator = Paginator(diarios, 50)
     page_number = request.GET.get("page")
     diario_page = paginator.get_page(page_number)
 
-    return render(request, "pages/ver_diario.html", {"diario": diario_page})
+    return render(request, "pages/ver_diario.html", {"diarios": diario_page})
 
+@login_required
+@staff_required
+def ocultar_diario(request):
+    if request.method == "POST":
+        diarios_ids = request.POST.get("diarios_ids", "")
+        diarios_ids = diarios_ids.split(",")
+        Diario.objects.filter(id__in=diarios_ids).update(oculto=True)
+        return JsonResponse({"success": True})
+    return JsonResponse({"success": False, "error": "Método no permitido"})
 
 @staff_required
 @login_required
@@ -828,3 +837,97 @@ def generar_pdf_anticipos_aprobados(request):
 
     # Devolver la respuesta
     return response  # Este es el return que faltaba
+
+
+@login_required
+@staff_required
+def generar_pdf_diarios(request):
+    # Obtener las fechas de inicio y fin del filtro
+    fecha_inicio = request.GET.get("fecha_inicio")
+    fecha_fin = request.GET.get("fecha_fin")
+
+    # Verificar que se proporcionen las fechas
+    if not fecha_inicio or not fecha_fin:
+        messages.error(request, "Debes seleccionar un rango de fechas para descargar el PDF.")
+        return redirect("ver_diario")
+
+    try:
+        fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
+        fecha_fin = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
+    except ValueError:
+        messages.error(request, "Formato de fecha inválido.")
+        return redirect("ver_diario")
+
+    # Filtrar diarios por las fechas
+    diarios_filtrados = Diario.objects.filter(tiempo_entrega__range=(fecha_inicio, fecha_fin))
+
+    if not diarios_filtrados.exists():
+        messages.error(request, "No hay órdenes diarias en el rango de fechas seleccionado.")
+        return redirect("ver_diario")
+
+    # Crear la respuesta HTTP para descargar el PDF
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="ordenes_diarias_{fecha_inicio}_{fecha_fin}.pdf"'
+
+    # Crear el documento PDF en formato apaisado
+    doc = SimpleDocTemplate(response, pagesize=landscape(A4), leftMargin=0.5 * inch, rightMargin=0.5 * inch)
+    elements = []
+
+    # Encabezado del PDF
+    styles = getSampleStyleSheet()
+    elements.append(Paragraph(f"Órdenes Diarias desde {fecha_inicio} hasta {fecha_fin}", styles["Title"]))
+
+    # Crear una tabla con los datos de las órdenes diarias
+    data = [
+        [
+            Paragraph("ID", styles["Heading4"]), 
+            Paragraph("Tiempo de Entrega", styles["Heading4"]), 
+            Paragraph("Nombre", styles["Heading4"]), 
+            Paragraph("Empresa", styles["Heading4"]), 
+            Paragraph("Centro de Costo", styles["Heading4"]), 
+            Paragraph("Destino", styles["Heading4"]), 
+            Paragraph("Medio de Pago", styles["Heading4"]), 
+            Paragraph("Documento PDF", styles["Heading4"])
+        ]
+    ]
+
+    # Llenar la tabla con los datos y aplicar saltos de línea en las columnas largas
+    for diario in diarios_filtrados:
+        data.append([
+            diario.id,
+            diario.tiempo_entrega.strftime("%Y-%m-%d"),  # Formatear la fecha
+            Paragraph(diario.nombre, styles["Normal"]),  # Salto de línea para nombre
+            Paragraph(diario.empresa, styles["Normal"]),  # Salto de línea para empresa
+            Paragraph(diario.centro_costo, styles["Normal"]),  # Salto de línea para centro de costo
+            Paragraph(diario.destino, styles["Normal"]),  # Salto de línea para destino
+            diario.medio_pago,
+            "Disponible" if diario.documento_pdf else "No disponible"
+        ])
+
+    # Ajustar el ancho de las columnas para adaptarse mejor al contenido
+    col_widths = [40, 80, 150, 150, 100, 100, 100, 100]  # Ajusta los tamaños según necesites
+    table = Table(data, colWidths=col_widths)
+
+    # Estilos de la tabla
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, 0), 10),
+        ("FONTSIZE", (0, 1), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+        ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
+        ("GRID", (0, 0), (-1, -1), 1, colors.black),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),  # Alineación vertical en el medio
+        ("ROWSPACING", (0, 0), (-1, -1), 5),  # Espacio adicional entre filas
+    ]))
+
+    # Añadir la tabla a los elementos
+    elements.append(table)
+
+    # Construir el PDF
+    doc.build(elements)
+
+    # Devolver la respuesta
+    return response
