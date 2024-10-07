@@ -321,10 +321,13 @@ def diario_view(request):
 @superuser_required
 @login_required
 def ver_solicitudes(request):
+    # Filtrar las solicitudes visibles (no ocultas)
     solicitudes = Solicitud.objects.filter(oculto=False).prefetch_related('mensajes', 'cotizaciones')
-    cache.set('solicitudes', solicitudes, 300)  # Cache for 5 minutes
+    
+    # Guardar las solicitudes en cache por 5 minutos
+    cache.set('solicitudes', solicitudes, 300)
 
-    # Filtrar por los campos
+    # Filtrar por los campos enviados en la request GET
     id_filtro = request.GET.get("id")
     nombre_filtro = request.GET.get("nombre")
     descripcion_filtro = request.GET.get("descripcion")
@@ -332,13 +335,8 @@ def ver_solicitudes(request):
     destino_filtro = request.GET.get("destino")
     tipo_filtro = request.GET.get("tipo")
     solicitado_filtro = request.GET.get("solicitado")
-    imagen_filtro = request.GET.get("imagen")
-
-    for solicitud in solicitudes:
-        solicitud.cotizacion_aprobada = solicitud.cotizaciones.filter(
-            estado="aprobada"
-        ).first()
-
+    
+    # Aplicar los filtros en las solicitudes
     if id_filtro:
         solicitudes = solicitudes.filter(id=id_filtro)
     if nombre_filtro:
@@ -353,22 +351,25 @@ def ver_solicitudes(request):
         solicitudes = solicitudes.filter(tipo__icontains=tipo_filtro)
     if solicitado_filtro:
         solicitudes = solicitudes.filter(solicitado__icontains=solicitado_filtro)
-    if imagen_filtro:
-        solicitudes = solicitudes.filter(imagen_icontains=imagen_filtro)
-     
-     # Añadir el último mensaje de cada solicitud
+
+    # Añadir información extra a cada solicitud
     for solicitud in solicitudes:
+        # Último mensaje relacionado
         solicitud.ultimo_mensaje = solicitud.mensajes.order_by('-fecha_envio').first()
+
+        # Cotización aprobada
         solicitud.cotizacion_aprobada = solicitud.cotizaciones.filter(estado="aprobada").first()
-        # Determinar si el archivo es una imagen
+
+        # Determinar si el archivo es imagen o PDF
         if solicitud.archivo and solicitud.archivo.url:
-            extension = os.path.splitext(solicitud.archivo.url)[1].lower()
+            extension = os.path.splitext(solicitud.archivo.url)[1].lower()  # Obtener la extensión
             solicitud.is_image = extension in ['.jpg', '.jpeg', '.png']
             solicitud.is_pdf = extension == '.pdf'
         else:
             solicitud.is_image = False
             solicitud.is_pdf = False
 
+    # Renderizar la plantilla con las solicitudes filtradas
     return render(request, "pages/ver_solicitudes.html", {"solicitudes": solicitudes})
 
 @login_required

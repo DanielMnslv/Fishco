@@ -20,7 +20,7 @@ class Solicitud(models.Model):
         upload_to='archivos/', 
         blank=True, 
         null=True,
-        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'pdf', 'xlsx', 'xls'])]
+        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'pdf', 'xls', 'xlsx'])]  # Extensiones permitidas
     )
     oculto = models.BooleanField(default=False)
     estado = models.CharField(

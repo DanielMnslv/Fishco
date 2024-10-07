@@ -156,37 +156,40 @@
                     <td>{{ solicitud.usuario.username }}</td> 
                     <td class="truncate-text">{{ solicitud.observaciones|slice:":30" }}{% if solicitud.observaciones|length > 30 %}<a href="#" data-toggle="modal" data-target="#modalObservaciones{{ solicitud.id }}">...</a>{% endif %}</td>
                     <td>
-                        {% if solicitud.archivo %}
-                            <a href="{{ solicitud.archivo.url }}" download>Descargar Archivo</a>
-                            {% if solicitud.archivo.url.endswith('.jpg') or solicitud.archivo.url.endswith('.jpeg') or solicitud.archivo.url.endswith('.png') %}
-                                <a href="#" data-toggle="modal" data-target="#imageModal{{ solicitud.id }}">
-                                    <img src="{{ solicitud.archivo.url }}" alt="Imagen del Producto" style="width: 50px; height: 50px;">
-                                </a>
-                                <!-- Modal para imagen -->
-                                <div class="modal fade" id="imageModal{{ solicitud.id }}" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel{{ solicitud.id }}" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="imageModalLabel{{ solicitud.id }}">Imagen del Producto</h5>
-                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                    <span aria-hidden="true">&times;</span>
-                                                </button>
-                                            </div>
-                                            <div class="modal-body text-center">
-                                                <img src="{{ solicitud.archivo.url }}" alt="Imagen del Producto" style="max-width: 100%; height: auto;" loading="lazy">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% elif solicitud.archivo.url.endswith('.pdf') %}
-                                <embed src="{{ solicitud.archivo.url }}" type="application/pdf" width="100px" height="100px" />
-                            {% elif solicitud.archivo.url.endswith('.xls') or solicitud.archivo.url.endswith('.xlsx') %}
-                                <span>Archivo Excel Subido</span>
-                            {% endif %}
-                        {% else %}
-                            No disponible
-                        {% endif %}
-                    </td>
+                    <td>
+    {% if solicitud.archivo %}
+        <a href="{{ solicitud.archivo.url }}" download>Descargar Archivo</a>
+        
+        {% if solicitud.is_image %}
+            <a href="#" data-toggle="modal" data-target="#imageModal{{ solicitud.id }}">
+                <img src="{{ solicitud.archivo.url }}" alt="Imagen del Producto" style="width: 50px; height: 50px;">
+            </a>
+            <!-- Modal para la imagen -->
+            <div class="modal fade" id="imageModal{{ solicitud.id }}" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel{{ solicitud.id }}" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="imageModalLabel{{ solicitud.id }}">Imagen del Producto</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <img src="{{ solicitud.archivo.url }}" alt="Imagen del Producto" style="max-width: 100%; height: auto;" loading="lazy">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% elif solicitud.is_pdf %}
+            <embed src="{{ solicitud.archivo.url }}" type="application/pdf" width="100px" height="100px" />
+        {% else %}
+            <span>Archivo Subido</span>
+        {% endif %}
+    {% else %}
+        No disponible
+    {% endif %}
+</td>
+
                     <td class="truncate-text">
                         {% if solicitud.ultimo_mensaje %}
                         <strong>{{ solicitud.ultimo_mensaje.remitente.username }}:</strong> {{ solicitud.ultimo_mensaje.contenido|slice:":30" }}{% if solicitud.ultimo_mensaje.contenido|length > 30 %}<a href="#" data-toggle="modal" data-target="#modalMensajes{{ solicitud.id }}">...</a>{% endif %}
