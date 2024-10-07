@@ -6,15 +6,31 @@
     .table-container {
         margin-top: 20px;
     }
+
+    .table {
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 1rem;
+        background-color: transparent;
+        text-align: center;
+    }
+
+    th, td {
+        vertical-align: middle;
+        text-align: center;
+    }
+
     .truncate-text {
         max-width: 300px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
+
     .modal-body {
         white-space: pre-wrap;
     }
+
     .btn-mostaza {
         background-color: #FFC107; /* Color mostaza */
         color: white; /* Color del texto */
@@ -24,6 +40,7 @@
     .btn-mostaza:hover {
         background-color: #E0A800; /* Color más oscuro para hover */
     }
+
     .lazyload {
         opacity: 0;
         transition: opacity 0.3s;
@@ -156,10 +173,9 @@
                     <td>{{ solicitud.usuario.username }}</td> 
                     <td class="truncate-text">{{ solicitud.observaciones|slice:":30" }}{% if solicitud.observaciones|length > 30 %}<a href="#" data-toggle="modal" data-target="#modalObservaciones{{ solicitud.id }}">...</a>{% endif %}</td>
                     <td>
-                    <td>
     {% if solicitud.archivo %}
         <a href="{{ solicitud.archivo.url }}" download>Descargar Archivo</a>
-        
+
         {% if solicitud.is_image %}
             <a href="#" data-toggle="modal" data-target="#imageModal{{ solicitud.id }}">
                 <img src="{{ solicitud.archivo.url }}" alt="Imagen del Producto" style="width: 50px; height: 50px;">
@@ -181,17 +197,16 @@
                 </div>
             </div>
         {% elif solicitud.is_pdf %}
-            <!-- Eliminar la vista previa del PDF, pero permitir la descarga -->
-            <span>Archivo PDF disponible</span>
+            <!-- Mostrar botón rojo para PDF -->
+            <span class="btn btn-danger">PDF</span>
         {% elif solicitud.is_excel %}
-            <!-- Eliminar la vista previa de los archivos Excel, pero permitir la descarga -->
-            <span>Archivo Excel disponible</span>
+            <!-- Mostrar botón verde para Excel -->
+            <span class="btn btn-success">Excel</span>
         {% endif %}
     {% else %}
         No disponible
     {% endif %}
 </td>
-
 
                     <td class="truncate-text">
                         {% if solicitud.ultimo_mensaje %}
@@ -321,27 +336,6 @@
             }
         });
     }
-</script>
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    let lazyImages = [].slice.call(document.querySelectorAll("img.lazyload"));
-
-    if ("IntersectionObserver" in window) {
-      let lazyImageObserver = new IntersectionObserver(function(entries, observer) {
-        entries.forEach(function(entry) {
-          if (entry.isIntersecting) {
-            let lazyImage = entry.target;
-            lazyImage.src = lazyImage.dataset.src;
-            lazyImageObserver.unobserve(lazyImage);
-          }
-        });
-      });
-
-      lazyImages.forEach(function(lazyImage) {
-        lazyImageObserver.observe(lazyImage);
-      });
-    }
-  });
 </script>
 {% endblock content %}
 
