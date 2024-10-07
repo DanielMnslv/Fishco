@@ -181,14 +181,17 @@
                 </div>
             </div>
         {% elif solicitud.is_pdf %}
-            <embed src="{{ solicitud.archivo.url }}" type="application/pdf" width="100px" height="100px" />
-        {% else %}
-            <span>Archivo Subido</span>
+            <!-- Eliminar la vista previa del PDF, pero permitir la descarga -->
+            <span>Archivo PDF disponible</span>
+        {% elif solicitud.is_excel %}
+            <!-- Eliminar la vista previa de los archivos Excel, pero permitir la descarga -->
+            <span>Archivo Excel disponible</span>
         {% endif %}
     {% else %}
         No disponible
     {% endif %}
 </td>
+
 
                     <td class="truncate-text">
                         {% if solicitud.ultimo_mensaje %}
