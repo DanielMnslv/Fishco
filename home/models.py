@@ -16,7 +16,6 @@ class Solicitud(models.Model):
     destino = models.CharField(max_length=255)
     tipo = models.CharField(max_length=50)
     observaciones = models.TextField(blank=True, null=True)
-    solicitado = models.CharField(max_length=255)
     imagen = models.ImageField(upload_to="imagenes/", blank=True, null=True)
     oculto = models.BooleanField(default=False)
     estado = models.CharField(
@@ -24,14 +23,15 @@ class Solicitud(models.Model):
         choices=[
             ("pendiente", "Pendiente"),
             ("aprobado", "Aprobado"),
-            ("rechazado", "Rechazado")  # Puedes agregar más estados si los necesitas
+            ("rechazado", "Rechazado")  
         ],
         default="pendiente",
     )
+    # Relacionamos la solicitud con el usuario que la creó
     usuario = models.ForeignKey(
         get_user_model(), 
         on_delete=models.CASCADE, 
-        default=50  # ID del usuario por defecto
+        related_name="solicitudes"  # Usamos 'solicitudes' como el nombre para la relación inversa
     )
 
     def __str__(self):
@@ -204,6 +204,7 @@ class Diario(models.Model):
     )
     documento_pdf = models.FileField(upload_to="documentos_pdf/", blank=True, null=True)
     oculto = models.BooleanField(default=False)
+    observaciones = models.TextField(blank=True, null=True)
     def __str__(self):
         return f"Diario {self.nombre} - {self.empresa}"
 

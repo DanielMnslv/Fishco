@@ -76,6 +76,7 @@
                     <th>Destino</th>
                     <th>Medio de Pago</th>
                     <th>Documento PDF</th>
+	            <th>Observaciones</th>
                     <th>Aprobado</th>
                 </tr>
             </thead>
@@ -103,6 +104,7 @@
                             <span class="btn btn-primary">Pendiente</span>
                         {% endif %}
                     </td>
+		    <td>{{ item.observaciones|default:"Sin observaciones" }}</td>
                 </tr>
                 {% empty %}
                 <tr>

@@ -14,7 +14,6 @@ class SolicitudForm(forms.ModelForm):
             "destino",
             "tipo",
             "observaciones",
-            "solicitado",
             "imagen",
         ]
         widgets = {
@@ -35,9 +34,6 @@ class SolicitudForm(forms.ModelForm):
             ),
             "tipo": forms.TextInput(attrs={"class": "form-control", "required": True}),
             "observaciones": forms.Textarea(attrs={"class": "form-control", "rows": 2}),
-            "solicitado": forms.TextInput(
-                attrs={"class": "form-control", "required": True}
-            ),
             "imagen": forms.ClearableFileInput(attrs={"class": "form-control"}),
         }
 
@@ -214,6 +210,7 @@ class DiarioForm(forms.ModelForm):
             "destino",
             "medio_pago",
             "documento_pdf",
+	    "observaciones",
         ]
         widgets = {
             "tiempo_entrega": forms.DateTimeInput(
@@ -225,5 +222,6 @@ class DiarioForm(forms.ModelForm):
             "destino": forms.Select(attrs={"class": "form-control"}),
             "medio_pago": forms.Select(attrs={"class": "form-control"}),
             "documento_pdf": forms.ClearableFileInput(attrs={"class": "form-control"}),
+	    "observaciones": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
         }
 
