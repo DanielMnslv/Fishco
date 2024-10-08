@@ -49,11 +49,11 @@
                 <!-- Modificar para aceptar imágenes, PDFs y archivos Excel -->
                 <div class="form-group">
                 <label for="archivo">Archivo del Producto o Servicio</label>
-                <input type="file" id="archivo" name="archivo" class="form-control" accept=".jpg,.jpeg,.png,.pdf,.xls,.xlsx">
+                <input type="file" id="archivo" name="archivo" class="form-control" accept=".jpg,.jpeg,.png,.pdf,.xls,.xlsx,.webp" required>
                 </div>
                 <div class="form-group">
                   <label for="cantidad">Cantidad</label>
-                  <input type="number" id="cantidad" name="cantidad" class="form-control" min="1">
+                  <input type="number" id="cantidad" name="cantidad" class="form-control" min="1" required>
                 </div>
               </div>
               <div class="col-md-6">
@@ -67,7 +67,7 @@
                 </div>
                 <div class="form-group">
                   <label for="observaciones">Observaciones de Especificación</label>
-                  <textarea id="observaciones" name="observaciones" class="form-control" rows="3"></textarea>
+                  <textarea id="observaciones" name="observaciones" class="form-control" rows="3" required></textarea>
                 </div>
                 <div class="form-group">
                   <label for="solicitado">Solicitado Por</label>

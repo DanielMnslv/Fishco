@@ -165,7 +165,11 @@
                 <tr id="solicitud-{{ solicitud.id }}">
                     <td>{{ solicitud.id }}</td>
                     <td>{{ solicitud.fecha|date:"d/m/Y g:i a" }}</td>
-                    <td>{{ solicitud.nombre }}</td>
+                    <td class="truncate-text">
+                        {{ solicitud.nombre|slice:":30" }}{% if solicitud.nombre|length > 30 %}
+                        <a href="#" data-toggle="modal" data-target="#modalNombre{{ solicitud.id }}">...</a>
+                        {% endif %}
+                    </td>
                     <td class="truncate-text">{{ solicitud.descripcion|slice:":30" }}{% if solicitud.descripcion|length > 30 %}<a href="#" data-toggle="modal" data-target="#modalDescripcion{{ solicitud.id }}">...</a>{% endif %}</td>
                     <td>{{ solicitud.cantidad }}</td>
                     <td>{{ solicitud.destino }}</td>
@@ -237,6 +241,23 @@
                         <button class="btn btn-danger" onclick="ocultarSolicitud({{ solicitud.id }})">Archivar</button>
                     </td>
                 </tr>
+		<!-- Modal para mostrar el nombre completo -->
+                <div class="modal fade" id="modalNombre{{ solicitud.id }}" tabindex="-1" role="dialog" aria-labelledby="modalLabelNombre{{ solicitud.id }}" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalLabelNombre{{ solicitud.id }}">Nombre Completo</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">{{ solicitud.nombre }}</div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Modal para mostrar la descripción completa -->
                 <div class="modal fade" id="modalDescripcion{{ solicitud.id }}" tabindex="-1" role="dialog" aria-labelledby="modalLabelDescripcion{{ solicitud.id }}" aria-hidden="true">
@@ -313,6 +334,30 @@
             </tbody>
         </table>
     </div>
+    <!-- Paginación -->
+    <nav aria-label="Page navigation example">
+        <ul class="pagination">
+            {% if solicitudes.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ solicitudes.previous_page_number }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+            {% for num in solicitudes.paginator.page_range %}
+                <li class="page-item {% if solicitudes.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+            {% endfor %}
+            {% if solicitudes.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ solicitudes.next_page_number }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>

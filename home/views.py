@@ -321,11 +321,20 @@ def diario_view(request):
 @superuser_required
 @login_required
 def ver_solicitudes(request):
-    # Filtrar las solicitudes visibles (no ocultas)
-    solicitudes = Solicitud.objects.filter(oculto=False).prefetch_related('mensajes', 'cotizaciones')
-    
-    # Guardar las solicitudes en cache por 5 minutos
-    cache.set('solicitudes', solicitudes, 300)
+    # Obtener todas las solicitudes
+    solicitudes_con_cotizacion = Solicitud.objects.filter(
+        oculto=False, cotizaciones__isnull=False
+    ).distinct().prefetch_related('mensajes', 'cotizaciones').order_by('fecha')
+
+    solicitudes_sin_cotizacion = Solicitud.objects.filter(
+        oculto=False, cotizaciones__isnull=True
+    ).distinct().prefetch_related('mensajes').order_by('fecha')
+
+    # Concatenar ambas consultas: primero las que tienen cotización, luego las que no
+    solicitudes = list(solicitudes_con_cotizacion) + list(solicitudes_sin_cotizacion)
+
+    # Guardar las solicitudes en cache durante 10 minutos
+    cache.set('solicitudes', solicitudes, 600)
 
     # Filtrar por los campos enviados en la request GET
     id_filtro = request.GET.get("id")
@@ -335,22 +344,22 @@ def ver_solicitudes(request):
     destino_filtro = request.GET.get("destino")
     tipo_filtro = request.GET.get("tipo")
     solicitado_filtro = request.GET.get("solicitado")
-    
+
     # Aplicar los filtros en las solicitudes
     if id_filtro:
-        solicitudes = solicitudes.filter(id=id_filtro)
+        solicitudes = [sol for sol in solicitudes if str(sol.id) == id_filtro]
     if nombre_filtro:
-        solicitudes = solicitudes.filter(nombre__icontains=nombre_filtro)
+        solicitudes = [sol for sol in solicitudes if nombre_filtro.lower() in sol.nombre.lower()]
     if descripcion_filtro:
-        solicitudes = solicitudes.filter(descripcion__icontains=descripcion_filtro)
+        solicitudes = [sol for sol in solicitudes if descripcion_filtro.lower() in sol.descripcion.lower()]
     if cantidad_filtro:
-        solicitudes = solicitudes.filter(cantidad=cantidad_filtro)
+        solicitudes = [sol for sol in solicitudes if sol.cantidad == int(cantidad_filtro)]
     if destino_filtro:
-        solicitudes = solicitudes.filter(destino__icontains=destino_filtro)
+        solicitudes = [sol for sol in solicitudes if destino_filtro.lower() in sol.destino.lower()]
     if tipo_filtro:
-        solicitudes = solicitudes.filter(tipo__icontains=tipo_filtro)
+        solicitudes = [sol for sol in solicitudes if tipo_filtro.lower() in sol.tipo.lower()]
     if solicitado_filtro:
-        solicitudes = solicitudes.filter(solicitado__icontains=solicitado_filtro)
+        solicitudes = [sol for sol in solicitudes if solicitado_filtro.lower() in sol.solicitado.lower()]
 
     # Añadir información extra a cada solicitud
     for solicitud in solicitudes:
@@ -369,8 +378,13 @@ def ver_solicitudes(request):
             solicitud.is_image = False
             solicitud.is_pdf = False
 
-    # Renderizar la plantilla con las solicitudes filtradas
-    return render(request, "pages/ver_solicitudes.html", {"solicitudes": solicitudes})
+    # Paginación: mostrar 31 solicitudes por página
+    paginator = Paginator(solicitudes, 31)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Renderizar la plantilla con las solicitudes filtradas y paginadas
+    return render(request, "pages/ver_solicitudes.html", {"solicitudes": page_obj})
 
 @login_required
 def mis_solicitudes(request):
