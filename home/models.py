@@ -54,7 +54,15 @@ class Cotizacion(models.Model):
     precio = models.DecimalField(max_digits=10, decimal_places=2)
     detalles = models.TextField(blank=True, null=True)
     estado = models.CharField(max_length=50, choices=ESTADO_CHOICES, default="pendiente")
-    cotizacion_pdf = models.FileField(upload_to="cotizaciones_pdfs/", blank=True, null=True)
+    
+    # Cambiar el campo para aceptar múltiples tipos de archivos
+    archivo = models.FileField(
+        upload_to="cotizaciones_archivos/", 
+        blank=True, 
+        null=True, 
+        validators=[FileExtensionValidator(allowed_extensions=["pdf", "jpg", "jpeg", "png", "xls", "xlsx", "doc", "docx"])]
+    )
+    
     estado_aprobada = models.BooleanField(default=False)
     fecha = models.DateTimeField(default=timezone.now)
 

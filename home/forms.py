@@ -59,16 +59,14 @@ class CotizacionForm(forms.ModelForm):
             "precio",
             "detalles",
             "estado",
-            "cotizacion_pdf",
+            "archivo",  # Cambiamos cotizacion_pdf por archivo para aceptar múltiples tipos
         ]
         widgets = {
-        "proveedor": forms.TextInput(attrs={"class": "form-control"}),
-        "precio": forms.NumberInput(attrs={"class": "form-control"}),
-        "detalles": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
-        "cotizacion_pdf": forms.ClearableFileInput(
-        attrs={"class": "form-control"}
-    ),
-}
+            "proveedor": forms.TextInput(attrs={"class": "form-control"}),
+            "precio": forms.NumberInput(attrs={"class": "form-control"}),
+            "detalles": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "archivo": forms.ClearableFileInput(attrs={"class": "form-control", "accept": ".pdf,.jpg,.jpeg,.png,.xls,.xlsx,.doc,.docx"}),
+        }
 
 
 class MensajeForm(forms.ModelForm):

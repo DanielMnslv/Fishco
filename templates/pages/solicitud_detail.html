@@ -35,12 +35,12 @@
                     {% endif %}
                 </td>
                 <td>
-                    {% if cotizacion.cotizacion_pdf %}
-                        <a href="{{ cotizacion.cotizacion_pdf.url }}" target="_blank">Ver Cotización</a>
-                    {% else %}
-                        No disponible
-                    {% endif %}
-                </td>
+    {% if cotizacion.archivo %}
+        <a href="{{ cotizacion.archivo.url }}" target="_blank">Ver Cotizacion</a>
+    {% else %}
+        No disponible
+    {% endif %}
+		</td>
                 <td>
                     {% if cotizacion.estado == 'aprobada' %}
                         <span class="badge bg-secondary">Aprobada</span>

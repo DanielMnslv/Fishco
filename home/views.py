@@ -203,8 +203,8 @@ class SolicitudDetailView(LoginRequiredMixin, UserPassesTestMixin, View):
             },
         )
 
-@superuser_required  # solo superusuarios deben subir cotizaciones
 @login_required
+@superuser_required
 def subir_cotizacion(request, solicitud_id):
     solicitud = get_object_or_404(Solicitud, id=solicitud_id)
 
@@ -213,16 +213,14 @@ def subir_cotizacion(request, solicitud_id):
         if form.is_valid():
             cotizacion = form.save(commit=False)
             cotizacion.solicitud = solicitud
-            cotizacion.cotizacion_imagen = request.FILES.get("cotizacion_imagen")
+            cotizacion.archivo = request.FILES.get("archivo")  # Guardar el archivo subido
             cotizacion.save()
             messages.success(request, "Cotización subida con éxito.")
             return redirect("ver_solicitudes")
     else:
         form = CotizacionForm()
 
-    return render(
-        request, "subir_cotizacion.html", {"solicitud": solicitud, "form": form}
-    )
+    return render(request, "subir_cotizacion.html", {"solicitud": solicitud, "form": form})
 
 # Vista para aprobar cotización (solo usuarios con permisos específicos)
 @user_passes_test(lambda u: u.id in [31, 33])  # IDs permitidos
@@ -379,7 +377,7 @@ def ver_solicitudes(request):
             solicitud.is_pdf = False
 
     # Paginación: mostrar 31 solicitudes por página
-    paginator = Paginator(solicitudes, 31)
+    paginator = Paginator(solicitudes, 100)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -442,7 +440,8 @@ def ver_ordenes(request):
 @staff_required
 @login_required
 def ver_diario(request):
-    diarios = Diario.objects.all()
+    # Filtrar solo los diarios que no estén ocultos
+    diarios = Diario.objects.filter(oculto=False)
 
     # Obtener fechas de inicio y fin de los filtros
     fecha_inicio = request.GET.get("fecha_inicio")
@@ -468,14 +467,18 @@ def ver_diario(request):
 
     return render(request, "pages/ver_diario.html", {"diarios": diario_page})
 
+
 @login_required
 @staff_required
 def ocultar_diario(request):
     if request.method == "POST":
         diarios_ids = request.POST.get("diarios_ids", "")
-        diarios_ids = diarios_ids.split(",")
-        Diario.objects.filter(id__in=diarios_ids).update(oculto=True)
-        return JsonResponse({"success": True})
+        if diarios_ids:
+            diarios_ids = diarios_ids.split(",")
+            Diario.objects.filter(id__in=diarios_ids).update(oculto=True)
+            return JsonResponse({"success": True})
+        else:
+            return JsonResponse({"success": False, "error": "No se seleccionaron diarios."})
     return JsonResponse({"success": False, "error": "Método no permitido"})
 
 @staff_required
