@@ -345,7 +345,7 @@ def diario_view(request):
 @superuser_required
 @login_required
 def ver_solicitudes(request):
-    # Obtener todas las solicitudes
+    # Obtener todas las solicitudes que no están ocultas
     solicitudes_con_cotizacion = Solicitud.objects.filter(
         oculto=False, cotizaciones__isnull=False
     ).distinct().prefetch_related('mensajes', 'cotizaciones').order_by('fecha')
@@ -360,7 +360,7 @@ def ver_solicitudes(request):
     # Guardar las solicitudes en cache durante 10 minutos
     cache.set('solicitudes', solicitudes, 600)
 
-    # Filtrar por los campos enviados en la request GET
+    # Aplicar los filtros en las solicitudes
     id_filtro = request.GET.get("id")
     nombre_filtro = request.GET.get("nombre")
     descripcion_filtro = request.GET.get("descripcion")
@@ -393,22 +393,21 @@ def ver_solicitudes(request):
         # Cotización aprobada
         solicitud.cotizacion_aprobada = solicitud.cotizaciones.filter(estado="aprobada").first()
 
-        # Determinar si el archivo es imagen o PDF
-        if solicitud.archivo and solicitud.archivo.url:
-            extension = os.path.splitext(solicitud.archivo.url)[1].lower()  # Obtener la extensión
-            solicitud.is_image = extension in ['.jpg', '.jpeg', '.png']
-            solicitud.is_pdf = extension == '.pdf'
+        # Si la cotización aprobada tiene un archivo
+        if solicitud.cotizacion_aprobada and solicitud.cotizacion_aprobada.archivo:
+            solicitud.cotizacion_pdf_url = solicitud.cotizacion_aprobada.archivo
         else:
-            solicitud.is_image = False
-            solicitud.is_pdf = False
+            solicitud.cotizacion_pdf_url = None
 
     # Paginación: mostrar 31 solicitudes por página
-    paginator = Paginator(solicitudes, 100)
+    paginator = Paginator(solicitudes, 70)  # Ajusta este número según lo necesites
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
     # Renderizar la plantilla con las solicitudes filtradas y paginadas
     return render(request, "pages/ver_solicitudes.html", {"solicitudes": page_obj})
+
+
 
 @login_required
 def mis_solicitudes(request):

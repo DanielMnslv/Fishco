@@ -223,17 +223,21 @@
                         No hay mensajes
                         {% endif %}
                     </td>
-                    <td>
-                        {% if solicitud.cotizacion_aprobada %}
-                            {% if solicitud.cotizacion_aprobada.cotizacion_pdf %}
-                                <a href="{{ solicitud.cotizacion_aprobada.cotizacion_pdf.url }}" target="_blank" class="btn btn-success">Aprobado</a>
-                            {% else %}
-                                No disponible
-                            {% endif %}
-                        {% else %}
-                            <a href="#" target="_blank" class="btn btn-danger">No Aprobado</a>
-                        {% endif %}
-                    </td>
+                    <td> 
+    {% if solicitud.cotizacion_aprobada %}
+        {% if solicitud.cotizacion_pdf_url %}
+            <!-- Botón verde para descargar si hay un archivo -->
+            <a href="{{ solicitud.cotizacion_pdf_url }}" target="_blank" class="btn btn-success">Aprobado</a>
+        {% else %}
+            <!-- Botón verde sin opción de descarga si no hay archivo -->
+            <span class="btn btn-success">Aprobado (sin archivo)</span>
+        {% endif %}
+    {% else %}
+        <!-- Botón rojo si no ha sido aprobada -->
+        <span class="btn btn-danger">No Aprobado</span>
+    {% endif %}  
+</td>
+
 
                     <td>
                         {% if solicitud.cotizaciones.count > 0 %}
