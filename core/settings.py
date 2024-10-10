@@ -34,7 +34,7 @@ if not SECRET_KEY:
 DEBUG = str2bool(os.environ.get("DEBUG"))
 # print(' DEBUG -> ' + str(DEBUG) )
 
-ALLOWED_HOSTS = ["89.117.147.197", "localhost", "127.0.0.1", "193.203.175.151", "193.19.106.53"]
+ALLOWED_HOSTS = ["89.117.147.197", "localhost", "127.0.0.1", "193.203.175.151", "193.19.106.53", "example.com", "www.example.com"]
 
 CSRF_TRUSTED_ORIGINS = [
     "http://89.117.147.197:8000",
@@ -193,7 +193,14 @@ STATICFILES_DIRS = (
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGIN_REDIRECT_URL = "/"
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+LOGIN_REDIRECT_URL = "/"
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.hostinger.com'  # Servidor SMTP
+EMAIL_PORT = 465  # Puerto SMTP
+EMAIL_USE_SSL = True  # Habilitar SSL
+EMAIL_HOST_USER = 'plataforma@comprasfishco.com'  # El correo remitente
+EMAIL_HOST_PASSWORD = '@Fishco2024'  # La contraseña del remitente
+DEFAULT_FROM_EMAIL = 'plataforma@comprasfishco.com'  # El correo de donde saldrá el email
 
 # ### DYNAMIC_DATATB Settings ###
 DYNAMIC_DATATB = {

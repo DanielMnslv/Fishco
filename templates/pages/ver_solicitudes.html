@@ -49,6 +49,10 @@
     .lazyload.lazyloaded {
         opacity: 1;
     }
+    .pagination {
+    justify-content: flex-start; /* Alineación hacia la izquierda */
+    margin-top: 1rem;
+    }
 </style>
 {% endblock extrastyle %}
 
@@ -331,33 +335,33 @@
                     <td colspan="12">No hay solicitudes disponibles.</td>
                 </tr>
                 {% endfor %}
-            </tbody>                     
+            </tbody>
+	   </table>
+	   <!-- Paginación: movida justo después de la tabla -->
+    <nav aria-label="Page navigation example">
+        <ul class="pagination d-flex justify-content-start">
+            {% if solicitudes.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ solicitudes.previous_page_number }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+            {% for num in solicitudes.paginator.page_range %}
+                <li class="page-item {% if solicitudes.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+            {% endfor %}
+            {% if solicitudes.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ solicitudes.next_page_number }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>                
     </div>
-    <!-- Paginación -->
-<nav aria-label="Page navigation example">
-    <ul class="pagination d-flex justify-content-start">
-        {% if solicitudes.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ solicitudes.previous_page_number }}" aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
-        {% endif %}
-        {% for num in solicitudes.paginator.page_range %}
-            <li class="page-item {% if solicitudes.number == num %}active{% endif %}">
-                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-            </li>
-        {% endfor %}
-        {% if solicitudes.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ solicitudes.next_page_number }}" aria-label="Next">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-        {% endif %}
-    </ul>
-</nav>
-
 </div>
 
 

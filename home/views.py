@@ -32,7 +32,7 @@ import os
 from django.conf import settings
 from django.db.models import Max
 from django.core.cache import cache
-
+from django.core.mail import send_mail
 
 
 @login_required
@@ -114,7 +114,24 @@ class SolicitudView(LoginRequiredMixin, View):
             solicitud = form.save(commit=False)  # No guardar aún, para asignar el usuario
             solicitud.usuario = request.user  # Asignar el usuario autenticado
             solicitud.save()  # Ahora sí, guardar con el usuario asignado
-            messages.success(request, "Solicitud creada con éxito.")
+
+            # Enviar notificación por correo a múltiples destinatarios
+            subject = f'Nueva solicitud creada: {solicitud.nombre}'
+            message = f'Una nueva solicitud ha sido creada por {request.user.username}.\n\n' \
+                      f'Detalles:\n' \
+                      f'Nombre: {solicitud.nombre}\n' \
+                      f'Destino: {solicitud.destino}\n' \
+                      f'Tipo: {solicitud.tipo}\n\n' \
+                      f'Ver más en la plataforma.'
+            
+            # Lista de destinatarios
+            recipient_list = ["gestiondocumental.pfishco@gmail.com"]
+            from_email = settings.DEFAULT_FROM_EMAIL  # El correo configurado como remitente
+
+            # Enviar el correo
+            send_mail(subject, message, from_email, recipient_list)
+
+            messages.success(request, "Solicitud creada con éxito y notificación enviada.")
             return redirect("index")
         return render(request, "pages/solicitud.html", {"form": form})
 
@@ -226,11 +243,6 @@ def subir_cotizacion(request, solicitud_id):
 @user_passes_test(lambda u: u.id in [31, 33])  # IDs permitidos
 @login_required
 def aprobar_cotizacion(request, cotizacion_id):
-    # Verificar si el usuario tiene los ID permitidos
-    if request.user.id not in [31, 33]:
-        messages.error(request, "No tienes permiso para aprobar cotizaciones.")
-        return redirect("ver_solicitudes")
-
     cotizacion = get_object_or_404(Cotizacion, id=cotizacion_id)
     solicitud = cotizacion.solicitud
     cotizaciones = solicitud.cotizaciones.all()
@@ -243,9 +255,23 @@ def aprobar_cotizacion(request, cotizacion_id):
     cotizacion.estado = "aprobada"  # Cambia el estado a "aprobada"
     cotizacion.save()
 
-    messages.success(
-        request, f"La cotización de {cotizacion.proveedor} ha sido aprobada."
-    )
+    # Enviar notificación por correo a los destinatarios
+    subject = f'Cotización aprobada para la solicitud: {solicitud.nombre}'
+    message = f'Se ha aprobado una cotización de {cotizacion.proveedor} para la solicitud "{solicitud.nombre}".\n\n' \
+              f'Detalles de la cotización:\n' \
+              f'Proveedor: {cotizacion.proveedor}\n' \
+              f'Precio: ${cotizacion.precio:,.2f}\n' \
+              f'Solicitud: {solicitud.nombre}\n\n' \
+              f'Ver más detalles en la plataforma.'
+
+    # Lista de destinatarios
+    recipient_list = ["auxcompras@cifishco.com.co", "gestiondocumental.pfishco@gmail.com"]
+    from_email = settings.DEFAULT_FROM_EMAIL
+
+    # Enviar el correo
+    send_mail(subject, message, from_email, recipient_list)
+
+    messages.success(request, f"La cotización de {cotizacion.proveedor} ha sido aprobada y se ha notificado por correo.")
     return redirect("solicitud_detail", pk=solicitud.id)
 
 
@@ -539,13 +565,35 @@ def aprobar_anticipos_masivamente(request):
         anticipo_ids = request.POST.getlist("anticipo_ids")
         
         if anticipo_ids:
-            # Actualizar los anticipos seleccionados para marcarlos como aprobados
-            Anticipo.objects.filter(id__in=anticipo_ids).update(aprobado=True)
-            messages.success(request, "Anticipos aprobados con éxito.")
+            # Filtrar los anticipos seleccionados
+            anticipos_aprobados = Anticipo.objects.filter(id__in=anticipo_ids)
+            anticipos_aprobados.update(aprobado=True)
+
+            # Construir el contenido del correo
+            subject = "Aprobación masiva de anticipos"
+            message = "Se han aprobado los siguientes anticipos:\n\n"
+            
+            for anticipo in anticipos_aprobados:
+                message += f'Nombre: {anticipo.nombre}\n' \
+                           f'NIT: {anticipo.nit}\n' \
+                           f'Producto/Servicio: {anticipo.producto_servicio}\n' \
+                           f'Total a pagar: ${anticipo.total_pagar:,.2f}\n\n'
+
+            message += "Ver más detalles en la plataforma."
+
+            # Lista de destinatarios
+            recipient_list = ["auxcompras@cifishco.com.co", "gestiondocumental.pfishco@gmail.com"]
+            from_email = settings.DEFAULT_FROM_EMAIL
+
+            # Enviar el correo con el resumen
+            send_mail(subject, message, from_email, recipient_list)
+
+            messages.success(request, "Anticipos aprobados con éxito y se ha enviado una notificación por correo.")
         else:
             messages.error(request, "No se seleccionaron anticipos para aprobar.")
     
     return redirect("ver_anticipos")
+
 
 class AnticipoListView(LoginRequiredMixin, StaffRequiredMixin, ListView):
     model = Anticipo
