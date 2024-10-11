@@ -129,17 +129,20 @@
 // Función para seleccionar todos los checkboxes
 document.getElementById('select_all').addEventListener('change', function() {
     let checkboxes = document.querySelectorAll('input[name="anticipo_ids"]');
-    for (let checkbox of checkboxes) {
+    checkboxes.forEach(function(checkbox) {
         checkbox.checked = this.checked;
-    }
+    }, this); // 'this' se refiere al checkbox 'select_all'
+    console.log('Todos los checkboxes seleccionados:', this.checked); // Depuración
 });
 
 // Función para ocultar anticipos seleccionados mediante AJAX
 document.getElementById('ocultar-seleccionados-btn').addEventListener('click', function() {
     let seleccionados = [];
-    document.querySelectorAll('input[name="anticipo_ids"]:checked').forEach((checkbox) => {
+    document.querySelectorAll('input[name="anticipo_ids"]:checked').forEach(function(checkbox) {
         seleccionados.push(checkbox.value);
     });
+
+    console.log('Anticipos seleccionados para ocultar:', seleccionados); // Depuración
 
     if (seleccionados.length === 0) {
         alert("No has seleccionado ningún anticipo.");
@@ -158,7 +161,7 @@ document.getElementById('ocultar-seleccionados-btn').addEventListener('click', f
         },
         success: function(response) {
             if (response.success) {
-                seleccionados.forEach(id => {
+                seleccionados.forEach(function(id) {
                     $('#anticipo-' + id).fadeOut();  // Ocultar las filas seleccionadas
                 });
             } else {
@@ -174,9 +177,11 @@ document.getElementById('ocultar-seleccionados-btn').addEventListener('click', f
 // Agregar los IDs seleccionados al formulario de aprobación masiva antes de enviarlo
 document.getElementById('form-aprobar-anticipos').addEventListener('submit', function(e) {
     let seleccionados = [];
-    document.querySelectorAll('input[name="anticipo_ids"]:checked').forEach((checkbox) => {
+    document.querySelectorAll('input[name="anticipo_ids"]:checked').forEach(function(checkbox) {
         seleccionados.push(checkbox.value);
     });
+
+    console.log('Anticipos seleccionados para aprobar:', seleccionados); // Depuración
 
     if (seleccionados.length === 0) {
         e.preventDefault();
@@ -185,8 +190,11 @@ document.getElementById('form-aprobar-anticipos').addEventListener('submit', fun
     }
 
     document.getElementById('anticipo_ids').value = seleccionados.join(",");
+    console.log('Valor del campo oculto:', document.getElementById('anticipo_ids').value); // Depuración
 });
 </script>
+
+    
 
 {% endblock content %}
 

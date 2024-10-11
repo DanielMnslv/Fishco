@@ -561,37 +561,55 @@ def aprobar_anticipo(request, anticipo_id):
 def aprobar_anticipos_masivamente(request):
     if request.method == "POST":
         # Obtener la lista de IDs seleccionados
-        anticipo_ids = request.POST.getlist("anticipo_ids")  # Usamos getlist para asegurarnos de recibir una lista
+        anticipo_ids = request.POST.getlist("anticipo_ids")
 
+        # Imprimir los IDs para verificar si están siendo recibidos correctamente
+        print(f"IDs recibidos desde el frontend: {anticipo_ids}")
+
+        # Verificamos si hay IDs seleccionados
         if anticipo_ids:
             try:
-                # Convertir los IDs en enteros para asegurarnos de que Django los maneje correctamente
+                # Convertir los IDs de anticipos a una lista de enteros
                 anticipo_ids = [int(id) for id in anticipo_ids]
+                print(f"IDs seleccionados (convertidos a enteros): {anticipo_ids}")  # Depuración: ver IDs recibidos
 
-                # Filtrar los anticipos seleccionados y marcarlos como aprobados
+                # Filtrar los anticipos seleccionados
                 anticipos_aprobados = Anticipo.objects.filter(id__in=anticipo_ids)
-                anticipos_aprobados.update(aprobado=True)
 
-                # Enviar notificaciones por correo, construir el mensaje y los detalles
-                subject = "Aprobación masiva de anticipos"
-                message = "Se han aprobado los siguientes anticipos:\n\n"
-                for anticipo in anticipos_aprobados:
-                    message += f'Nombre: {anticipo.nombre}\nNIT: {anticipo.nit}\nProducto/Servicio: {anticipo.producto_servicio}\nTotal a pagar: ${anticipo.total_pagar:,.2f}\n\n'
+                if anticipos_aprobados.exists():
+                    # Actualizar anticipos seleccionados a aprobados
+                    anticipos_aprobados.update(aprobado=True)
 
-                message += "Ver más detalles en la plataforma."
-                recipient_list = ["auxcompras@cifishco.com.co", "gestiondocumental.pfishco@gmail.com"]
-                from_email = settings.DEFAULT_FROM_EMAIL
+                    # Construir el contenido del correo
+                    subject = "Aprobación masiva de anticipos"
+                    message = "Se han aprobado los siguientes anticipos:\n\n"
 
-                # Enviar el correo
-                send_mail(subject, message, from_email, recipient_list)
+                    for anticipo in anticipos_aprobados:
+                        message += f'Nombre: {anticipo.nombre}\n' \
+                                   f'NIT: {anticipo.nit}\n' \
+                                   f'Producto/Servicio: {anticipo.producto_servicio}\n' \
+                                   f'Total a pagar: ${anticipo.total_pagar:,.2f}\n\n'
 
-                messages.success(request, "Anticipos aprobados con éxito y se ha enviado una notificación por correo.")
-            except ValueError:
-                messages.error(request, "Ocurrió un error al procesar los IDs.")
+                    message += "Ver más detalles en la plataforma."
+
+                    # Lista de destinatarios
+                    recipient_list = ["auxcompras@cifishco.com.co", "gestiondocumental.pfishco@gmail.com"]
+                    from_email = settings.DEFAULT_FROM_EMAIL
+
+                    # Enviar el correo con el resumen
+                    send_mail(subject, message, from_email, recipient_list)
+
+                    messages.success(request, "Anticipos aprobados con éxito y se ha enviado una notificación por correo.")
+                else:
+                    messages.error(request, "No se encontraron anticipos válidos para aprobar.")
+            except ValueError as e:
+                messages.error(request, f"Error al convertir los IDs de anticipos: {str(e)}")
         else:
             messages.error(request, "No se seleccionaron anticipos para aprobar.")
 
     return redirect("ver_anticipos")
+
+
 
 
 
@@ -868,7 +886,7 @@ def generar_pdf_anticipos_aprobados(request):
     for anticipo in anticipos_aprobados:
         data.append(
             [
-                anticipo.centro_costo,
+                Paragraph(anticipo.centro_costo, styles["Normal"]),  # Salto de línea para centro de costo
                 anticipo.nit,
                 Paragraph(anticipo.nombre, styles["Normal"]),  # Salto de línea para nombre
                 Paragraph(anticipo.producto_servicio, styles["Normal"]),  # Salto de línea para producto/servicio
