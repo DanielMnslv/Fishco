@@ -126,72 +126,29 @@
 
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 <script>
-// Función para seleccionar todos los checkboxes
-document.getElementById('select_all').addEventListener('change', function() {
-    let checkboxes = document.querySelectorAll('input[name="anticipo_ids"]');
-    checkboxes.forEach(function(checkbox) {
-        checkbox.checked = this.checked;
-    }, this); 
-    console.log('Todos los checkboxes seleccionados:', this.checked);
-});
-
-// Función para ocultar anticipos seleccionados mediante AJAX
-document.getElementById('ocultar-seleccionados-btn').addEventListener('click', function() {
-    let seleccionados = [];
-    document.querySelectorAll('input[name="anticipo_ids"]:checked').forEach(function(checkbox) {
-        seleccionados.push(checkbox.value);
+    // Función para seleccionar todos los checkboxes
+    document.getElementById('select_all').addEventListener('change', function() {
+        let checkboxes = document.querySelectorAll('input[name="anticipo_ids"]');
+        checkboxes.forEach(function(checkbox) {
+            checkbox.checked = this.checked;
+        }, this); // 'this' se refiere al checkbox 'select_all'
     });
 
-    console.log('Anticipos seleccionados para ocultar:', seleccionados); 
+    // Agregar los IDs seleccionados al formulario de aprobación masiva antes de enviarlo
+    document.getElementById('form-aprobar-anticipos').addEventListener('submit', function(e) {
+        let seleccionados = [];
+        document.querySelectorAll('input[name="anticipo_ids"]:checked').forEach(function(checkbox) {
+            seleccionados.push(checkbox.value);
+        });
 
-    if (seleccionados.length === 0) {
-        alert("No has seleccionado ningún anticipo.");
-        return;
-    }
-
-    // Realizar una petición AJAX para ocultar los anticipos seleccionados
-    $.ajax({
-        url: "{% url 'ocultar_anticipos' %}",
-        method: "POST",
-        headers: {
-            'X-CSRFToken': '{{ csrf_token }}'
-        },
-        data: {
-            "anticipos_ids": seleccionados.join(",")
-        },
-        success: function(response) {
-            if (response.success) {
-                seleccionados.forEach(function(id) {
-                    $('#anticipo-' + id).fadeOut();  // Ocultar las filas seleccionadas
-                });
-            } else {
-                alert(response.error || "Error al ocultar anticipos seleccionados.");
-            }
-        },
-        error: function() {
-            alert("Ocurrió un error al intentar ocultar los anticipos seleccionados.");
+        if (seleccionados.length === 0) {
+            e.preventDefault();
+            alert("No has seleccionado ningún anticipo para aprobar.");
+            return;
         }
+
+        document.getElementById('anticipo_ids').value = seleccionados.join(",");
     });
-});
-
-// Agregar los IDs seleccionados al formulario de aprobación masiva antes de enviarlo
-document.getElementById('form-aprobar-anticipos').addEventListener('submit', function(e) {
-    let seleccionados = [];
-    document.querySelectorAll('input[name="anticipo_ids"]:checked').forEach(function(checkbox) {
-        seleccionados.push(checkbox.value);
-    });
-
-    console.log('Anticipos seleccionados para aprobar:', seleccionados); 
-
-    if (seleccionados.length === 0) {
-        e.preventDefault();
-        alert("No has seleccionado ningún anticipo para aprobar.");
-        return;
-    }
-
-    document.getElementById('anticipo_ids').value = seleccionados.join(",");
-    console.log('Valor del campo oculto:', document.getElementById('anticipo_ids').value); 
-});
 </script>
 {% endblock content %}
 

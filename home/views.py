@@ -560,25 +560,27 @@ def aprobar_anticipo(request, anticipo_id):
 @login_required
 def aprobar_anticipos_masivamente(request):
     if request.method == "POST":
-        anticipo_ids = request.POST.getlist("anticipo_ids")
-        print(f"IDs recibidos desde el frontend: {anticipo_ids}")  # Depuración: Verificar qué IDs llegan
+        anticipo_ids = request.POST.get("anticipo_ids")  # Recibe la cadena de IDs
 
         if anticipo_ids:
-            try:
-                anticipo_ids = [int(id) for id in anticipo_ids]  # Asegurarse de que los IDs son enteros
-                print(f"IDs seleccionados (convertidos a enteros): {anticipo_ids}")  # Verificación adicional
-                anticipos_aprobados = Anticipo.objects.filter(id__in=anticipo_ids)
+            # Convertir la cadena de IDs en una lista de enteros
+            anticipo_ids = [int(id) for id in anticipo_ids.split(",")]
 
-                if anticipos_aprobados.exists():
-                    anticipos_aprobados.update(aprobado=True)
-                    messages.success(request, "Anticipos aprobados con éxito.")
-                else:
-                    messages.error(request, "No se encontraron anticipos válidos para aprobar.")
-            except ValueError as e:
-                messages.error(request, f"Error al convertir los IDs de anticipos: {str(e)}")
+            # Filtrar los anticipos seleccionados
+            anticipos_aprobados = Anticipo.objects.filter(id__in=anticipo_ids)
+
+            if anticipos_aprobados.exists():
+                # Aprobar masivamente los anticipos seleccionados
+                anticipos_aprobados.update(aprobado=True)
+
+                messages.success(request, "Anticipos aprobados con éxito.")
+            else:
+                messages.error(request, "No se encontraron anticipos válidos para aprobar.")
         else:
             messages.error(request, "No se seleccionaron anticipos para aprobar.")
+
     return redirect("ver_anticipos")
+
 
 
 
