@@ -130,9 +130,9 @@
 document.getElementById('select_all').addEventListener('change', function() {
     let checkboxes = document.querySelectorAll('input[name="anticipo_ids"]');
     checkboxes.forEach(function(checkbox) {
-        checkbox.checked = document.getElementById('select_all').checked;
-    });
-    console.log('Todos los checkboxes seleccionados:', document.getElementById('select_all').checked); // Depuración
+        checkbox.checked = this.checked;
+    }, this); 
+    console.log('Todos los checkboxes seleccionados:', this.checked);
 });
 
 // Función para ocultar anticipos seleccionados mediante AJAX
@@ -142,7 +142,7 @@ document.getElementById('ocultar-seleccionados-btn').addEventListener('click', f
         seleccionados.push(checkbox.value);
     });
 
-    console.log('Anticipos seleccionados para ocultar:', seleccionados); // Depuración
+    console.log('Anticipos seleccionados para ocultar:', seleccionados); 
 
     if (seleccionados.length === 0) {
         alert("No has seleccionado ningún anticipo.");
@@ -181,7 +181,7 @@ document.getElementById('form-aprobar-anticipos').addEventListener('submit', fun
         seleccionados.push(checkbox.value);
     });
 
-    console.log('Anticipos seleccionados para aprobar:', seleccionados); // Depuración
+    console.log('Anticipos seleccionados para aprobar:', seleccionados); 
 
     if (seleccionados.length === 0) {
         e.preventDefault();
@@ -190,10 +190,8 @@ document.getElementById('form-aprobar-anticipos').addEventListener('submit', fun
     }
 
     document.getElementById('anticipo_ids').value = seleccionados.join(",");
-    console.log('Valor del campo oculto:', document.getElementById('anticipo_ids').value); // Depuración
+    console.log('Valor del campo oculto:', document.getElementById('anticipo_ids').value); 
 });
 </script>
-
- 
 {% endblock content %}
 
