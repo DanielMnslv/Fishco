@@ -130,9 +130,9 @@
 document.getElementById('select_all').addEventListener('change', function() {
     let checkboxes = document.querySelectorAll('input[name="anticipo_ids"]');
     checkboxes.forEach(function(checkbox) {
-        checkbox.checked = this.checked;
-    }, this); // 'this' se refiere al checkbox 'select_all'
-    console.log('Todos los checkboxes seleccionados:', this.checked); // Depuración
+        checkbox.checked = document.getElementById('select_all').checked;
+    });
+    console.log('Todos los checkboxes seleccionados:', document.getElementById('select_all').checked); // Depuración
 });
 
 // Función para ocultar anticipos seleccionados mediante AJAX
@@ -194,7 +194,6 @@ document.getElementById('form-aprobar-anticipos').addEventListener('submit', fun
 });
 </script>
 
-    
-
+ 
 {% endblock content %}
 
