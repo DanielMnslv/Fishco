@@ -30,8 +30,8 @@
                 <td>{{ cotizacion.precio_formateado }}</td>
                 <!-- Mostrar texto truncado con un modal para ver más -->
                 <td class="detalles-column">
-                    {{ cotizacion.detalles|slice:":50" }}{% if cotizacion.detalles|length > 50 %}...
-                    <a href="#" data-toggle="modal" data-target="#detalleModal{{ cotizacion.id }}">Ver más</a>
+                    {{ cotizacion.detalles|slice:":50" }}{% if cotizacion.detalles|length > 50 %}
+                    <a href="#" data-toggle="modal" data-target="#detalleModal{{ cotizacion.id }}">...</a>
                     {% endif %}
                 </td>
                 <td>
