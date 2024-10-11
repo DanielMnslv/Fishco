@@ -556,6 +556,9 @@ def aprobar_anticipo(request, anticipo_id):
     return render(request, "aprobar_anticipo.html", {"anticipo": anticipo})
 
 
+from django.core.mail import send_mail
+from django.conf import settings
+
 @user_passes_test(lambda u: u.id in [31, 33])  # IDs permitidos
 @login_required
 def aprobar_anticipos_masivamente(request):
@@ -573,13 +576,31 @@ def aprobar_anticipos_masivamente(request):
                 # Aprobar masivamente los anticipos seleccionados
                 anticipos_aprobados.update(aprobado=True)
 
-                messages.success(request, "Anticipos aprobados con éxito.")
+                # Crear el mensaje de correo con los detalles de los anticipos aprobados
+                anticipo_list = ""
+                for anticipo in anticipos_aprobados:
+                    anticipo_list += f"ID: {anticipo.id}, Nombre: {anticipo.nombre}, Total: {anticipo.total_pagar}\n"
+
+                # Crear el contenido del correo
+                subject = "Anticipos Aprobados Masivamente"
+                message = f"Se han aprobado los siguientes anticipos:\n\n{anticipo_list}"
+
+                # Enviar el correo a los destinatarios
+                recipient_list = ["auxcompras@cifishco.com.co", "gestiondocumental.pfishco@gmail.com"]  # Destinatarios
+                from_email = settings.DEFAULT_FROM_EMAIL
+
+                try:
+                    send_mail(subject, message, from_email, recipient_list)
+                    messages.success(request, "Anticipos aprobados con éxito. Notificación enviada por correo.")
+                except Exception as e:
+                    messages.error(request, f"Anticipos aprobados, pero hubo un error al enviar el correo: {e}")
             else:
                 messages.error(request, "No se encontraron anticipos válidos para aprobar.")
         else:
             messages.error(request, "No se seleccionaron anticipos para aprobar.")
 
     return redirect("ver_anticipos")
+
 
 
 
