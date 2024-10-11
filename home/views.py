@@ -560,54 +560,26 @@ def aprobar_anticipo(request, anticipo_id):
 @login_required
 def aprobar_anticipos_masivamente(request):
     if request.method == "POST":
-        # Obtener la lista de IDs seleccionados
         anticipo_ids = request.POST.getlist("anticipo_ids")
+        print(f"IDs recibidos desde el frontend: {anticipo_ids}")  # Depuración: Verificar qué IDs llegan
 
-        # Imprimir los IDs para verificar si están siendo recibidos correctamente
-        print(f"IDs recibidos desde el frontend: {anticipo_ids}")
-
-        # Verificamos si hay IDs seleccionados
         if anticipo_ids:
             try:
-                # Convertir los IDs de anticipos a una lista de enteros
-                anticipo_ids = [int(id) for id in anticipo_ids]
-                print(f"IDs seleccionados (convertidos a enteros): {anticipo_ids}")  # Depuración: ver IDs recibidos
-
-                # Filtrar los anticipos seleccionados
+                anticipo_ids = [int(id) for id in anticipo_ids]  # Asegurarse de que los IDs son enteros
+                print(f"IDs seleccionados (convertidos a enteros): {anticipo_ids}")  # Verificación adicional
                 anticipos_aprobados = Anticipo.objects.filter(id__in=anticipo_ids)
 
                 if anticipos_aprobados.exists():
-                    # Actualizar anticipos seleccionados a aprobados
                     anticipos_aprobados.update(aprobado=True)
-
-                    # Construir el contenido del correo
-                    subject = "Aprobación masiva de anticipos"
-                    message = "Se han aprobado los siguientes anticipos:\n\n"
-
-                    for anticipo in anticipos_aprobados:
-                        message += f'Nombre: {anticipo.nombre}\n' \
-                                   f'NIT: {anticipo.nit}\n' \
-                                   f'Producto/Servicio: {anticipo.producto_servicio}\n' \
-                                   f'Total a pagar: ${anticipo.total_pagar:,.2f}\n\n'
-
-                    message += "Ver más detalles en la plataforma."
-
-                    # Lista de destinatarios
-                    recipient_list = ["auxcompras@cifishco.com.co", "gestiondocumental.pfishco@gmail.com"]
-                    from_email = settings.DEFAULT_FROM_EMAIL
-
-                    # Enviar el correo con el resumen
-                    send_mail(subject, message, from_email, recipient_list)
-
-                    messages.success(request, "Anticipos aprobados con éxito y se ha enviado una notificación por correo.")
+                    messages.success(request, "Anticipos aprobados con éxito.")
                 else:
                     messages.error(request, "No se encontraron anticipos válidos para aprobar.")
             except ValueError as e:
                 messages.error(request, f"Error al convertir los IDs de anticipos: {str(e)}")
         else:
             messages.error(request, "No se seleccionaron anticipos para aprobar.")
-
     return redirect("ver_anticipos")
+
 
 
 
