@@ -113,7 +113,7 @@ class SolicitudView(LoginRequiredMixin, View):
         if form.is_valid():
             solicitud = form.save(commit=False)  # No guardar aún, para asignar el usuario
             solicitud.usuario = request.user  # Asignar el usuario autenticado
-            solicitud.save()  # Ahora sí, guardar con el usuario asignado
+            solicitud.save()  # Guardar la solicitud con el usuario asignado
 
             # Enviar notificación por correo a múltiples destinatarios
             subject = f'Nueva solicitud creada: {solicitud.nombre}'
@@ -123,7 +123,7 @@ class SolicitudView(LoginRequiredMixin, View):
                       f'Destino: {solicitud.destino}\n' \
                       f'Tipo: {solicitud.tipo}\n\n' \
                       f'Ver más en la plataforma.'
-            
+
             # Lista de destinatarios
             recipient_list = ["gestiondocumental.pfishco@gmail.com"]
             from_email = settings.DEFAULT_FROM_EMAIL  # El correo configurado como remitente
@@ -131,9 +131,20 @@ class SolicitudView(LoginRequiredMixin, View):
             # Enviar el correo
             send_mail(subject, message, from_email, recipient_list)
 
+            # Mensaje de éxito
             messages.success(request, "Solicitud creada con éxito y notificación enviada.")
-            return redirect("index")
+            
+            # Reiniciar el formulario después de envío exitoso
+            form = SolicitudForm()
+        else:
+            # Mensaje de error con los detalles del formulario inválido
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"Error en {field}: {error}")
+
+        # Si el formulario es válido o no, se renderiza la misma página con los mensajes correspondientes
         return render(request, "pages/solicitud.html", {"form": form})
+
 
 
 class SolicitudDetailView(LoginRequiredMixin, UserPassesTestMixin, View):
@@ -655,6 +666,9 @@ class AnticipoListView(LoginRequiredMixin, StaffRequiredMixin, ListView):
 def ocultar_anticipos(request):
     if request.method == 'POST':
         anticipos_ids = request.POST.get("anticipos_ids", "").split(",")
+        # Filtrar los IDs vacíos
+        anticipos_ids = [id for id in anticipos_ids if id.isdigit()]
+
         if anticipos_ids:
             # Verificar si se encontraron anticipos con esos IDs
             updated_count = Anticipo.objects.filter(id__in=anticipos_ids).update(oculto=True)

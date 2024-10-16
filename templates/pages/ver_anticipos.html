@@ -130,16 +130,13 @@
     document.getElementById('select_all').addEventListener('change', function() {
         let checkboxes = document.querySelectorAll('input[name="anticipo_ids"]');
         checkboxes.forEach(function(checkbox) {
-            checkbox.checked = this.checked;
-        }, this); // 'this' se refiere al checkbox 'select_all'
+            checkbox.checked = this.checked; // 'this' se refiere al checkbox 'select_all'
+        }, this);
     });
 
     // Agregar los IDs seleccionados al formulario de aprobación masiva antes de enviarlo
     document.getElementById('form-aprobar-anticipos').addEventListener('submit', function(e) {
-        let seleccionados = [];
-        document.querySelectorAll('input[name="anticipo_ids"]:checked').forEach(function(checkbox) {
-            seleccionados.push(checkbox.value);
-        });
+        let seleccionados = Array.from(document.querySelectorAll('input[name="anticipo_ids"]:checked')).map(checkbox => checkbox.value);
 
         if (seleccionados.length === 0) {
             e.preventDefault();
@@ -149,6 +146,42 @@
 
         document.getElementById('anticipo_ids').value = seleccionados.join(",");
     });
+
+    // Agregar un evento al botón "Facturado y Archivado"
+    document.getElementById('ocultar-seleccionados-btn').addEventListener('click', function() {
+        let seleccionados = Array.from(document.querySelectorAll('input[name="anticipo_ids"]:checked')).map(checkbox => checkbox.value);
+
+        if (seleccionados.length === 0) {
+            alert("No has seleccionado ningún anticipo para ocultar.");
+            return;
+        }
+
+        // Enviar los IDs a la vista para ocultarlos
+        fetch("{% url 'ocultar_anticipos' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}",
+            },
+            body: JSON.stringify({ anticipos_ids: seleccionados })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Anticipos ocultos exitosamente.");
+                seleccionados.forEach(id => {
+                    document.getElementById('anticipo-' + id).style.display = 'none'; // Ocultar la fila
+                });
+            } else {
+                alert("Error: " + (data.error || "No se pudo ocultar los anticipos."));
+            }
+        })
+        .catch(error => {
+            console.error("Error al ocultar anticipos:", error);
+            alert("Ocurrió un error al ocultar los anticipos.");
+        });
+    });
 </script>
+
 {% endblock content %}
 

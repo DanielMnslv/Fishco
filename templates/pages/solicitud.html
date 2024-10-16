@@ -3,6 +3,19 @@
 
 {% block content %}
 
+  <!-- Mostrar mensajes de éxito o error -->
+  {% if messages %}
+    <div class="row">
+      <div class="col-sm-12">
+        {% for message in messages %}
+          <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}" role="alert">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
   <!-- [ Main Content ] start -->
   <div class="row">
     <div class="col-sm-12">
@@ -18,9 +31,9 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-        <label for="fecha">Fecha</label>
-        <input type="datetime-local" id="fecha" name="fecha" class="form-control" required>
-    </div>
+                  <label for="fecha">Fecha</label>
+                  <input type="datetime-local" id="fecha" name="fecha" class="form-control" required>
+                </div>
                 <div class="form-group">
                   <label for="tipo">Tipo</label>
                   <select id="tipo" name="tipo" class="form-control" required>
@@ -31,25 +44,25 @@
                 <div class="form-group">
                   <label for="destino">Destino de Producto o Servicio</label>
                   <select id="destino" name="destino" class="form-control" required>
+                    <!-- Opciones de destino -->
                     <option value="ADMINISTRACIÓN">ADMINISTRACIÓN</option>
-                        <option value="PRODUCCION">PRODUCCION</option>
-                        <option value="ALEVINERA">ALEVINERA</option>
-                        <option value="ECOPEZ">ECOPEZ</option>
-                        <option value="FERRY">FERRY</option>
-                        <option value="CARRO VNS228">CARRO VNS228</option>
-                        <option value="CARRO WGY">CARRO WGY</option>
-                        <option value="CARRO THS 473">CARRO THS 473</option>
-                        <option value="CARRO PESCA SRP 254">CARRO PESCA SRP 254</option>
-                        <option value="TERMOKIN GQZ 727">TERMOKIN GQZ 727</option>
-                        <option value="TERMOKIN GRK 030">TERMOKIN GRK 030</option>
-                        <option value="THERMO KING THS 592">THERMO KING THS 592</option>
-                        <option value="UNIDAD COMERCIALIZACION">UNIDAD COMERCIALIZACION</option>
+                    <option value="PRODUCCION">PRODUCCION</option>
+                    <option value="ALEVINERA">ALEVINERA</option>
+                    <option value="ECOPEZ">ECOPEZ</option>
+                    <option value="FERRY">FERRY</option>
+                    <option value="CARRO VNS228">CARRO PESCA VNS 228</option>
+                    <option value="CARRO WGY">CARRO PESCA WGY 964</option>
+                    <option value="CARRO THS 473">CARRO PESCA THS 473</option>
+                    <option value="CARRO PESCA SRP 254">CARRO PESCA SRP 254</option>
+                    <option value="TERMOKIN GQZ 727">CARRO EXPORTACION GQZ 727</option>
+                    <option value="TERMOKIN GRK 030">CARRO EXPORTACION GRK 030</option>
+                    <option value="THERMO KING THS 592">CARRO EXPORTACION THS 592</option>
+                    <option value="UNIDAD COMERCIALIZACION">UNIDAD COMERCIALIZACION</option>
                   </select>
                 </div>
-                <!-- Modificar para aceptar imágenes, PDFs y archivos Excel -->
                 <div class="form-group">
-                <label for="archivo">Archivo del Producto o Servicio</label>
-                <input type="file" id="archivo" name="archivo" class="form-control" accept=".jpg,.jpeg,.png,.pdf,.xls,.xlsx,.webp" required>
+                  <label for="archivo">Archivo del Producto o Servicio</label>
+                  <input type="file" id="archivo" name="archivo" class="form-control" accept=".jpg,.jpeg,.png,.pdf,.xls,.xlsx,.webp" required>
                 </div>
                 <div class="form-group">
                   <label for="cantidad">Cantidad</label>
@@ -84,3 +97,4 @@
   <!-- [ Main Content ] end -->
 
 {% endblock content %}
+
