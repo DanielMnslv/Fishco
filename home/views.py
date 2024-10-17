@@ -33,7 +33,7 @@ from django.conf import settings
 from django.db.models import Max
 from django.core.cache import cache
 from django.core.mail import send_mail
-
+import json
 
 @login_required
 def index(request):
@@ -597,7 +597,7 @@ def aprobar_anticipos_masivamente(request):
                 message = f"Se han aprobado los siguientes anticipos:\n\n{anticipo_list}"
 
                 # Enviar el correo a los destinatarios
-                recipient_list = ["auxcompras@cifishco.com.co", "gestiondocumental.pfishco@gmail.com"]  # Destinatarios
+                recipient_list = ["auxcompras@cifishco.com.co", "gestiondocumental.pfishco@gmail.com", "tesoreria@cifishco.com.co"]  # Destinatarios
                 from_email = settings.DEFAULT_FROM_EMAIL
 
                 try:
@@ -665,9 +665,9 @@ class AnticipoListView(LoginRequiredMixin, StaffRequiredMixin, ListView):
 @csrf_protect
 def ocultar_anticipos(request):
     if request.method == 'POST':
-        anticipos_ids = request.POST.get("anticipos_ids", "").split(",")
-        # Filtrar los IDs vacíos
-        anticipos_ids = [id for id in anticipos_ids if id.isdigit()]
+        data = json.loads(request.body)  # Leer el cuerpo como JSON
+        anticipos_ids = data.get("anticipos_ids", [])
+        anticipos_ids = [id for id in anticipos_ids if id.isdigit()]  # Filtrar los IDs vacíos
 
         if anticipos_ids:
             # Verificar si se encontraron anticipos con esos IDs
