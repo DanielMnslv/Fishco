@@ -3,6 +3,19 @@
 
 {% block content %}
 
+  <!-- Mostrar mensajes de éxito o error -->
+  {% if messages %}
+    <div class="row">
+      <div class="col-sm-12">
+        {% for message in messages %}
+          <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}" role="alert">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
   <!-- [ Main Content ] start -->
   <div class="row">
     <div class="col-sm-12">
@@ -14,64 +27,62 @@
           <h5>Compras Diarias</h5>
           <hr>
           <form action="{% url 'diario' %}" method="POST" enctype="multipart/form-data" name="diario">
-                {% csrf_token %}
+            {% csrf_token %}
 
-                 <div class="form-group">
-                  <label for="tiempo_entrega">Fecha</label>
-                  <input type="date" id="tiempo_entrega" name="tiempo_entrega" class="form-control" required>
-                </div>
+            <div class="form-group">
+              <label for="tiempo_entrega">Fecha</label>
+              <input type="date" id="tiempo_entrega" name="tiempo_entrega" class="form-control" required>
+            </div>
 
-                <div class="form-group">
-                  <label for="nombre">Producto o Servicio</label>
-                  <input type="text" id="nombre" name="nombre" class="form-control" placeholder="Nombre del Producto o Servicio" required>
-                </div>
+            <div class="form-group">
+              <label for="nombre">Producto o Servicio</label>
+              <input type="text" id="nombre" name="nombre" class="form-control" placeholder="Nombre del Producto o Servicio" required>
+            </div>
 
-                 <div class="form-group">
-                  <label for="empresa">Empresa</label>
-                  <input type="text" id="empresa" name="empresa" class="form-control" required>
-                </div>
+            <div class="form-group">
+              <label for="empresa">Empresa</label>
+              <input type="text" id="empresa" name="empresa" class="form-control" required>
+            </div>
 
-                <div class="form-group">
-                  <label for="centro_costo">Centro de Costo</label>
-                  <select id="centro_costo" name="centro_costo" class="form-control" required>
-                    <option value="ADMINISTRACIÓN">ADMINISTRACIÓN</option>
-                    <option value="PRODUCCION">PRODUCCIÓN</option>
-                    <option value="ALEVINERA">ALEVINERA</option>
-                    <option value="ECOPEZ">ECOPEZ</option>
-                    <option value="FERRY">FERRY</option>
-                    <option value="CARRO VNS228">CARRO PESCA NVS 228</option>
-                    <option value="CARRO WGY">CARRO PESCA WGY 964</option>
-                    <option value="CARRO THS 473">CARRO PESCA THS 473</option>
-                    <option value="CARRO PESCA SRP 254">CARRO PESCA SRP 254</option>
-                    <option value="TERMOKIN GQZ 727">CARRO EXPORTACION GQZ 727</option>
-                    <option value="TERMOKIN GRK 030">CARRO EXPORTACION GRK 030</option>
-                    <option value="THERMO KING THS 592">CARRO EXPORTACION THS 592</option>
-                    <option value="UNIDAD COMERCIALIZACION">UNIDAD COMERCIALIZACIÓN</option>
-                    <!-- Other options -->
-                  </select>
-                </div>
+            <div class="form-group">
+              <label for="centro_costo">Centro de Costo</label>
+              <select id="centro_costo" name="centro_costo" class="form-control" required>
+                <option value="ADMINISTRACIÓN">ADMINISTRACIÓN</option>
+                <option value="PRODUCCION">PRODUCCIÓN</option>
+                <option value="ALEVINERA">ALEVINERA</option>
+                <option value="ECOPEZ">ECOPEZ</option>
+                <option value="FERRY">FERRY</option>
+                <option value="CARRO PESCA NVS 228">CARRO PESCA NVS 228</option>
+                <option value="CARRO PESCA WGY 964">CARRO PESCA WGY 964</option>
+                <option value="CARRO PESCA THS 473">CARRO PESCA THS 473</option>
+                <option value="CARRO PESCA SRP 254">CARRO PESCA SRP 254</option>
+                <option value="CARRO EXPORTACION GQZ 727">CARRO EXPORTACIÓN GQZ 727</option>
+                <option value="CARRO EXPORTACION GRK 030">CARRO EXPORTACIÓN GRK 030</option>
+                <option value="CARRO EXPORTACION THS 592">CARRO EXPORTACIÓN THS 592</option>
+                <option value="UNIDAD COMERCIALIZACION">UNIDAD COMERCIALIZACIÓN</option>
+              </select>
+            </div>
 
-                <div class="form-group">
-                  <label for="destino">Destino de Producto o Servicio</label>
-                  <select id="destino" name="destino" class="form-control" required>
-                    <option value="ADMINISTRACIÓN">ADMINISTRACIÓN</option>
-                        <option value="PRODUCCION">PRODUCCION</option>
-                        <option value="ALEVINERA">ALEVINERA</option>
-                        <option value="ECOPEZ">ECOPEZ</option>
-                        <option value="FERRY">FERRY</option>
-                        <option value="CARRO VNS228">CARRO PESCA NVS 228</option>
-                        <option value="CARRO WGY">CARRO PESCA WGY 964</option>
-                        <option value="CARRO THS 473">CARRO PESCA THS 473</option>
-                        <option value="CARRO PESCA SRP 254">CARRO PESCA SRP 254</option>
-                        <option value="TERMOKIN GQZ 727">CARRO EXPORTACION GQZ 727</option>
-                        <option value="TERMOKIN GRK 030">CARRO EXPORTACION GRK 030</option>
-                        <option value="THERMO KING THS 592">CARRO EXPORTACION THS 592</option>
-                        <option value="UNIDAD COMERCIALIZACION">UNIDAD COMERCIALIZACION</option>
-                  </select>
-                </div>
+            <div class="form-group">
+              <label for="destino">Destino de Producto o Servicio</label>
+              <select id="destino" name="destino" class="form-control" required>
+                <option value="ADMINISTRACIÓN">ADMINISTRACIÓN</option>
+                <option value="PRODUCCION">PRODUCCIÓN</option>
+                <option value="ALEVINERA">ALEVINERA</option>
+                <option value="ECOPEZ">ECOPEZ</option>
+                <option value="FERRY">FERRY</option>
+                <option value="CARRO PESCA NVS 228">CARRO PESCA NVS 228</option>
+                <option value="CARRO PESCA WGY 964">CARRO PESCA WGY 964</option>
+                <option value="CARRO PESCA THS 473">CARRO PESCA THS 473</option>
+                <option value="CARRO PESCA SRP 254">CARRO PESCA SRP 254</option>
+                <option value="CARRO EXPORTACION GQZ 727">CARRO EXPORTACIÓN GQZ 727</option>
+                <option value="CARRO EXPORTACION GRK 030">CARRO EXPORTACIÓN GRK 030</option>
+                <option value="CARRO EXPORTACION THS 592">CARRO EXPORTACIÓN THS 592</option>
+                <option value="UNIDAD COMERCIALIZACION">UNIDAD COMERCIALIZACIÓN</option>
+              </select>
+            </div>
 
-
-                <div class="form-group">
+            <div class="form-group">
               <label for="medio_pago">Medio de Pago</label>
               <select id="medio_pago" name="medio_pago" class="form-control" required>
                 <option value="cuentas_por_pagar">Cuentas por Pagar</option>
@@ -81,22 +92,22 @@
               </select>
             </div>
 
-                <div class="form-group">
-                <label for="documento_pdf">Sube tu Documento PDF</label>
-                <input type="file" id="documento_pdf" name="documento_pdf" accept=".pdf">
-                </div>
+            <div class="form-group">
+              <label for="documento_pdf">Sube tu Documento PDF</label>
+              <input type="file" id="documento_pdf" name="documento_pdf" accept=".pdf">
+            </div>
 
-		<div class="form-group">
-                <label for="observaciones">Observaciones</label>
-                <textarea id="observaciones" name="observaciones" class="form-control" rows="3"></textarea>
-                </div>
+            <div class="form-group">
+              <label for="observaciones">Observaciones</label>
+              <textarea id="observaciones" name="observaciones" class="form-control" rows="3"></textarea>
+            </div>
 
-
-                <!-- Submit Button -->
+            <!-- Submit Button -->
             <div class="text-center">
               <button type="submit" class="btn btn-primary btn-block">Enviar</button>
             </div>
-            </form>       </div> <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+          </form>
+        </div>
       </div>
     </div>
   </div>

@@ -208,11 +208,11 @@ class DiarioForm(forms.ModelForm):
             "destino",
             "medio_pago",
             "documento_pdf",
-	    "observaciones",
+	        "observaciones",
         ]
         widgets = {
-            "tiempo_entrega": forms.DateTimeInput(
-                attrs={"class": "form-control", "type": "datetime-local"}
+            "tiempo_entrega": forms.DateInput(
+                attrs={"class": "form-control", "type": "date"}  # Cambiado a 'date'
             ),
             "nombre": forms.TextInput(attrs={"class": "form-control"}),
             "empresa": forms.TextInput(attrs={"class": "form-control"}),
@@ -220,6 +220,5 @@ class DiarioForm(forms.ModelForm):
             "destino": forms.Select(attrs={"class": "form-control"}),
             "medio_pago": forms.Select(attrs={"class": "form-control"}),
             "documento_pdf": forms.ClearableFileInput(attrs={"class": "form-control"}),
-	    "observaciones": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "observaciones": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
         }
-

@@ -164,17 +164,22 @@ class Anticipo(models.Model):
 
 
 
+from django.db import models
+
 class Diario(models.Model):
     TIEMPO_ENTREGA_CHOICES = [(f"{i:02d}:00", f"{i:02d}:00") for i in range(24)]
 
-    tiempo_entrega = models.DateField("Hora de Entrega") 
+    # Cambiar a DateTimeField o TimeField si prefieres tener horas específicas
+    tiempo_entrega = models.DateField("Fecha de Entrega")
+
     nombre = models.CharField(max_length=200)
     empresa = models.CharField(max_length=200)
+
     centro_costo = models.CharField(
         max_length=200,
         choices=[
             ("ADMINISTRACIÓN", "ADMINISTRACIÓN"),
-            ("PRODUCCION", "PRODUCCION"),
+            ("PRODUCCION", "PRODUCCIÓN"),
             ("ALEVINERA", "ALEVINERA"),
             ("ECOPEZ", "ECOPEZ"),
             ("FERRY", "FERRY"),
@@ -182,30 +187,32 @@ class Diario(models.Model):
             ("CARRO PESCA WGY 964", "CARRO PESCA WGY 964"),
             ("CARRO PESCA THS 473", "CARRO PESCA THS 473"),
             ("CARRO PESCA SRP 254", "CARRO PESCA SRP 254"),
-            ("CARRO EXPORTACION GQZ 727", "CARRO EXPORTACION GQZ 727"),
-            ("CARRO EXPORTACION GRK 030", "CARRO EXPORTACION GRK 030"),
-            ("CARRO EXPORTACION THS 592", "CARRO EXPORTACION THS 592"),
-            ("UNIDAD COMERCIALIZACION", "UNIDAD COMERCIALIZACION"),
+            ("CARRO EXPORTACION GQZ 727", "CARRO EXPORTACIÓN GQZ 727"),
+            ("CARRO EXPORTACION GRK 030", "CARRO EXPORTACIÓN GRK 030"),
+            ("CARRO EXPORTACION THS 592", "CARRO EXPORTACIÓN THS 592"),
+            ("UNIDAD COMERCIALIZACION", "UNIDAD COMERCIALIZACIÓN"),
         ],
     )
+
     destino = models.CharField(
         max_length=200,
         choices=[
             ("ADMINISTRACIÓN", "ADMINISTRACIÓN"),
-            ("PRODUCCION", "PRODUCCION"),
+            ("PRODUCCION", "PRODUCCIÓN"),
             ("ALEVINERA", "ALEVINERA"),
             ("ECOPEZ", "ECOPEZ"),
             ("FERRY", "FERRY"),
-            ("CARRO VNS228", "CARRO VNS228"),
-            ("CARRO WGY", "CARRO WGY"),
-            ("CARRO THS 473", "CARRO THS 473"),
+            ("CARRO PESCA NVS 228", "CARRO PESCA NVS 228"),
+            ("CARRO PESCA WGY 964", "CARRO PESCA WGY 964"),
+            ("CARRO PESCA THS 473", "CARRO PESCA THS 473"),
             ("CARRO PESCA SRP 254", "CARRO PESCA SRP 254"),
-            ("TERMOKIN GQZ 727", "TERMOKIN GQZ 727"),
-            ("TERMOKIN GRK 030", "TERMOKIN GRK 030"),
-            ("THERMO KING THS 592", "THERMO KING THS 592"),
-            ("UNIDAD COMERCIALIZACION", "UNIDAD COMERCIALIZACION"),
+            ("CARRO EXPORTACION GQZ 727", "CARRO EXPORTACIÓN GQZ 727"),
+            ("CARRO EXPORTACION GRK 030", "CARRO EXPORTACIÓN GRK 030"),
+            ("CARRO EXPORTACION THS 592", "CARRO EXPORTACIÓN THS 592"),
+            ("UNIDAD COMERCIALIZACION", "UNIDAD COMERCIALIZACIÓN"),
         ],
     )
+
     medio_pago = models.CharField(
         max_length=200,
         choices=[
@@ -215,9 +222,11 @@ class Diario(models.Model):
             ("caja_paula", "Caja de Paula"),
         ],
     )
+
     documento_pdf = models.FileField(upload_to="documentos_pdf/", blank=True, null=True)
     oculto = models.BooleanField(default=False)
     observaciones = models.TextField(blank=True, null=True)
+
     def __str__(self):
         return f"Diario {self.nombre} - {self.empresa}"
 

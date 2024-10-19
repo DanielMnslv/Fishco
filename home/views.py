@@ -339,15 +339,19 @@ def anticipo_view(request):
         form = AnticipoForm()
     return render(request, "pages/anticipo.html", {"form": form})
 
-@staff_required
 @login_required
+@staff_required
 def diario_view(request):
     if request.method == "POST":
         form = DiarioForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             messages.success(request, "Diario creado con éxito.")
-            return redirect("index")
+            return redirect("diario")  # Redirecciona tras el éxito
+        else:
+            # Imprimir errores del formulario
+            print(form.errors)
+            messages.error(request, "Hubo un error al registrar el diario. Verifica los datos.")
     else:
         form = DiarioForm()
     return render(request, "pages/diario.html", {"form": form})
@@ -477,7 +481,7 @@ def ver_ordenes(request):
 @login_required
 def ver_diario(request):
     # Filtrar solo los diarios que no estén ocultos
-    diarios = Diario.objects.filter(oculto=False)
+    diarios = Diario.objects.filter(oculto=False).order_by('tiempo_entrega')  # Ordenar los diarios por tiempo_entrega
 
     # Obtener fechas de inicio y fin de los filtros
     fecha_inicio = request.GET.get("fecha_inicio")
@@ -502,6 +506,7 @@ def ver_diario(request):
     diario_page = paginator.get_page(page_number)
 
     return render(request, "pages/ver_diario.html", {"diarios": diario_page})
+
 
 
 @login_required
