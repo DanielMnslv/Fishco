@@ -83,7 +83,6 @@ class MensajeForm(forms.ModelForm):
             ),
         }
 
-
 class OrdenForm(forms.ModelForm):
     class Meta:
         model = Orden
@@ -107,7 +106,6 @@ class OrdenForm(forms.ModelForm):
             "tiempo_entrega": forms.TextInput(attrs={"class": "form-control"}),
             "observaciones": forms.Textarea(attrs={"class": "form-control", "rows": 2}),
         }
-
 
 class AnticipoForm(forms.ModelForm):
     class Meta:

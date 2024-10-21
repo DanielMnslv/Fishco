@@ -93,11 +93,6 @@ class Mensaje(models.Model):
 
 
 class Orden(models.Model):
-    ESTADO_CHOICES = [
-        ('PENDIENTE', 'Pendiente'),
-        ('APROBADA', 'Aprobada'),
-        ('RECHAZADA', 'Rechazada'),
-    ]
     descripcion = models.TextField()
     codigo_cotizacion = models.CharField(max_length=100)
     precio = models.DecimalField(max_digits=10, decimal_places=2)
@@ -106,10 +101,13 @@ class Orden(models.Model):
     destino = models.CharField(max_length=255)
     tiempo_entrega = models.CharField(max_length=255)
     observaciones = models.TextField(blank=True, null=True)
-    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')
+    
+    # Elimina el campo estado y sus opciones
+    # estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')
 
     def __str__(self):
         return f"{self.codigo_cotizacion} - {self.descripcion}"
+
 
 
 class Anticipo(models.Model):

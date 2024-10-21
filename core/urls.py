@@ -5,7 +5,6 @@ from rest_framework.authtoken.views import obtain_auth_token  # <-- NEW
 from home.views import (
     SolicitudView,
     OrdenView,
-    AprobarOrdenView,
     SolicitudDetailView,
     anticipo_view,
     diario_view,
@@ -49,11 +48,6 @@ urlpatterns = [
         name="aprobar_cotizacion",
     ),
     path("ver_ordenes/", ver_ordenes, name="ver_ordenes"),
-    path(
-        "aprobar_orden/<int:orden_id>/",
-        AprobarOrdenView.as_view(),
-        name="aprobar_orden",
-    ),
     path(
         "generar_reporte_orden/<int:orden_id>/",
         generar_reporte_orden,

@@ -35,11 +35,21 @@ from django.core.cache import cache
 from django.core.mail import send_mail
 import json
 
+
+from django.db.models import Count, Avg, F, ExpressionWrapper, DurationField
+from datetime import timedelta
+from django.utils import timezone
+
 @login_required
 def index(request):
     # Obtener estadísticas de Solicitudes
     total_solicitudes = Solicitud.objects.count()
-    solicitudes_aprobadas = Solicitud.objects.filter(estado="aprobado").count()
+
+    # Solicitudes aprobadas (tienen al menos una cotización aprobada)
+    solicitudes_aprobadas = Solicitud.objects.filter(cotizaciones__estado="aprobada").distinct().count()
+
+    solicitudes_pendientes = total_solicitudes - solicitudes_aprobadas
+    solicitudes_rechazadas = 0  # Si tienes algún campo o estado para solicitudes rechazadas, puedes ajustarlo
 
     # Obtener estadísticas de Cotizaciones
     total_cotizaciones = Cotizacion.objects.count()
@@ -49,35 +59,61 @@ def index(request):
     total_anticipos = Anticipo.objects.count()
     anticipos_aprobados = Anticipo.objects.filter(aprobado=True).count()
 
-    # Obtener estadísticas de Órdenes
+    # Obtener estadísticas de Órdenes (solo el total, ya que no tienen estado)
     total_ordenes = Orden.objects.count()
-    ordenes_aprobadas = Orden.objects.filter(estado="APROBADA").count()
 
-    # Calcular porcentajes
-    porcentaje_solicitudes_aprobadas = (solicitudes_aprobadas / total_solicitudes * 100) if total_solicitudes > 0 else 0
-    porcentaje_cotizaciones_aprobadas = (cotizaciones_aprobadas / total_cotizaciones * 100) if total_cotizaciones > 0 else 0
-    porcentaje_anticipos_aprobados = (anticipos_aprobados / total_anticipos * 100) if total_anticipos > 0 else 0
-    porcentaje_ordenes_aprobadas = (ordenes_aprobadas / total_ordenes * 100) if total_ordenes > 0 else 0
+    # Obtener solicitudes por categoría
+    solicitudes_productos = Solicitud.objects.filter(tipo="producto").count()
+    solicitudes_servicios = Solicitud.objects.filter(tipo="servicio").count()
+
+    # Obtener solicitudes por destino
+    solicitudes_por_destino = Solicitud.objects.values('destino').annotate(total=Count('id')).order_by('-total')
+
+    # Tendencia de solicitudes en la última semana
+    now = timezone.now()
+    last_week = now - timedelta(days=7)
+    solicitudes_ultima_semana = Solicitud.objects.filter(fecha__gte=last_week).count()
+
+    # Tiempo promedio de aprobación de solicitudes (promedio del tiempo de aprobación de cotizaciones)
+    solicitudes_aprobadas_duracion = Cotizacion.objects.filter(estado="aprobada").annotate(
+        tiempo_aprobacion=ExpressionWrapper(
+            F('fecha') - F('solicitud__fecha'),
+            output_field=DurationField()
+        )
+    ).aggregate(promedio=Avg('tiempo_aprobacion'))
+
+    # Obtener solicitudes por usuario
+    solicitudes_por_usuario = Solicitud.objects.values('usuario__username').annotate(total=Count('id')).order_by('-total')
 
     context = {
         'total_solicitudes': total_solicitudes,
         'solicitudes_aprobadas': solicitudes_aprobadas,
-        'porcentaje_solicitudes_aprobadas': porcentaje_solicitudes_aprobadas,
+        'solicitudes_pendientes': solicitudes_pendientes,
+        'solicitudes_rechazadas': solicitudes_rechazadas,
 
         'total_cotizaciones': total_cotizaciones,
         'cotizaciones_aprobadas': cotizaciones_aprobadas,
-        'porcentaje_cotizaciones_aprobadas': porcentaje_cotizaciones_aprobadas,
 
         'total_anticipos': total_anticipos,
         'anticipos_aprobados': anticipos_aprobados,
-        'porcentaje_anticipos_aprobados': porcentaje_anticipos_aprobados,
 
         'total_ordenes': total_ordenes,
-        'ordenes_aprobadas': ordenes_aprobadas,
-        'porcentaje_ordenes_aprobadas': porcentaje_ordenes_aprobadas,
+
+        'solicitudes_productos': solicitudes_productos,
+        'solicitudes_servicios': solicitudes_servicios,
+
+        'solicitudes_por_destino': solicitudes_por_destino,
+        'solicitudes_ultima_semana': solicitudes_ultima_semana,
+
+        'solicitudes_aprobadas_duracion': solicitudes_aprobadas_duracion['promedio'],
+        'solicitudes_por_usuario': solicitudes_por_usuario,
     }
 
     return render(request, "pages/index.html", context)
+
+
+
+
 
 
 @login_required
@@ -310,20 +346,6 @@ class OrdenView(LoginRequiredMixin, SuperUserRequiredMixin, View):
             messages.success(request, "Orden creada con éxito.")
             return redirect("index")
         return render(request, "pages/orden.html", {"form": form})
-
-
-class AprobarOrdenView(LoginRequiredMixin, UserPassesTestMixin, View):
-    def post(self, request, orden_id):
-        # Verificar si el usuario tiene los ID permitidos
-        if request.user.id not in [31, 33, 32]:
-            messages.error(request, "No tienes permiso para aprobar órdenes.")
-            return redirect("ver_ordenes")
-        
-        orden = get_object_or_404(Orden, id=orden_id)
-        orden.estado = "APROBADA"
-        orden.save()
-        messages.success(request, "Orden aprobada con éxito.")
-        return redirect("ver_ordenes")
 
 
 @staff_required

@@ -85,9 +85,7 @@
                     <th>Destino</th>
                     <th>Tiempo de Entrega</th>
                     <th>Observaciones</th>
-                    <th>Documento PDF</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
+                    <th>Archivo</th>
                 </tr>
             </thead>
             <tbody>
@@ -109,16 +107,6 @@
                         No disponible
                         {% endif %}
                     </td>
-                    <td>{{ orden.get_estado_display }}</td>
-                    <td>
-    {% if orden.estado == "PENDIENTE" %}
-    <form action="{% url 'aprobar_orden' orden.id %}" method="post">
-        {% csrf_token %}
-        <input type="submit" value="Aprobar" class="btn btn-success">
-    </form>
-    {% endif %}
-    
-</td>
                 </tr>
                 {% empty %}
                 <tr>
