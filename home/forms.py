@@ -207,18 +207,20 @@ class DiarioForm(forms.ModelForm):
             "centro_costo",
             "destino",
             "medio_pago",
-            "documento_pdf",
-	        "observaciones",
+            "documento",  # Asegúrate de que el campo se llama "documento" ahora
+            "observaciones",
         ]
         widgets = {
             "tiempo_entrega": forms.DateInput(
-                attrs={"class": "form-control", "type": "date"}  # Cambiado a 'date'
+                attrs={"class": "form-control", "type": "date"}
             ),
             "nombre": forms.TextInput(attrs={"class": "form-control"}),
             "empresa": forms.TextInput(attrs={"class": "form-control"}),
             "centro_costo": forms.Select(attrs={"class": "form-control"}),
             "destino": forms.Select(attrs={"class": "form-control"}),
             "medio_pago": forms.Select(attrs={"class": "form-control"}),
-            "documento_pdf": forms.ClearableFileInput(attrs={"class": "form-control"}),
+            "documento": forms.ClearableFileInput(
+                attrs={"class": "form-control", "accept": ".pdf,.jpg,.jpeg,.png,.doc,.docx"}  # Permitir múltiples tipos de archivos
+            ),
             "observaciones": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
         }

@@ -223,7 +223,13 @@ class Diario(models.Model):
         ],
     )
 
-    documento_pdf = models.FileField(upload_to="documentos_pdf/", blank=True, null=True)
+    # Cambiar el nombre del campo para algo más genérico como "documento"
+    documento = models.FileField(
+        upload_to="documentos/",  # Ruta donde se almacenarán los archivos
+        blank=True,
+        null=True,
+        validators=[FileExtensionValidator(allowed_extensions=['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'])]  # Extensiones permitidas
+    )
     oculto = models.BooleanField(default=False)
     observaciones = models.TextField(blank=True, null=True)
 
