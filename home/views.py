@@ -39,6 +39,9 @@ import json
 from django.db.models import Count, Avg, F, ExpressionWrapper, DurationField
 from datetime import timedelta
 from django.utils import timezone
+from django.db.models.functions import TruncMonth
+
+
 
 @login_required
 def index(request):
@@ -110,6 +113,7 @@ def index(request):
     }
 
     return render(request, "pages/index.html", context)
+
 
 
 

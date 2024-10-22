@@ -24,7 +24,55 @@
     </div>
   </div>
   
-  <!-- Repite esta estructura para Cotizaciones, Anticipos y Órdenes -->
+  <div class="col-md-6 col-xl-3 mb-4">
+    <div class="card bg-light shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-uppercase text-muted mb-2">Total Cotizaciones</h6>
+            <span class="h2 font-weight-bold mb-0">{{ total_cotizaciones }}</span>
+            <p class="text-muted mb-0"><i class="fa fa-arrow-up text-success"></i> {{ cotizaciones_aprobadas }} aprobadas</p>
+          </div>
+          <div class="icon icon-shape bg-primary text-white rounded-circle shadow">
+            <i class="fas fa-file-invoice"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6 col-xl-3 mb-4">
+    <div class="card bg-light shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-uppercase text-muted mb-2">Total Anticipos</h6>
+            <span class="h2 font-weight-bold mb-0">{{ total_anticipos }}</span>
+            <p class="text-muted mb-0"><i class="fa fa-arrow-up text-success"></i> {{ anticipos_aprobados }} aprobados</p>
+          </div>
+          <div class="icon icon-shape bg-warning text-white rounded-circle shadow">
+            <i class="fas fa-dollar-sign"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6 col-xl-3 mb-4">
+    <div class="card bg-light shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-uppercase text-muted mb-2">Total Órdenes</h6>
+            <span class="h2 font-weight-bold mb-0">{{ total_ordenes }}</span>
+          </div>
+          <div class="icon icon-shape bg-info text-white rounded-circle shadow">
+            <i class="fas fa-shipping-fast"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Gráficos -->
