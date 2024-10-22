@@ -193,6 +193,11 @@ class AnticipoSearchForm(forms.Form):
         required=False,
         widget=forms.DateInput(attrs={"class": "form-control", "type": "date"}),
     )
+    nombre = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Nombre"})
+    )
+
 
 
 class DiarioForm(forms.ModelForm):

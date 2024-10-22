@@ -20,6 +20,10 @@
     .table-container {
         margin-top: 20px;
     }
+    .observaciones {
+        white-space: pre-wrap;  /* Permitir saltos de línea */
+        word-wrap: break-word;   /* Ajustar palabras largas */
+    }
 </style>
 {% endblock extrastyle %}
 
@@ -66,52 +70,44 @@
     <div class="table-container">
         <table class="table table-striped table-bordered">
             <thead>
-                <tr>
-                    <th><input type="checkbox" id="select_all" /></th>
-                    <th>ID</th>
-                    <th>Tiempo de Entrega</th>
-                    <th>Nombre</th>
-                    <th>Empresa</th>
-                    <th>Centro de Costo</th>
-                    <th>Destino</th>
-                    <th>Medio de Pago</th>
-                    <th>Documento PDF</th>
-	            <th>Observaciones</th>
-                    <th>Aprobado</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in diarios %}
-                <tr id="diario-{{ item.id }}">
-                    <td><input type="checkbox" name="diario_ids" value="{{ item.id }}"></td>
-                    <td>{{ item.tiempo_entrega }}</td>
-                    <td>{{ item.nombre }}</td>
-                    <td>{{ item.empresa }}</td>
-                    <td>{{ item.centro_costo }}</td>
-                    <td>{{ item.destino }}</td>
-                    <td>{{ item.medio_pago }}</td>
-                    <td>
-                        {% if item.documento_pdf %}
-                            <a href="{{ item.documento_pdf.url }}" target="_blank">Ver PDF</a>
-                        {% else %}
-                            No disponible
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if item.aprobado %}
-                            <span class="btn btn-success">Aprobado</span>
-                        {% else %}
-                            <span class="btn btn-primary">Pendiente</span>
-                        {% endif %}
-                    </td>
-		    <td>{{ item.observaciones|default:"Sin observaciones" }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="10" class="text-center">No se encontraron registros.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
+    <tr>
+        <th><input type="checkbox" id="select_all" /></th>
+        <th>Tiempo de Entrega</th>
+        <th>Nombre</th>
+        <th>Empresa</th>
+        <th>Centro de Costo</th>
+        <th>Destino</th>
+        <th>Medio de Pago</th>
+        <th>Documento PDF</th>
+        <th>Observaciones</th>
+    </tr>
+</thead>
+<tbody>
+    {% for item in diarios %}
+    <tr id="diario-{{ item.id }}">
+        <td><input type="checkbox" name="diario_ids" value="{{ item.id }}"></td>
+        <td>{{ item.tiempo_entrega }}</td>
+        <td>{{ item.nombre }}</td>
+        <td>{{ item.empresa }}</td>
+        <td>{{ item.centro_costo }}</td>
+        <td>{{ item.destino }}</td>
+        <td>{{ item.medio_pago }}</td>
+        <td>
+            {% if item.documento_pdf %}
+                <a href="{{ item.documento_pdf.url }}" target="_blank">Ver PDF</a>
+            {% else %}
+                No disponible
+            {% endif %}
+        </td>
+        <td class="observaciones">{{ item.observaciones|default:"Sin observaciones" }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="9" class="text-center">No se encontraron registros.</td>
+    </tr>
+    {% endfor %}
+</tbody>
+ 
         </table>
     </div>
 

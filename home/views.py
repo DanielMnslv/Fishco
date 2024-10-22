@@ -552,9 +552,23 @@ def ocultar_diario(request):
 @login_required
 def ver_anticipos(request):
     anticipos = Anticipo.objects.filter(oculto=False)  # Filtrar anticipos no ocultos
+    
+    # Obtener valores de los filtros desde el request
     fecha_inicio = request.GET.get("fecha_inicio")
     fecha_fin = request.GET.get("fecha_fin")
+    nombre = request.GET.get("nombre")
+    id = request.GET.get("id")
+    centro_costo = request.GET.get("centro_costo")
+    nit = request.GET.get("nit")
+    producto_servicio = request.GET.get("producto_servicio")
+    cantidad = request.GET.get("cantidad")
+    subtotal = request.GET.get("subtotal")
+    iva = request.GET.get("iva")
+    retencion = request.GET.get("retencion")
+    total_pagar = request.GET.get("total_pagar")
+    observaciones = request.GET.get("observaciones")
 
+    # Aplicar filtros según se necesiten
     if fecha_inicio and fecha_fin:
         try:
             fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
@@ -575,7 +589,33 @@ def ver_anticipos(request):
         except ValueError:
             anticipos = anticipos.none()
 
+    # Filtro por otros campos
+    if nombre:
+        anticipos = anticipos.filter(nombre__icontains=nombre)
+    if id:
+        anticipos = anticipos.filter(id=id)
+    if centro_costo:
+        anticipos = anticipos.filter(centro_costo__icontains=centro_costo)
+    if nit:
+        anticipos = anticipos.filter(nit__icontains=nit)
+    if producto_servicio:
+        anticipos = anticipos.filter(producto_servicio__icontains=producto_servicio)
+    if cantidad:
+        anticipos = anticipos.filter(cantidad=cantidad)
+    if subtotal:
+        anticipos = anticipos.filter(subtotal=subtotal)
+    if iva:
+        anticipos = anticipos.filter(valor_iva=iva)
+    if retencion:
+        anticipos = anticipos.filter(valor_retencion=retencion)
+    if total_pagar:
+        anticipos = anticipos.filter(total_pagar=total_pagar)
+    if observaciones:
+        anticipos = anticipos.filter(observaciones__icontains=observaciones)
+
     return render(request, "pages/ver_anticipos.html", {"anticipos": anticipos})
+
+
 
 
 # Vista para aprobar anticipo (solo usuarios con permisos específicos)

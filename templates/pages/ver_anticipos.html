@@ -29,20 +29,65 @@
 
     <!-- Filtros por fechas -->
     <form method="GET" action="">
-        <div class="row">
-            <div class="col-md-4 mb-3">
-                <label for="fecha_inicio">Fecha Inicio:</label>
-                <input type="date" name="fecha_inicio" class="form-control" value="{{ request.GET.fecha_inicio }}">
-            </div>
-            <div class="col-md-4 mb-3">
-                <label for="fecha_fin">Fecha Fin:</label>
-                <input type="date" name="fecha_fin" class="form-control" value="{{ request.GET.fecha_fin }}">
-            </div>
-            <div class="col-md-4 mb-3 align-self-end">
-                <button type="submit" class="btn btn-primary">Filtrar</button>
-            </div>
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label for="fecha_inicio">Fecha Inicio:</label>
+            <input type="date" name="fecha_inicio" class="form-control" value="{{ request.GET.fecha_inicio }}">
         </div>
-    </form>
+        <div class="col-md-4 mb-3">
+            <label for="fecha_fin">Fecha Fin:</label>
+            <input type="date" name="fecha_fin" class="form-control" value="{{ request.GET.fecha_fin }}">
+        </div>
+        <div class="col-md-4 mb-3">
+            <label for="nombre">Nombre:</label>
+            <input type="text" name="nombre" class="form-control" placeholder="Nombre" value="{{ request.GET.nombre }}">
+        </div>
+        <div class="col-md-4 mb-3">
+            <label for="id">ID:</label>
+            <input type="number" name="id" class="form-control" placeholder="ID" value="{{ request.GET.id }}">
+        </div>
+        <div class="col-md-4 mb-3">
+            <label for="centro_costo">Centro de Costo:</label>
+            <input type="text" name="centro_costo" class="form-control" placeholder="Centro de Costo" value="{{ request.GET.centro_costo }}">
+        </div>
+        <div class="col-md-4 mb-3">
+            <label for="nit">NIT:</label>
+            <input type="text" name="nit" class="form-control" placeholder="NIT" value="{{ request.GET.nit }}">
+        </div>
+        <div class="col-md-4 mb-3">
+            <label for="producto_servicio">Producto/Servicio:</label>
+            <input type="text" name="producto_servicio" class="form-control" placeholder="Producto/Servicio" value="{{ request.GET.producto_servicio }}">
+        </div>
+        <div class="col-md-4 mb-3">
+            <label for="cantidad">Cantidad:</label>
+            <input type="number" name="cantidad" class="form-control" placeholder="Cantidad" value="{{ request.GET.cantidad }}">
+        </div>
+        <div class="col-md-4 mb-3">
+            <label for="subtotal">Subtotal:</label>
+            <input type="number" step="0.01" name="subtotal" class="form-control" placeholder="Subtotal" value="{{ request.GET.subtotal }}">
+        </div>
+        <div class="col-md-4 mb-3">
+            <label for="iva">IVA:</label>
+            <input type="number" step="0.01" name="iva" class="form-control" placeholder="IVA" value="{{ request.GET.iva }}">
+        </div>
+        <div class="col-md-4 mb-3">
+            <label for="retencion">Retención:</label>
+            <input type="number" step="0.01" name="retencion" class="form-control" placeholder="Retención" value="{{ request.GET.retencion }}">
+        </div>
+        <div class="col-md-4 mb-3">
+            <label for="total_pagar">Total a Pagar:</label>
+            <input type="number" step="0.01" name="total_pagar" class="form-control" placeholder="Total a Pagar" value="{{ request.GET.total_pagar }}">
+        </div>
+        <div class="col-md-4 mb-3">
+            <label for="observaciones">Observaciones:</label>
+            <input type="text" name="observaciones" class="form-control" placeholder="Observaciones" value="{{ request.GET.observaciones }}">
+        </div>
+        <div class="col-md-4 mb-3 align-self-end">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+    </div>
+</form>
+
 
     <!-- Tabla de botones -->
     <div class="table-container mb-3">
