@@ -503,28 +503,62 @@ def ver_ordenes(request):
     return render(request, "pages/ver_ordenes.html", {"ordenes": ordenes_page})
 
 
-@staff_required
+from django.utils.dateparse import parse_date
+
 @login_required
+@staff_required
 def ver_diario(request):
     # Filtrar solo los diarios que no estén ocultos
-    diarios = Diario.objects.filter(oculto=False).order_by('tiempo_entrega')  # Ordenar los diarios por tiempo_entrega
+    diarios = Diario.objects.filter(oculto=False).order_by('tiempo_entrega')
 
-    # Obtener fechas de inicio y fin de los filtros
+    # Obtener los filtros del GET
     fecha_inicio = request.GET.get("fecha_inicio")
     fecha_fin = request.GET.get("fecha_fin")
+    tiempo_entrega = request.GET.get("tiempo_entrega")
+    nombre = request.GET.get("nombre")
+    empresa = request.GET.get("empresa")
+    centro_costo = request.GET.get("centro_costo")
+    destino = request.GET.get("destino")
+    medio_pago = request.GET.get("medio_pago")
+    observaciones = request.GET.get("observaciones")
 
-    # Verificar que las fechas sean válidas y no nulas
+    # Filtrar por fechas si están presentes
     if fecha_inicio and fecha_fin:
         try:
-            # Convertir las fechas a objetos datetime
             fecha_inicio = parse_date(fecha_inicio)
             fecha_fin = parse_date(fecha_fin)
-
-            # Filtrar usando las fechas
             if fecha_inicio and fecha_fin:
                 diarios = diarios.filter(tiempo_entrega__range=[fecha_inicio, fecha_fin])
         except ValueError:
             pass  # Si ocurre un error con las fechas, no filtrar
+
+    # Filtrar por Tiempo de Entrega
+    if tiempo_entrega:
+        diarios = diarios.filter(tiempo_entrega__icontains=tiempo_entrega)
+
+    # Filtrar por Nombre
+    if nombre:
+        diarios = diarios.filter(nombre__icontains=nombre)
+
+    # Filtrar por Empresa
+    if empresa:
+        diarios = diarios.filter(empresa__icontains=empresa)
+
+    # Filtrar por Centro de Costo
+    if centro_costo:
+        diarios = diarios.filter(centro_costo__icontains=centro_costo)
+
+    # Filtrar por Destino
+    if destino:
+        diarios = diarios.filter(destino__icontains=destino)
+
+    # Filtrar por Medio de Pago
+    if medio_pago:
+        diarios = diarios.filter(medio_pago__icontains=medio_pago)
+
+    # Filtrar por Observaciones
+    if observaciones:
+        diarios = diarios.filter(observaciones__icontains=observaciones)
 
     # Paginación si es necesario
     paginator = Paginator(diarios, 50)
@@ -532,6 +566,7 @@ def ver_diario(request):
     diario_page = paginator.get_page(page_number)
 
     return render(request, "pages/ver_diario.html", {"diarios": diario_page})
+
 
 
 

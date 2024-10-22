@@ -31,22 +31,65 @@
 <div class="container">
     <h1>Ver Órdenes Diarias</h1>
 
-    <!-- Filtros por fechas -->
-    <form method="GET" action="">
-        <div class="row">
-            <div class="col-md-4 mb-3">
-                <label for="fecha_inicio">Fecha Inicio:</label>
-                <input type="date" name="fecha_inicio" class="form-control" value="{{ request.GET.fecha_inicio }}">
-            </div>
-            <div class="col-md-4 mb-3">
-                <label for="fecha_fin">Fecha Fin:</label>
-                <input type="date" name="fecha_fin" class="form-control" value="{{ request.GET.fecha_fin }}">
-            </div>
-            <div class="col-md-4 mb-3 align-self-end">
-                <button type="submit" class="btn btn-primary">Filtrar</button>
-            </div>
+    <!-- Filtros adicionales -->
+<form method="GET" action="">
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label for="fecha_inicio">Fecha Inicio:</label>
+            <input type="date" name="fecha_inicio" class="form-control" value="{{ request.GET.fecha_inicio }}">
         </div>
-    </form>
+        <div class="col-md-4 mb-3">
+            <label for="fecha_fin">Fecha Fin:</label>
+            <input type="date" name="fecha_fin" class="form-control" value="{{ request.GET.fecha_fin }}">
+        </div>
+
+        <!-- Filtro por Tiempo de Entrega -->
+        <div class="col-md-4 mb-3">
+            <label for="tiempo_entrega">Tiempo de Entrega:</label>
+            <input type="text" name="tiempo_entrega" class="form-control" value="{{ request.GET.tiempo_entrega }}">
+        </div>
+
+        <!-- Filtro por Nombre -->
+        <div class="col-md-4 mb-3">
+            <label for="nombre">Nombre:</label>
+            <input type="text" name="nombre" class="form-control" value="{{ request.GET.nombre }}">
+        </div>
+
+        <!-- Filtro por Empresa -->
+        <div class="col-md-4 mb-3">
+            <label for="empresa">Empresa:</label>
+            <input type="text" name="empresa" class="form-control" value="{{ request.GET.empresa }}">
+        </div>
+
+        <!-- Filtro por Centro de Costo -->
+        <div class="col-md-4 mb-3">
+            <label for="centro_costo">Centro de Costo:</label>
+            <input type="text" name="centro_costo" class="form-control" value="{{ request.GET.centro_costo }}">
+        </div>
+
+        <!-- Filtro por Destino -->
+        <div class="col-md-4 mb-3">
+            <label for="destino">Destino:</label>
+            <input type="text" name="destino" class="form-control" value="{{ request.GET.destino }}">
+        </div>
+
+        <!-- Filtro por Medio de Pago -->
+        <div class="col-md-4 mb-3">
+            <label for="medio_pago">Medio de Pago:</label>
+            <input type="text" name="medio_pago" class="form-control" value="{{ request.GET.medio_pago }}">
+        </div>
+
+        <!-- Filtro por Observaciones -->
+        <div class="col-md-4 mb-3">
+            <label for="observaciones">Observaciones:</label>
+            <input type="text" name="observaciones" class="form-control" value="{{ request.GET.observaciones }}">
+        </div>
+
+        <div class="col-md-4 mb-3 align-self-end">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+    </div>
+</form>
 
     <!-- Tabla de botones -->
     <div class="table-container mb-3">
