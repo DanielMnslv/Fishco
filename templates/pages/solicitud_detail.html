@@ -28,19 +28,17 @@
             <tr>
                 <td>{{ cotizacion.proveedor }}</td>
                 <td>{{ cotizacion.precio_formateado }}</td>
-                <!-- Mostrar texto truncado con un modal para ver más -->
+                <!-- Mostrar el texto completo con salto de línea -->
                 <td class="detalles-column">
-                    {{ cotizacion.detalles|slice:":50" }}{% if cotizacion.detalles|length > 50 %}
-                    <a href="#" data-toggle="modal" data-target="#detalleModal{{ cotizacion.id }}">...</a>
-                    {% endif %}
+                    {{ cotizacion.detalles }}
                 </td>
                 <td>
-    {% if cotizacion.archivo %}
-        <a href="{{ cotizacion.archivo.url }}" target="_blank">Ver Cotizacion</a>
-    {% else %}
-        No disponible
-    {% endif %}
-		</td>
+                    {% if cotizacion.archivo %}
+                        <a href="{{ cotizacion.archivo.url }}" target="_blank">Ver Cotización</a>
+                    {% else %}
+                        No disponible
+                    {% endif %}
+                </td>
                 <td>
                     {% if cotizacion.estado == 'aprobada' %}
                         <span class="badge bg-secondary">Aprobada</span>
@@ -52,26 +50,6 @@
                     {% endif %}
                 </td>
             </tr>
-
-            <!-- Modal para mostrar detalles completos -->
-            <div class="modal fade" id="detalleModal{{ cotizacion.id }}" tabindex="-1" role="dialog" aria-labelledby="detalleModalLabel{{ cotizacion.id }}" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="detalleModalLabel{{ cotizacion.id }}">Detalles de la Cotización</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            {{ cotizacion.detalles }}
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
             {% endfor %}
         </tbody>
     </table>
@@ -82,7 +60,10 @@
         <ul class="list-group">
             {% for mensaje in mensajes %}
             <li class="list-group-item">
-                <strong>{{ mensaje.remitente.username }}:</strong> {{ mensaje.contenido }}
+                <strong>{{ mensaje.remitente.username }}:</strong> 
+                <div class="mensaje-text">
+                    {{ mensaje.contenido }}
+                </div>
                 <span class="text-muted float-right">{{ mensaje.fecha_envio }}</span>
             </li>
             {% endfor %}
@@ -102,10 +83,16 @@
 {% block extrastyle %}
 <style>
     .detalles-column {
-        max-width: 300px; /* Limitar el ancho máximo de la columna */
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        max-width: 300px;
+        white-space: pre-wrap !important; /* Forzar el comportamiento para mantener saltos de línea */
+        word-wrap: break-word !important; /* Forzar el ajuste automático de las palabras */
+        overflow-wrap: break-word; /* Otra propiedad para asegurar el ajuste de palabras largas */
+        overflow: hidden; /* Asegura que el contenido no se desborde */
+    }
+
+    .mensaje-text {
+        white-space: pre-wrap;
+        word-wrap: break-word;
     }
 </style>
 {% endblock %}

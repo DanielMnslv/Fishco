@@ -136,12 +136,16 @@
         <td>{{ item.destino }}</td>
         <td>{{ item.medio_pago }}</td>
         <td>
-            {% if item.documento_pdf %}
-                <a href="{{ item.documento_pdf.url }}" target="_blank">Ver PDF</a>
-            {% else %}
-                No disponible
-            {% endif %}
-        </td>
+    {% if item.tipo_documento == 'pdf' %}
+        <a href="{{ item.documento_pdf.url }}" target="_blank">Ver PDF</a>
+    {% elif item.tipo_documento == 'imagen' %}
+        <img src="{{ item.documento_pdf.url }}" alt="Imagen" style="max-width: 100px; max-height: 100px;" />
+    {% elif item.tipo_documento == 'otro' %}
+        <a href="{{ item.documento_pdf.url }}" target="_blank">Descargar archivo</a>
+    {% else %}
+        No disponible
+    {% endif %}
+</td>
         <td class="observaciones">{{ item.observaciones|default:"Sin observaciones" }}</td>
     </tr>
     {% empty %}

@@ -503,6 +503,8 @@ def ver_ordenes(request):
     return render(request, "pages/ver_ordenes.html", {"ordenes": ordenes_page})
 
 
+from pathlib import Path
+from django.core.paginator import Paginator
 from django.utils.dateparse import parse_date
 
 @login_required
@@ -534,31 +536,44 @@ def ver_diario(request):
 
     # Filtrar por Tiempo de Entrega
     if tiempo_entrega:
-        diarios = diarios.filter(tiempo_entrega__icontains=tiempo_entrega)
+        diarios = diarios.filter(tiempo_entrega__icontains(tiempo_entrega))
 
     # Filtrar por Nombre
     if nombre:
-        diarios = diarios.filter(nombre__icontains=nombre)
+        diarios = diarios.filter(nombre__icontains(nombre))
 
     # Filtrar por Empresa
     if empresa:
-        diarios = diarios.filter(empresa__icontains=empresa)
+        diarios = diarios.filter(empresa__icontains(empresa))
 
     # Filtrar por Centro de Costo
     if centro_costo:
-        diarios = diarios.filter(centro_costo__icontains=centro_costo)
+        diarios = diarios.filter(centro_costo__icontains(centro_costo))
 
     # Filtrar por Destino
     if destino:
-        diarios = diarios.filter(destino__icontains=destino)
+        diarios = diarios.filter(destino__icontains(destino))
 
     # Filtrar por Medio de Pago
     if medio_pago:
-        diarios = diarios.filter(medio_pago__icontains=medio_pago)
+        diarios = diarios.filter(medio_pago__icontains(medio_pago))
 
     # Filtrar por Observaciones
     if observaciones:
-        diarios = diarios.filter(observaciones__icontains=observaciones)
+        diarios = diarios.filter(observaciones__icontains(observaciones))
+
+    # Modificar cada diario para incluir información del tipo de documento
+    for diario in diarios:
+        if diario.documento:
+            extension = Path(diario.documento).suffix.lower()  # Obtiene la extensión del archivo en minúsculas
+            if extension == '.pdf':
+                diario.tipo_documento = 'pdf'
+            elif extension in ['.jpg', '.jpeg', '.png']:
+                diario.tipo_documento = 'imagen'
+            else:
+                diario.tipo_documento = 'otro'
+        else:
+            diario.tipo_documento = 'no_disponible'
 
     # Paginación si es necesario
     paginator = Paginator(diarios, 50)
@@ -566,6 +581,7 @@ def ver_diario(request):
     diario_page = paginator.get_page(page_number)
 
     return render(request, "pages/ver_diario.html", {"diarios": diario_page})
+_
 
 
 

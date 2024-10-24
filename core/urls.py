@@ -22,10 +22,11 @@ from home.views import (
     mis_solicitudes,
     ocultar_diario,
     generar_pdf_diarios,
+    generar_reporte_orden,  # <--- aquí también está 'generar_reporte_orden'
 )
+
 from django.conf.urls.static import static
 from django.conf import settings
-from home.views import generar_reporte_orden
 
 
 urlpatterns = [
