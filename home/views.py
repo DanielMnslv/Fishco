@@ -564,16 +564,17 @@ def ver_diario(request):
 
     # Modificar cada diario para incluir información del tipo de documento
     for diario in diarios:
-        if diario.documento:
-            extension = Path(diario.documento).suffix.lower()  # Obtiene la extensión del archivo en minúsculas
-            if extension == '.pdf':
-                diario.tipo_documento = 'pdf'
-            elif extension in ['.jpg', '.jpeg', '.png']:
-                diario.tipo_documento = 'imagen'
-            else:
-                diario.tipo_documento = 'otro'
+     if diario.documento:
+        extension = Path(diario.documento).suffix.lower()  # Obtiene la extensión del archivo en minúsculas
+        if extension == '.pdf':
+            diario.tipo_documento = 'pdf'
+        elif extension in ['.jpg', '.jpeg', '.png']:
+            diario.tipo_documento = 'imagen'
         else:
-            diario.tipo_documento = 'no_disponible'
+            diario.tipo_documento = 'otro'
+     else:
+        diario.tipo_documento = 'no_disponible'
+
 
     # Paginación si es necesario
     paginator = Paginator(diarios, 50)
