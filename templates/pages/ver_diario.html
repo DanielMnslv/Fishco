@@ -74,10 +74,16 @@
             </div>
 
             <!-- Filtro por Medio de Pago -->
-            <div class="col-md-4 mb-3">
-                <label for="medio_pago">Medio de Pago:</label>
-                <input type="text" name="medio_pago" class="form-control" value="{{ request.GET.medio_pago }}">
-            </div>
+<div class="col-md-4 mb-3">
+    <label for="medio_pago">Medio de Pago:</label>
+    <select name="medio_pago" class="form-control">
+        <option value="">Seleccionar Medio de Pago</option>
+        <option value="Cuentas por Pagar" {% if request.GET.medio_pago == "Cuentas por Pagar" %}selected{% endif %}>Cuentas por Pagar</option>
+        <option value="Caja de Compra" {% if request.GET.medio_pago == "Caja de Compra" %}selected{% endif %}>Caja de Compra</option>
+        <option value="Tarjeta Débito" {% if request.GET.medio_pago == "Tarjeta Débito" %}selected{% endif %}>Tarjeta Débito</option>
+        <option value="Caja de Paula" {% if request.GET.medio_pago == "Caja de Paula" %}selected{% endif %}>Caja de Paula</option>
+    </select>
+</div>
 
             <!-- Filtro por Observaciones -->
             <div class="col-md-4 mb-3">
