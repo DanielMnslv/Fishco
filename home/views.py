@@ -556,7 +556,7 @@ def ver_diario(request):
 
     # Filtrar por Medio de Pago (aquí usamos exact para coincidencia exacta)
     if medio_pago:
-    diarios = diarios.filter(medio_pago__iexact=medio_pago)
+    	diarios = diarios.filter(medio_pago__iexact=medio_pago)
 
 
     # Filtrar por Observaciones
