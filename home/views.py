@@ -554,9 +554,10 @@ def ver_diario(request):
     if destino:
         diarios = diarios.filter(destino__icontains(destino))
 
-    # Filtrar por Medio de Pago
+    # Filtrar por Medio de Pago (aquí usamos exact para coincidencia exacta)
     if medio_pago:
-        diarios = diarios.filter(medio_pago__icontains(medio_pago))
+    diarios = diarios.filter(medio_pago__iexact=medio_pago)
+
 
     # Filtrar por Observaciones
     if observaciones:
@@ -565,7 +566,6 @@ def ver_diario(request):
     # Modificar cada diario para incluir información del tipo de documento
     for diario in diarios:
         if diario.documento:
-            # Usa `.path` para obtener la ruta del archivo
             extension = Path(diario.documento.path).suffix.lower() if diario.documento else None
             if extension == '.pdf':
                 diario.tipo_documento = 'pdf'
@@ -582,6 +582,8 @@ def ver_diario(request):
     diario_page = paginator.get_page(page_number)
 
     return render(request, "pages/ver_diario.html", {"diarios": diario_page})
+
+
 
 
 
