@@ -506,7 +506,6 @@ def ver_ordenes(request):
 from pathlib import Path
 from django.core.paginator import Paginator
 from django.utils.dateparse import parse_date
-
 @login_required
 @staff_required
 def ver_diario(request):
@@ -554,38 +553,26 @@ def ver_diario(request):
     if destino:
         diarios = diarios.filter(destino__icontains(destino))
 
-    # Filtrar por Medio de Pago (aquí usamos exact para coincidencia exacta)
+    # Filtro por Medio de Pago
     if medio_pago:
-    	diarios = diarios.filter(medio_pago__iexact=medio_pago)
-
+        if medio_pago == "Cuentas por Pagar":
+            medio_pago = "cuentas_por_pagar"
+        elif medio_pago == "Caja de Compra":
+            medio_pago = "caja_compra"
+        elif medio_pago == "Tarjeta Débito":
+            medio_pago = "tarjeta_debito"
+        diarios = diarios.filter(medio_pago__iexact=medio_pago)
 
     # Filtrar por Observaciones
     if observaciones:
         diarios = diarios.filter(observaciones__icontains(observaciones))
 
-    # Modificar cada diario para incluir información del tipo de documento
-    for diario in diarios:
-        if diario.documento:
-            extension = Path(diario.documento.path).suffix.lower() if diario.documento else None
-            if extension == '.pdf':
-                diario.tipo_documento = 'pdf'
-            elif extension in ['.jpg', '.jpeg', '.png']:
-                diario.tipo_documento = 'imagen'
-            else:
-                diario.tipo_documento = 'otro'
-        else:
-            diario.tipo_documento = 'no_disponible'
-
-    # Paginación si es necesario
+    # Paginación
     paginator = Paginator(diarios, 50)
     page_number = request.GET.get("page")
     diario_page = paginator.get_page(page_number)
 
     return render(request, "pages/ver_diario.html", {"diarios": diario_page})
-
-
-
-
 
 
 @login_required
