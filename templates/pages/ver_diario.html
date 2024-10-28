@@ -97,6 +97,24 @@
         </div>
     </form>
 
+    <!-- Tabla de botones -->
+    <div class="table-container mb-3">
+        <table class="table table-borderless">
+            <tr>
+                <td>
+                    <form method="GET" action="{% url 'generar_pdf_diarios' %}">
+                        <input type="hidden" name="fecha_inicio" value="{{ request.GET.fecha_inicio }}">
+                        <input type="hidden" name="fecha_fin" value="{{ request.GET.fecha_fin }}">
+                        <button type="submit" class="btn btn-warning">Descargar PDF de Órdenes Diarias</button>
+                    </form>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-danger" id="ocultar-seleccionados-btn">Facturado y Archivado</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+
     <!-- Tabla de diarios -->
     <div class="table-container">
         <table class="table table-striped table-bordered">
