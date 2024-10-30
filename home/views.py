@@ -567,12 +567,23 @@ def ver_diario(request):
     if observaciones:
         diarios = diarios.filter(observaciones__icontains(observaciones))
 
+    # Agregar atributos para el tipo de documento en cada elemento
+    for diario in diarios:
+        if diario.documento:
+            url = diario.documento.url
+            diario.is_pdf = url.endswith('.pdf')
+            diario.is_image = url.endswith(('.jpg', '.jpeg', '.png'))
+        else:
+            diario.is_pdf = False
+            diario.is_image = False
+
     # Paginación
     paginator = Paginator(diarios, 50)
     page_number = request.GET.get("page")
     diario_page = paginator.get_page(page_number)
 
     return render(request, "pages/ver_diario.html", {"diarios": diario_page})
+
 
 
 @login_required

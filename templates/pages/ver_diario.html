@@ -1,6 +1,7 @@
 {% extends 'layouts/base.html' %}
 {% load static %}
 
+
 {% block extrastyle %}
 <style>
     .iframe-container {
@@ -34,10 +35,69 @@
     <!-- Filtros adicionales -->
     <form method="GET" action="">
         <div class="row">
-            <!-- Filtros aquí -->
-            ...
+            <div class="col-md-4 mb-3">
+                <label for="fecha_inicio">Fecha Inicio:</label>
+                <input type="date" name="fecha_inicio" class="form-control" value="{{ request.GET.fecha_inicio }}">
+            </div>
+            <div class="col-md-4 mb-3">
+                <label for="fecha_fin">Fecha Fin:</label>
+                <input type="date" name="fecha_fin" class="form-control" value="{{ request.GET.fecha_fin }}">
+            </div>
+
+            <!-- Filtro por Tiempo de Entrega -->
+            <div class="col-md-4 mb-3">
+                <label for="tiempo_entrega">Tiempo de Entrega:</label>
+                <input type="text" name="tiempo_entrega" class="form-control" value="{{ request.GET.tiempo_entrega }}">
+            </div>
+
+            <!-- Filtro por Nombre -->
+            <div class="col-md-4 mb-3">
+                <label for="nombre">Nombre:</label>
+                <input type="text" name="nombre" class="form-control" value="{{ request.GET.nombre }}">
+            </div>
+
+            <!-- Filtro por Empresa -->
+            <div class="col-md-4 mb-3">
+                <label for="empresa">Empresa:</label>
+                <input type="text" name="empresa" class="form-control" value="{{ request.GET.empresa }}">
+            </div>
+
+            <!-- Filtro por Centro de Costo -->
+            <div class="col-md-4 mb-3">
+                <label for="centro_costo">Centro de Costo:</label>
+                <input type="text" name="centro_costo" class="form-control" value="{{ request.GET.centro_costo }}">
+            </div>
+
+            <!-- Filtro por Destino -->
+            <div class="col-md-4 mb-3">
+                <label for="destino">Destino:</label>
+                <input type="text" name="destino" class="form-control" value="{{ request.GET.destino }}">
+            </div>
+
+            <!-- Filtro por Medio de Pago -->
+            <div class="col-md-4 mb-3">
+                <label for="medio_pago">Medio de Pago:</label>
+                <select name="medio_pago" class="form-control">
+                    <option value="">Seleccionar Medio de Pago</option>
+                    <option value="Cuentas por Pagar" {% if request.GET.medio_pago == "Cuentas por Pagar" %}selected{% endif %}>Cuentas por Pagar</option>
+                    <option value="Caja de Compra" {% if request.GET.medio_pago == "Caja de Compra" %}selected{% endif %}>Caja de Compra</option>
+                    <option value="Tarjeta Débito" {% if request.GET.medio_pago == "Tarjeta Débito" %}selected{% endif %}>Tarjeta Débito</option>
+                    <option value="Caja de Paula" {% if request.GET.medio_pago == "Caja de Paula" %}selected{% endif %}>Caja de Paula</option>
+                </select>
+            </div>
+
+            <!-- Filtro por Observaciones -->
+            <div class="col-md-4 mb-3">
+                <label for="observaciones">Observaciones:</label>
+                <input type="text" name="observaciones" class="form-control" value="{{ request.GET.observaciones }}">
+            </div>
+
+            <div class="col-md-4 mb-3 align-self-end">
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+            </div>
         </div>
     </form>
+
 
     <!-- Tabla de botones -->
     <div class="table-container mb-3">
@@ -84,18 +144,18 @@
                     <td>{{ item.destino }}</td>
                     <td>{{ item.medio_pago }}</td>
                     <td>
-                        {% if item.documento %}
-                            {% if item.documento.url.endswith ".pdf" %}
-                                <a href="{{ item.documento.url }}" target="_blank">Ver PDF</a>
-                            {% elif item.documento.url.endswith ".jpg" or item.documento.url.endswith ".jpeg" or item.documento.url.endswith ".png" %}
-                                <img src="{{ item.documento.url }}" alt="Imagen" style="max-width: 100px; max-height: 100px;" />
-                            {% else %}
-                                <a href="{{ item.documento.url }}" target="_blank">Descargar archivo</a>
-                            {% endif %}
-                        {% else %}
-                            No disponible
-                        {% endif %}
-                    </td>
+    {% if item.documento %}
+        {% if item.is_pdf %}
+            <a href="{{ item.documento.url }}" target="_blank">Ver PDF</a>
+        {% elif item.is_image %}
+            <img src="{{ item.documento.url }}" alt="Imagen" style="max-width: 100px; max-height: 100px;" />
+        {% else %}
+            <a href="{{ item.documento.url }}" target="_blank">Descargar archivo</a>
+        {% endif %}
+    {% else %}
+        No disponible
+    {% endif %}
+</td>
                     <td class="observaciones">{{ item.observaciones|default:"Sin observaciones" }}</td>
                 </tr>
                 {% empty %}
