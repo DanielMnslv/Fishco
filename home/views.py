@@ -1025,20 +1025,26 @@ def generar_pdf_anticipos_aprobados(request):
 
     # Llenar la tabla con los datos y aplicar saltos de línea en las columnas largas
     for anticipo in anticipos_aprobados:
-        data.append(
-            [
-                Paragraph(anticipo.centro_costo, styles["Normal"]),  # Salto de línea para centro de costo
-                anticipo.nit,
-                Paragraph(anticipo.nombre, styles["Normal"]),  # Salto de línea para nombre
-                Paragraph(anticipo.producto_servicio, styles["Normal"]),  # Salto de línea para producto/servicio
-                str(anticipo.cantidad),
-                f"${anticipo.subtotal:,.2f}",
-                f"${anticipo.valor_iva:,.2f}",
-                f"${anticipo.valor_retencion:,.2f}",
-                f"${anticipo.total_pagar:,.2f}",
-                Paragraph(anticipo.observaciones or "N/A", styles["Normal"]),  # Salto de línea para observaciones
-            ]
-        )
+    subtotal = anticipo.subtotal if anticipo.subtotal is not None else 0
+    valor_iva = anticipo.valor_iva if anticipo.valor_iva is not None else 0
+    valor_retencion = anticipo.valor_retencion if anticipo.valor_retencion is not None else 0
+    total_pagar = anticipo.total_pagar if anticipo.total_pagar is not None else 0
+
+    data.append(
+        [
+            Paragraph(anticipo.centro_costo, styles["Normal"]),  # Salto de línea para centro de costo
+            anticipo.nit,
+            Paragraph(anticipo.nombre, styles["Normal"]),  # Salto de línea para nombre
+            Paragraph(anticipo.producto_servicio, styles["Normal"]),  # Salto de línea para producto/servicio
+            str(anticipo.cantidad),
+            f"${subtotal:,.2f}",
+            f"${valor_iva:,.2f}",
+            f"${valor_retencion:,.2f}",
+            f"${total_pagar:,.2f}",
+            Paragraph(anticipo.observaciones or "N/A", styles["Normal"]),  # Salto de línea para observaciones
+        ]
+    )
+
 
     # Ajustar el ancho de las columnas
     col_widths = [80, 80, 100, 100, 60, 80, 80, 80, 80, 100]
