@@ -3,6 +3,15 @@
 
 {% block content %}
 <div class="container">
+    <!-- Bloque de mensajes de éxito o error -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% endif %}" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
     <h1>Subir Cotización para la Solicitud: {{ solicitud.nombre }}</h1>
     
     <p><strong>Descripción:</strong> {{ solicitud.descripcion }}</p>
@@ -41,10 +50,11 @@
                 <option value="aprobada">Aprobada</option>
             </select>
         </div>
-        <!-- Campos para subir las tres cotizaciones en PDF -->
+        
+        <!-- Campo para subir archivo -->
         <div class="form-group">
-        <label for="archivo">Cotización (Archivo)</label>
-        <input type="file" id="archivo" name="archivo" class="form-control-file" accept=".pdf,.jpg,.jpeg,.png,.xls,.xlsx,.doc,.docx">
+            <label for="archivo">Cotización (Archivo)</label>
+            <input type="file" id="archivo" name="archivo" class="form-control-file" accept=".pdf,.jpg,.jpeg,.png,.xls,.xlsx,.doc,.docx">
         </div>
 
         <button type="submit" class="btn btn-primary">Subir Cotización</button>

@@ -51,7 +51,7 @@ class Cotizacion(models.Model):
 
     solicitud = models.ForeignKey(Solicitud, related_name="cotizaciones", on_delete=models.CASCADE)
     proveedor = models.CharField(max_length=255)
-    precio = models.DecimalField(max_digits=10, decimal_places=2)
+    precio = models.DecimalField(max_digits=20, decimal_places=2)
     detalles = models.TextField(blank=True, null=True)
     estado = models.CharField(max_length=50, choices=ESTADO_CHOICES, default="pendiente")
     

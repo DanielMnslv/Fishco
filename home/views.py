@@ -279,12 +279,22 @@ def subir_cotizacion(request, solicitud_id):
     if request.method == "POST":
         form = CotizacionForm(request.POST, request.FILES)
         if form.is_valid():
-            cotizacion = form.save(commit=False)
-            cotizacion.solicitud = solicitud
-            cotizacion.archivo = request.FILES.get("archivo")  # Guardar el archivo subido
-            cotizacion.save()
-            messages.success(request, "Cotización subida con éxito.")
-            return redirect("ver_solicitudes")
+            try:
+                cotizacion = form.save(commit=False)
+                cotizacion.solicitud = solicitud
+                cotizacion.archivo = request.FILES.get("archivo")  # Guardar el archivo subido
+                cotizacion.save()
+                messages.success(request, "Cotización subida con éxito.")
+                return redirect("ver_solicitudes")
+            except Exception as e:
+                # Registrar cualquier error de excepción en los mensajes
+                messages.error(request, f"Ocurrió un error al subir la cotización: {e}")
+        else:
+            # Si el formulario es inválido, mostrar los errores de cada campo
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"Error en {field}: {error}")
+
     else:
         form = CotizacionForm()
 
