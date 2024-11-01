@@ -95,7 +95,7 @@ class Mensaje(models.Model):
 class Orden(models.Model):
     descripcion = models.TextField()
     codigo_cotizacion = models.CharField(max_length=100)
-    precio = models.DecimalField(max_digits=10, decimal_places=2)
+    precio = models.DecimalField(max_digits=20, decimal_places=2)
     cantidad = models.IntegerField()
     empresa = models.CharField(max_length=255)
     destino = models.CharField(max_length=255)

@@ -516,76 +516,56 @@ def ver_ordenes(request):
 from pathlib import Path
 from django.core.paginator import Paginator
 from django.utils.dateparse import parse_date
+from django.db.models import Q
+from datetime import datetime
+
 @login_required
 @staff_required
 def ver_diario(request):
-    # Filtrar solo los diarios que no estén ocultos
     diarios = Diario.objects.filter(oculto=False).order_by('tiempo_entrega')
 
-    # Obtener los filtros del GET
+    # Construir el filtro dinámico usando Q
+    filtros = Q()
     fecha_inicio = request.GET.get("fecha_inicio")
     fecha_fin = request.GET.get("fecha_fin")
-    tiempo_entrega = request.GET.get("tiempo_entrega")
-    nombre = request.GET.get("nombre")
-    empresa = request.GET.get("empresa")
-    centro_costo = request.GET.get("centro_costo")
-    destino = request.GET.get("destino")
-    medio_pago = request.GET.get("medio_pago")
-    observaciones = request.GET.get("observaciones")
 
-    # Filtrar por fechas si están presentes
+    # Filtrado por rango de fechas
     if fecha_inicio and fecha_fin:
         try:
-            fecha_inicio = parse_date(fecha_inicio)
-            fecha_fin = parse_date(fecha_fin)
-            if fecha_inicio and fecha_fin:
-                diarios = diarios.filter(tiempo_entrega__range=[fecha_inicio, fecha_fin])
+            fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
+            fecha_fin = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
+            filtros &= Q(tiempo_entrega__range=(fecha_inicio, fecha_fin))
         except ValueError:
-            pass  # Si ocurre un error con las fechas, no filtrar
+            pass  # Ignora el filtrado si hay error en el formato de fecha
 
-    # Filtrar por Tiempo de Entrega
-    if tiempo_entrega:
-        diarios = diarios.filter(tiempo_entrega__icontains(tiempo_entrega))
+    # Aplicar filtros adicionales de campos texto
+    filtros_texto = {
+        'tiempo_entrega': request.GET.get('tiempo_entrega'),
+        'nombre': request.GET.get('nombre'),
+        'empresa': request.GET.get('empresa'),
+        'centro_costo': request.GET.get('centro_costo'),
+        'destino': request.GET.get('destino'),
+        'observaciones': request.GET.get('observaciones')
+    }
 
-    # Filtrar por Nombre
-    if nombre:
-        diarios = diarios.filter(nombre__icontains(nombre))
+    for campo, valor in filtros_texto.items():
+        if valor:
+            filtros &= Q(**{f"{campo}__icontains": valor})
 
-    # Filtrar por Empresa
-    if empresa:
-        diarios = diarios.filter(empresa__icontains(empresa))
-
-    # Filtrar por Centro de Costo
-    if centro_costo:
-        diarios = diarios.filter(centro_costo__icontains(centro_costo))
-
-    # Filtrar por Destino
-    if destino:
-        diarios = diarios.filter(destino__icontains(destino))
-
-    # Filtro por Medio de Pago
+    # Filtrar por medio de pago con ajuste de valores
+    medio_pago = request.GET.get('medio_pago')
     if medio_pago:
-        if medio_pago == "Cuentas por Pagar":
-            medio_pago = "cuentas_por_pagar"
-        elif medio_pago == "Caja de Compra":
-            medio_pago = "caja_compra"
-        elif medio_pago == "Tarjeta Débito":
-            medio_pago = "tarjeta_debito"
-        diarios = diarios.filter(medio_pago__iexact=medio_pago)
+        opciones_medio_pago = {
+            "Cuentas por Pagar": "cuentas_por_pagar",
+            "Caja de Compra": "caja_compra",
+            "Tarjeta Débito": "tarjeta_debito",
+            "Caja de Paula": "caja_paula"
+        }
+        valor_medio_pago = opciones_medio_pago.get(medio_pago, medio_pago)
+        filtros &= Q(medio_pago__iexact=valor_medio_pago)
 
-    # Filtrar por Observaciones
-    if observaciones:
-        diarios = diarios.filter(observaciones__icontains(observaciones))
-
-    # Agregar atributos para el tipo de documento en cada elemento
-    for diario in diarios:
-        if diario.documento:
-            url = diario.documento.url
-            diario.is_pdf = url.endswith('.pdf')
-            diario.is_image = url.endswith(('.jpg', '.jpeg', '.png'))
-        else:
-            diario.is_pdf = False
-            diario.is_image = False
+    # Aplicar todos los filtros al queryset
+    diarios = diarios.filter(filtros)
 
     # Paginación
     paginator = Paginator(diarios, 50)
@@ -593,6 +573,7 @@ def ver_diario(request):
     diario_page = paginator.get_page(page_number)
 
     return render(request, "pages/ver_diario.html", {"diarios": diario_page})
+
 
 
 
@@ -1025,13 +1006,13 @@ def generar_pdf_anticipos_aprobados(request):
 
     # Llenar la tabla con los datos y aplicar saltos de línea en las columnas largas
     for anticipo in anticipos_aprobados:
-    subtotal = anticipo.subtotal if anticipo.subtotal is not None else 0
-    valor_iva = anticipo.valor_iva if anticipo.valor_iva is not None else 0
-    valor_retencion = anticipo.valor_retencion if anticipo.valor_retencion is not None else 0
-    total_pagar = anticipo.total_pagar if anticipo.total_pagar is not None else 0
+     subtotal = anticipo.subtotal if anticipo.subtotal is not None else 0
+     valor_iva = anticipo.valor_iva if anticipo.valor_iva is not None else 0
+     valor_retencion = anticipo.valor_retencion if anticipo.valor_retencion is not None else 0
+     total_pagar = anticipo.total_pagar if anticipo.total_pagar is not None else 0
 
-    data.append(
-        [
+     data.append(
+         [
             Paragraph(anticipo.centro_costo, styles["Normal"]),  # Salto de línea para centro de costo
             anticipo.nit,
             Paragraph(anticipo.nombre, styles["Normal"]),  # Salto de línea para nombre
@@ -1042,7 +1023,7 @@ def generar_pdf_anticipos_aprobados(request):
             f"${valor_retencion:,.2f}",
             f"${total_pagar:,.2f}",
             Paragraph(anticipo.observaciones or "N/A", styles["Normal"]),  # Salto de línea para observaciones
-        ]
+         ]
     )
 
 
