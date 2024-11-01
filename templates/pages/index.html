@@ -23,92 +23,30 @@
       </div>
     </div>
   </div>
-  
-  <div class="col-md-6 col-xl-3 mb-4">
-    <div class="card bg-light shadow-sm">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 class="text-uppercase text-muted mb-2">Total Cotizaciones</h6>
-            <span class="h2 font-weight-bold mb-0">{{ total_cotizaciones }}</span>
-            <p class="text-muted mb-0"><i class="fa fa-arrow-up text-success"></i> {{ cotizaciones_aprobadas }} aprobadas</p>
-          </div>
-          <div class="icon icon-shape bg-primary text-white rounded-circle shadow">
-            <i class="fas fa-file-invoice"></i>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-md-6 col-xl-3 mb-4">
-    <div class="card bg-light shadow-sm">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 class="text-uppercase text-muted mb-2">Total Anticipos</h6>
-            <span class="h2 font-weight-bold mb-0">{{ total_anticipos }}</span>
-            <p class="text-muted mb-0"><i class="fa fa-arrow-up text-success"></i> {{ anticipos_aprobados }} aprobados</p>
-          </div>
-          <div class="icon icon-shape bg-warning text-white rounded-circle shadow">
-            <i class="fas fa-dollar-sign"></i>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-md-6 col-xl-3 mb-4">
-    <div class="card bg-light shadow-sm">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 class="text-uppercase text-muted mb-2">Total Órdenes</h6>
-            <span class="h2 font-weight-bold mb-0">{{ total_ordenes }}</span>
-          </div>
-          <div class="icon icon-shape bg-info text-white rounded-circle shadow">
-            <i class="fas fa-shipping-fast"></i>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 
 <!-- Gráficos -->
 <div class="row">
-  <div class="col-lg-6 mb-4">
+  <!-- Gráfico de Solicitudes por Mes -->
+  <div class="col-12 mb-4">
     <div class="card shadow-sm">
       <div class="card-header bg-primary text-white">
         Gráfico de Solicitudes por Mes
       </div>
       <div class="card-body">
-        <canvas id="solicitudesMesChart"></canvas>
+        <canvas id="solicitudesMesChart" style="width: 100%; height: 400px;"></canvas>
       </div>
     </div>
   </div>
   
-  <div class="col-lg-6 mb-4">
+  <!-- Gráfico de Solicitudes por Usuario -->
+  <div class="col-12 mb-4">
     <div class="card shadow-sm">
-      <div class="card-header bg-info text-white">
-        Distribución de Cotizaciones
+      <div class="card-header bg-secondary text-white">
+        Solicitudes por Usuario
       </div>
       <div class="card-body">
-        <canvas id="cotizacionesChart"></canvas>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Gráfico de Anticipos -->
-<div class="row">
-  <div class="col-lg-6 mb-4">
-    <div class="card shadow-sm">
-      <div class="card-header bg-warning text-dark">
-        Anticipos por Estado
-      </div>
-      <div class="card-body">
-        <canvas id="anticiposChart"></canvas>
+        <canvas id="solicitudesUsuarioChart" style="width: 100%; height: 400px;"></canvas>
       </div>
     </div>
   </div>
@@ -135,6 +73,7 @@
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       scales: {
         y: {
           beginAtZero: true
@@ -143,37 +82,28 @@
     }
   });
 
-  // Gráfico de Cotizaciones
-  const ctx2 = document.getElementById('cotizacionesChart').getContext('2d');
-  const cotizacionesChart = new Chart(ctx2, {
-    type: 'doughnut',
+  // Gráfico de Solicitudes por Usuario
+  const ctx4 = document.getElementById('solicitudesUsuarioChart').getContext('2d');
+  const solicitudesUsuarioChart = new Chart(ctx4, {
+    type: 'bar',
     data: {
-      labels: ['Aprobadas', 'Pendientes', 'Rechazadas'],
+      labels: {{ usuarios|safe }},
       datasets: [{
-        label: 'Cotizaciones',
-        data: [{{ cotizaciones_aprobadas }}, {{ cotizaciones_pendientes }}, {{ cotizaciones_rechazadas }}],
-        backgroundColor: ['#28a745', '#ffc107', '#dc3545']
+        label: 'Solicitudes por Usuario',
+        data: {{ solicitudes_totales|safe }},
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        borderColor: 'rgba(255, 99, 132, 1)',
+        borderWidth: 1
       }]
     },
     options: {
-      responsive: true
-    }
-  });
-
-  // Gráfico de Anticipos
-  const ctx3 = document.getElementById('anticiposChart').getContext('2d');
-  const anticiposChart = new Chart(ctx3, {
-    type: 'pie',
-    data: {
-      labels: ['Aprobados', 'Pendientes'],
-      datasets: [{
-        label: 'Anticipos',
-        data: [{{ anticipos_aprobados }}, {{ anticipos_pendientes }}],
-        backgroundColor: ['#007bff', '#6c757d']
-      }]
-    },
-    options: {
-      responsive: true
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
     }
   });
 </script>

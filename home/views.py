@@ -45,75 +45,36 @@ from django.db.models.functions import TruncMonth
 
 @login_required
 def index(request):
-    # Obtener estadísticas de Solicitudes
+    # Obtener estadísticas generales
     total_solicitudes = Solicitud.objects.count()
-
-    # Solicitudes aprobadas (tienen al menos una cotización aprobada)
     solicitudes_aprobadas = Solicitud.objects.filter(cotizaciones__estado="aprobada").distinct().count()
 
-    solicitudes_pendientes = total_solicitudes - solicitudes_aprobadas
-    solicitudes_rechazadas = 0  # Si tienes algún campo o estado para solicitudes rechazadas, puedes ajustarlo
-
-    # Obtener estadísticas de Cotizaciones
-    total_cotizaciones = Cotizacion.objects.count()
-    cotizaciones_aprobadas = Cotizacion.objects.filter(estado="aprobada").count()
-
-    # Obtener estadísticas de Anticipos
-    total_anticipos = Anticipo.objects.count()
-    anticipos_aprobados = Anticipo.objects.filter(aprobado=True).count()
-
-    # Obtener estadísticas de Órdenes (solo el total, ya que no tienen estado)
-    total_ordenes = Orden.objects.count()
-
-    # Obtener solicitudes por categoría
-    solicitudes_productos = Solicitud.objects.filter(tipo="producto").count()
-    solicitudes_servicios = Solicitud.objects.filter(tipo="servicio").count()
-
-    # Obtener solicitudes por destino
-    solicitudes_por_destino = Solicitud.objects.values('destino').annotate(total=Count('id')).order_by('-total')
-
-    # Tendencia de solicitudes en la última semana
-    now = timezone.now()
-    last_week = now - timedelta(days=7)
-    solicitudes_ultima_semana = Solicitud.objects.filter(fecha__gte=last_week).count()
-
-    # Tiempo promedio de aprobación de solicitudes (promedio del tiempo de aprobación de cotizaciones)
-    solicitudes_aprobadas_duracion = Cotizacion.objects.filter(estado="aprobada").annotate(
-        tiempo_aprobacion=ExpressionWrapper(
-            F('fecha') - F('solicitud__fecha'),
-            output_field=DurationField()
-        )
-    ).aggregate(promedio=Avg('tiempo_aprobacion'))
-
-    # Obtener solicitudes por usuario
+    # Solicitudes por usuario
     solicitudes_por_usuario = Solicitud.objects.values('usuario__username').annotate(total=Count('id')).order_by('-total')
+    usuarios = [item['usuario__username'] for item in solicitudes_por_usuario]
+    solicitudes_totales = [item['total'] for item in solicitudes_por_usuario]
 
+    # Tendencia de solicitudes por mes
+    solicitudes_por_mes = (
+        Solicitud.objects.annotate(mes=TruncMonth('fecha'))
+        .values('mes')
+        .annotate(total=Count('id'))
+        .order_by('mes')
+    )
+    labels_solicitudes_meses = [item['mes'].strftime('%Y-%m') for item in solicitudes_por_mes]
+    data_solicitudes_meses = [item['total'] for item in solicitudes_por_mes]
+
+    # Contexto para los gráficos
     context = {
         'total_solicitudes': total_solicitudes,
         'solicitudes_aprobadas': solicitudes_aprobadas,
-        'solicitudes_pendientes': solicitudes_pendientes,
-        'solicitudes_rechazadas': solicitudes_rechazadas,
-
-        'total_cotizaciones': total_cotizaciones,
-        'cotizaciones_aprobadas': cotizaciones_aprobadas,
-
-        'total_anticipos': total_anticipos,
-        'anticipos_aprobados': anticipos_aprobados,
-
-        'total_ordenes': total_ordenes,
-
-        'solicitudes_productos': solicitudes_productos,
-        'solicitudes_servicios': solicitudes_servicios,
-
-        'solicitudes_por_destino': solicitudes_por_destino,
-        'solicitudes_ultima_semana': solicitudes_ultima_semana,
-
-        'solicitudes_aprobadas_duracion': solicitudes_aprobadas_duracion['promedio'],
-        'solicitudes_por_usuario': solicitudes_por_usuario,
+        'usuarios': usuarios,
+        'solicitudes_totales': solicitudes_totales,
+        'labels_solicitudes_meses': labels_solicitudes_meses,
+        'data_solicitudes_meses': data_solicitudes_meses,
     }
 
     return render(request, "pages/index.html", context)
-
 
 
 
@@ -491,7 +452,7 @@ def mis_solicitudes(request):
 @superuser_required
 @login_required
 def ver_ordenes(request):
-    ordenes = Orden.objects.all()
+    ordenes = Orden.objects.all().order_by('id')  # Añadir ordenamiento por 'id'
     filters = {
         "id": request.GET.get("id"),
         "descripcion__icontains": request.GET.get("descripcion"),
@@ -507,7 +468,7 @@ def ver_ordenes(request):
         if value:
             ordenes = ordenes.filter(**{key: value})
 
-    paginator = Paginator(ordenes, 10)
+    paginator = Paginator(ordenes, 100)
     page_number = request.GET.get("page")
     ordenes_page = paginator.get_page(page_number)
     return render(request, "pages/ver_ordenes.html", {"ordenes": ordenes_page})
