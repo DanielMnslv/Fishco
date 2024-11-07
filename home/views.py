@@ -1081,7 +1081,7 @@ def generar_pdf_diarios(request):
             Paragraph(diario.centro_costo, styles["Normal"]),  # Salto de línea para centro de costo
             Paragraph(diario.destino, styles["Normal"]),  # Salto de línea para destino
             diario.medio_pago,
-            "Disponible" if diario.documento_pdf else "No disponible"
+            "Disponible" if diario.documento else "No disponible"
         ])
 
     # Ajustar el ancho de las columnas para adaptarse mejor al contenido
