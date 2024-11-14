@@ -1,5 +1,5 @@
 from django import forms
-from .models import Solicitud, Orden, Anticipo, Diario,Cotizacion,Mensaje
+from .models import Solicitud, Orden, Anticipo, Diario,Cotizacion,Mensaje,ReporteCombustible
 from decimal import Decimal, ROUND_HALF_UP
 
 
@@ -226,4 +226,33 @@ class DiarioForm(forms.ModelForm):
                 attrs={"class": "form-control", "accept": ".pdf,.jpg,.jpeg,.png,.doc,.docx"}  # Permitir múltiples tipos de archivos
             ),
             "observaciones": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+        }
+
+
+
+
+class ReporteCombustibleForm(forms.ModelForm):
+    class Meta:
+        model = ReporteCombustible
+        fields = [
+            'fecha',
+            'combustible',
+            'cantidad',
+            'codigo_estacion',
+            'empresa',
+            'centro_costo',
+            'destino',
+            'conductor',
+            'placa'
+        ]
+        widgets = {
+            'fecha': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'combustible': forms.Select(attrs={'class': 'form-control'}),
+            'cantidad': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+            'codigo_estacion': forms.TextInput(attrs={'class': 'form-control'}),
+            'empresa': forms.TextInput(attrs={'class': 'form-control'}),
+            'centro_costo': forms.Select(attrs={'class': 'form-control'}),
+            'destino': forms.Select(attrs={'class': 'form-control'}),
+            'conductor': forms.TextInput(attrs={'class': 'form-control'}),
+            'placa': forms.TextInput(attrs={'class': 'form-control'}),
         }

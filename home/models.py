@@ -161,9 +161,6 @@ class Anticipo(models.Model):
         return f"{self.nombre} - Total a Pagar: {self.total_pagar}"
 
 
-
-from django.db import models
-
 class Diario(models.Model):
     TIEMPO_ENTREGA_CHOICES = [(f"{i:02d}:00", f"{i:02d}:00") for i in range(24)]
 
@@ -233,4 +230,47 @@ class Diario(models.Model):
 
     def __str__(self):
         return f"Diario {self.nombre} - {self.empresa}"
+    
+
+class ReporteCombustible(models.Model):
+    COMBUSTIBLE_CHOICES = [
+        ('GASOLINA', 'Gasolina'),
+        ('ACPM', 'ACPM'),
+    ]
+
+    CENTRO_COSTO_CHOICES = [
+        ('ADMINISTRACIÓN', 'ADMINISTRACIÓN'),
+        ('PRODUCCION', 'PRODUCCIÓN'),
+        ('ALEVINERA', 'ALEVINERA'),
+        ('ECOPEZ', 'ECOPEZ'),
+        ('FERRY', 'FERRY'),
+        ('CARRO PESCA NVS 228', 'CARRO PESCA NVS 228'),
+        ('CARRO PESCA WGY 964', 'CARRO PESCA WGY 964'),
+        ('CARRO PESCA THS 473', 'CARRO PESCA THS 473'),
+        ('CARRO PESCA SRP 254', 'CARRO PESCA SRP 254'),
+        ('CARRO EXPORTACION GQZ 727', 'CARRO EXPORTACIÓN GQZ 727'),
+        ('CARRO EXPORTACION GRK 030', 'CARRO EXPORTACIÓN GRK 030'),
+        ('CARRO EXPORTACION THS 592', 'CARRO EXPORTACIÓN THS 592'),
+        ('UNIDAD COMERCIALIZACION', 'UNIDAD COMERCIALIZACIÓN'),
+    ]
+
+    DESTINO_CHOICES = [
+        ('PRODUCCION', 'PRODUCCIÓN'),
+        ('ECOPEZ', 'ECOPEZ'),
+        ('FERRY', 'FERRY'),
+    ]
+
+    fecha = models.DateField()
+    combustible = models.CharField(max_length=10, choices=COMBUSTIBLE_CHOICES)
+    cantidad = models.DecimalField(max_digits=10, decimal_places=2)
+    codigo_estacion = models.CharField(max_length=50)
+    empresa = models.CharField(max_length=100)
+    centro_costo = models.CharField(max_length=50, choices=CENTRO_COSTO_CHOICES)
+    destino = models.CharField(max_length=50, choices=DESTINO_CHOICES)
+    conductor = models.CharField(max_length=100)
+    placa = models.CharField(max_length=10)
+
+    def __str__(self):
+        return f"{self.fecha} - {self.empresa} - {self.cantidad} galones"
+
 

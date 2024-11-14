@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views import View
-from .models import Diario, Solicitud, Orden, Anticipo, Cotizacion, Mensaje
+from .models import Diario, Solicitud, Orden, Anticipo, Cotizacion, Mensaje,ReporteCombustible
 from django.core.paginator import Paginator
 from .forms import (
     AprobacionRechazoForm,
@@ -13,6 +13,7 @@ from .forms import (
     CotizacionForm,
     AnticipoSearchForm,
     MensajeForm,
+    ReporteCombustibleForm,
 )
 from django.contrib import messages
 from django.utils import timezone
@@ -34,12 +35,13 @@ from django.db.models import Max
 from django.core.cache import cache
 from django.core.mail import send_mail
 import json
-
-
 from django.db.models import Count, Avg, F, ExpressionWrapper, DurationField
 from datetime import timedelta
 from django.utils import timezone
 from django.db.models.functions import TruncMonth
+from pathlib import Path
+from django.db.models import Q
+from datetime import date
 
 
 
@@ -75,10 +77,6 @@ def index(request):
     }
 
     return render(request, "pages/index.html", context)
-
-
-
-
 
 
 @login_required
@@ -145,7 +143,6 @@ class SolicitudView(LoginRequiredMixin, View):
 
         # Si el formulario es válido o no, se renderiza la misma página con los mensajes correspondientes
         return render(request, "pages/solicitud.html", {"form": form})
-
 
 
 class SolicitudDetailView(LoginRequiredMixin, UserPassesTestMixin, View):
@@ -473,12 +470,40 @@ def ver_ordenes(request):
     ordenes_page = paginator.get_page(page_number)
     return render(request, "pages/ver_ordenes.html", {"ordenes": ordenes_page})
 
+@login_required
+@superuser_required
+def reporte_combustible(request):
+    return render(request, 'pages/reporte_combustible.html')
 
-from pathlib import Path
-from django.core.paginator import Paginator
-from django.utils.dateparse import parse_date
-from django.db.models import Q
-from datetime import datetime
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def guardar_reporte_combustible(request):
+    if request.method == 'POST':
+        form = ReporteCombustibleForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Reporte de combustible guardado exitosamente.")
+            return redirect('reporte_combustible')
+        else:
+            messages.error(request, "Por favor revisa los datos ingresados.")
+    else:
+        form = ReporteCombustibleForm()
+    return render(request, 'pages/reporte_combustible.html', {'form': form})
+
+
+def ver_reporte_combustible(request):
+    # Obtener todos los reportes de combustible
+    reportes = ReporteCombustible.objects.all()
+
+    # Paginación: muestra 10 reportes por página
+    paginator = Paginator(reportes, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Renderiza el template con los reportes paginados
+    return render(request, 'pages/ver_reporte_combustible.html', {'reportes': page_obj})
 
 @login_required
 @staff_required
@@ -534,9 +559,6 @@ def ver_diario(request):
     diario_page = paginator.get_page(page_number)
 
     return render(request, "pages/ver_diario.html", {"diarios": diario_page})
-
-
-
 
 @login_required
 @staff_required
@@ -618,9 +640,6 @@ def ver_anticipos(request):
 
     return render(request, "pages/ver_anticipos.html", {"anticipos": anticipos})
 
-
-
-
 # Vista para aprobar anticipo (solo usuarios con permisos específicos)
 @user_passes_test(lambda u: u.id in [31, 33])  # IDs permitidos
 @login_required
@@ -687,12 +706,6 @@ def aprobar_anticipos_masivamente(request):
     return redirect("ver_anticipos")
 
 
-
-
-
-
-
-
 class AnticipoListView(LoginRequiredMixin, StaffRequiredMixin, ListView):
     model = Anticipo
     template_name = "anticipo_list.html"
@@ -733,8 +746,6 @@ class AnticipoListView(LoginRequiredMixin, StaffRequiredMixin, ListView):
         context["search_form"] = AnticipoSearchForm(self.request.GET)
         return context
 
-
-
 @login_required
 @csrf_protect
 def ocultar_anticipos(request):
@@ -751,9 +762,6 @@ def ocultar_anticipos(request):
             else:
                 return JsonResponse({"success": False, "error": "No se encontraron anticipos con los IDs proporcionados"})
         return JsonResponse({"success": False, "error": "No se seleccionaron anticipos"})
-
-
-
 
 
 @superuser_required  # O @staff_required, dependiendo del nivel de restricción
@@ -895,8 +903,6 @@ def generar_reporte_orden(request, orden_id):
     doc.build(elements)
 
     return response
-
-
 
 @staff_required  # O @superuser_required, dependiendo del nivel de restricción    
 @login_required
@@ -1111,3 +1117,159 @@ def generar_pdf_diarios(request):
 
     # Devolver la respuesta
     return response
+
+
+
+def generar_pdf_combustible(request):
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="reporte_combustible.pdf"'
+
+    # Ajuste de márgenes más amplios
+    doc = SimpleDocTemplate(response, pagesize=landscape(A4), leftMargin=1 * inch, rightMargin=1 * inch, topMargin=0.75 * inch, bottomMargin=0.75 * inch)
+    elements = []
+
+    # Añadir el logo al encabezado
+    logo_path = os.path.join(
+        settings.MEDIA_ROOT, "imagenes/Logo.png"
+    )  # Asegúrate de que la imagen del logo esté en esta ruta
+    logo = Image(logo_path, width=100, height=50)  # Ajusta el tamaño del logo
+    elements.append(logo)
+
+    # Estilos y título
+    styles = getSampleStyleSheet()
+    title = Paragraph("Reporte de Combustible", styles['Title'])
+    elements.append(title)
+
+
+    # Espacio entre el título y la tabla
+    elements.append(Paragraph("<br/><br/>", styles['Normal']))
+
+    # Encabezados y contenido de la tabla
+    data = [["Fecha", "Combustible", "Cantidad", "Código Estación", "Empresa", "Centro de Costo", "Destino", "Conductor", "Placa"]]
+    reportes = ReporteCombustible.objects.all()
+
+    for reporte in reportes:
+        data.append([
+            reporte.fecha.strftime("%Y-%m-%d"),  # Asegúrate de agregar el campo de fecha aquí
+            reporte.combustible,
+            f"{reporte.cantidad:.2f}",
+            reporte.codigo_estacion,
+            reporte.empresa,
+            reporte.centro_costo,
+            reporte.destino,
+            reporte.conductor,
+            reporte.placa
+        ])
+
+    # Define el ancho de las columnas
+    col_widths = [60, 80, 70, 90, 120, 110, 90, 100, 70]
+
+    # Configuración de la tabla con estilos
+    table = Table(data, colWidths=col_widths)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('FONTSIZE', (0, 1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    ]))
+
+    elements.append(table)
+    
+    # Espacio antes de la firma
+    elements.append(Paragraph("<br/><br/>", styles['Normal']))
+
+    # Incluir la imagen de la firma
+    firma_path = os.path.join(settings.MEDIA_ROOT, "imagenes/Firma.jpeg")
+    firma = Image(firma_path, width=150, height=75)
+    elements.append(firma)
+
+    doc.build(elements)
+    return response
+
+
+def generar_pdf_combustible2(request, reporte_id):
+    reporte = get_object_or_404(ReporteCombustible, id=reporte_id)
+    
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="reporte_combustible_{reporte_id}.pdf"'
+    
+    doc = SimpleDocTemplate(response, pagesize=letter)
+    elements = []
+    
+    # Crear un estilo para los encabezados
+    styles = getSampleStyleSheet()
+    title_style = styles["Title"]
+    header_style = styles["Heading2"]
+    normal_style = styles["Normal"]
+    
+    # Añadir el logo al encabezado
+    logo_path = os.path.join(
+        settings.MEDIA_ROOT, "imagenes/Logo.png"
+    )  # Asegúrate de que la imagen del logo esté en esta ruta
+    logo = Image(logo_path, width=100, height=50)  # Ajusta el tamaño del logo
+    elements.append(logo)
+
+    # Añadir el texto del encabezado
+    header_text = Paragraph(
+        "REPORTE DE COMBUSTIBLE - C.I. PISCÍCOLA FISHCO S.A.S.", header_style
+    )
+    elements.append(header_text)
+
+    # Espacio después del encabezado
+    elements.append(Paragraph("<br/>", normal_style))
+
+    # Título del documento
+    title = Paragraph(f"Reporte de Combustible {reporte.id}", title_style)
+    elements.append(title)
+
+    # Espacio después del título
+    elements.append(Paragraph("<br/>", normal_style))
+    
+    # Datos en tabla
+    data = [
+        ["Combustible", reporte.combustible],
+        ["Cantidad (galones)", f"{reporte.cantidad:.2f}"],
+        ["Código Estación", reporte.codigo_estacion],
+        ["Empresa", reporte.empresa],
+        ["Centro de Costo", reporte.centro_costo],
+        ["Destino", reporte.destino],
+        ["Conductor", reporte.conductor],
+        ["Placa", reporte.placa],
+    ]
+    
+    table = Table(data)
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.black),
+        ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
+        ("BACKGROUND", (0, 1), (-1, -1), colors.whitesmoke),
+        ("GRID", (0, 0), (-1, -1), 1, colors.black),
+    ]))
+    
+    elements.append(table)
+
+    # Añadir espacio antes de la firma
+    elements.append(Paragraph("<br/><br/>", normal_style))
+
+    # Incluir la imagen de la firma
+    firma_path = os.path.join(settings.MEDIA_ROOT, "imagenes/Firma.jpeg")
+    firma = Image(
+        firma_path, width=150, height=75
+    )  # Ajustar tamaño para ser más proporcional
+    elements.append(firma)
+
+    # Espacio y nombre del responsable de la firma
+    elements.append(Paragraph("", header_style))
+    
+    # Construir el documento PDF
+    doc.build(elements)
+    return response
+
+

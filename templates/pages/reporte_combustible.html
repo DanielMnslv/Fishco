@@ -1,0 +1,127 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block content %}
+
+  <!-- [ Main Content ] start -->
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="card">
+        <div class="card-header">
+          <h5>Registrar</h5>
+        </div>
+        <div class="card-body">
+          <h5>Reporte de Combustible</h5>
+          <hr>
+          <form action="{% url 'guardar_reporte_combustible' %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Row: Fecha y Combustible -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="fecha">Fecha</label>
+                  <input type="date" id="fecha" name="fecha" class="form-control" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="combustible">Tipo de Combustible</label>
+                  <select id="combustible" name="combustible" class="form-control" required>
+                    <option value="GASOLINA">Gasolina</option>
+                    <option value="ACPM">ACPM</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row: Cantidad y Código de Estación -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="cantidad">Cantidad (galones)</label>
+                  <input type="number" id="cantidad" name="cantidad" class="form-control" min="1" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="codigo_estacion">Código de Estación</label>
+                  <input type="text" id="codigo_estacion" name="codigo_estacion" class="form-control" required>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row: Empresa y Centro de Costo -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="empresa">Empresa</label>
+                  <input type="text" id="empresa" name="empresa" class="form-control" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+              <label for="centro_costo">Centro de Costo</label>
+              <select id="centro_costo" name="centro_costo" class="form-control" required>
+                <option value="ADMINISTRACIÓN">ADMINISTRACIÓN</option>
+                <option value="PRODUCCION">PRODUCCIÓN</option>
+                <option value="ALEVINERA">ALEVINERA</option>
+                <option value="ECOPEZ">ECOPEZ</option>
+                <option value="FERRY">FERRY</option>
+                <option value="CARRO PESCA NVS 228">CARRO PESCA NVS 228</option>
+                <option value="CARRO PESCA WGY 964">CARRO PESCA WGY 964</option>
+                <option value="CARRO PESCA THS 473">CARRO PESCA THS 473</option>
+                <option value="CARRO PESCA SRP 254">CARRO PESCA SRP 254</option>
+                <option value="CARRO EXPORTACION GQZ 727">CARRO EXPORTACIÓN GQZ 727</option>
+                <option value="CARRO EXPORTACION GRK 030">CARRO EXPORTACIÓN GRK 030</option>
+                <option value="CARRO EXPORTACION THS 592">CARRO EXPORTACIÓN THS 592</option>
+                <option value="UNIDAD COMERCIALIZACION">UNIDAD COMERCIALIZACIÓN</option>
+              </select>
+            </div>
+              </div>
+            </div>
+
+            <!-- Row: Destino y Conductor -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+              <label for="destino">Destino Combustible</label>
+              <select id="destino" name="destino" class="form-control" required>
+                <option value="PRODUCCION">PRODUCCIÓN</option>
+                <option value="ECOPEZ">ECOPEZ</option>
+                <option value="FERRY">FERRY</option>
+              </select>
+            </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="conductor">Conductor</label>
+                  <input type="text" id="conductor" name="conductor" class="form-control" required>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row: Placa -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="placa">Placa</label>
+                  <input type="text" id="placa" name="placa" class="form-control" required>
+                </div>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="text-center">
+              <button type="submit" class="btn btn-primary btn-block">Guardar Reporte</button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- [ Main Content ] end -->
+
+{% endblock content %}
+

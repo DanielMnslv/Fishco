@@ -23,6 +23,11 @@ from home.views import (
     ocultar_diario,
     generar_pdf_diarios,
     generar_reporte_orden,  # <--- aquí también está 'generar_reporte_orden'
+    reporte_combustible,
+    ver_reporte_combustible,
+    guardar_reporte_combustible,
+    generar_pdf_combustible,
+    generar_pdf_combustible2,
 )
 
 from django.conf.urls.static import static
@@ -54,6 +59,11 @@ urlpatterns = [
         generar_reporte_orden,
         name="generar_reporte_orden",
     ),
+    path('reporte_combustible/', reporte_combustible, name='reporte_combustible'),
+    path('guardar_reporte_combustible/', guardar_reporte_combustible, name='guardar_reporte_combustible'),
+    path('ver_reporte_combustible/', ver_reporte_combustible, name='ver_reporte_combustible'),
+    path('generar_pdf_combustible/', generar_pdf_combustible, name='generar_pdf_combustible'),
+    path('generar_pdf_combustible2/<int:reporte_id>/', generar_pdf_combustible2, name='generar_pdf_combustible2'),
     path("ver_diario/", ver_diario, name="ver_diario"),
     path("ver_anticipos/", ver_anticipos, name="ver_anticipos"),
     path("orden/", OrdenView.as_view(), name="orden"),
@@ -79,5 +89,6 @@ urlpatterns = [
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 
 
