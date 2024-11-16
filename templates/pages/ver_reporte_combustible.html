@@ -42,43 +42,15 @@
                 <label for="fecha_fin">Fecha Fin:</label>
                 <input type="date" name="fecha_fin" class="form-control" value="{{ request.GET.fecha_fin }}">
             </div>
-
-            <!-- Filtro por Tipo de Combustible -->
             <div class="col-md-4 mb-3">
                 <label for="combustible">Tipo de Combustible:</label>
                 <input type="text" name="combustible" class="form-control" value="{{ request.GET.combustible }}">
             </div>
-
-            <!-- Filtro por Código de Estación -->
+            <!-- Filtros adicionales -->
             <div class="col-md-4 mb-3">
                 <label for="codigo_estacion">Código de Estación:</label>
                 <input type="text" name="codigo_estacion" class="form-control" value="{{ request.GET.codigo_estacion }}">
             </div>
-
-            <!-- Filtro por Empresa -->
-            <div class="col-md-4 mb-3">
-                <label for="empresa">Empresa:</label>
-                <input type="text" name="empresa" class="form-control" value="{{ request.GET.empresa }}">
-            </div>
-
-            <!-- Filtro por Centro de Costo -->
-            <div class="col-md-4 mb-3">
-                <label for="centro_costo">Centro de Costo:</label>
-                <input type="text" name="centro_costo" class="form-control" value="{{ request.GET.centro_costo }}">
-            </div>
-
-            <!-- Filtro por Destino -->
-            <div class="col-md-4 mb-3">
-                <label for="destino">Destino:</label>
-                <input type="text" name="destino" class="form-control" value="{{ request.GET.destino }}">
-            </div>
-
-            <!-- Filtro por Conductor -->
-            <div class="col-md-4 mb-3">
-                <label for="conductor">Conductor:</label>
-                <input type="text" name="conductor" class="form-control" value="{{ request.GET.conductor }}">
-            </div>
-
             <div class="col-md-4 mb-3 align-self-end">
                 <button type="submit" class="btn btn-primary">Filtrar</button>
             </div>
@@ -91,10 +63,10 @@
             <tr>
                 <td>
                     <form method="GET" action="{% url 'generar_pdf_combustible' %}">
-    <input type="hidden" name="fecha_inicio" value="{{ request.GET.fecha_inicio }}">
-    <input type="hidden" name="fecha_fin" value="{{ request.GET.fecha_fin }}">
-    <button type="submit" class="btn btn-warning">Descargar PDF de Reporte de Combustible</button>
-</form>
+                        <input type="hidden" name="fecha_inicio" value="{{ request.GET.fecha_inicio }}">
+                        <input type="hidden" name="fecha_fin" value="{{ request.GET.fecha_fin }}">
+                        <button type="submit" class="btn btn-warning">Descargar PDF</button>
+                    </form>
                 </td>
                 <td>
                     <button type="button" class="btn btn-danger" id="ocultar-seleccionados-btn">Archivar Seleccionados</button>
@@ -135,16 +107,16 @@
                     <td>{{ item.conductor }}</td>
                     <td>{{ item.placa }}</td>
                     <td>
-    {% if item.id %}
-        <a href="{% url 'generar_pdf_combustible2' item.id %}" class="btn btn-info" target="_blank">Descargar PDF</a>
-    {% else %}
-        No disponible
-    {% endif %}
-</td>
+                        {% if item.id %}
+                            <a href="{% url 'generar_pdf_combustible2' item.id %}" class="btn btn-info" target="_blank">Descargar PDF</a>
+                        {% else %}
+                            No disponible
+                        {% endif %}
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="10" class="text-center">No se encontraron registros.</td>
+                    <td colspan="11" class="text-center">No se encontraron registros.</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -153,70 +125,53 @@
 
     <!-- Paginación -->
     <div class="pagination">
-        <span class="step-links">
-            {% if reportes.has_previous %}
-                <a href="?page=1">&laquo; Primera</a>
-                <a href="?page={{ reportes.previous_page_number }}">Anterior</a>
-            {% endif %}
+        {% if reportes.has_previous %}
+            <a href="?page=1">Primera</a>
+            <a href="?page={{ reportes.previous_page_number }}">Anterior</a>
+        {% endif %}
 
-            <span class="current">
-                Página {{ reportes.number }} de {{ reportes.paginator.num_pages }}.
-            </span>
+        Página {{ reportes.number }} de {{ reportes.paginator.num_pages }}.
 
-            {% if reportes.has_next %}
-                <a href="?page={{ reportes.next_page_number }}">Siguiente</a>
-                <a href="?page={{ reportes.paginator.num_pages }}">Última &raquo;</a>
-            {% endif %}
-        </span>
+        {% if reportes.has_next %}
+            <a href="?page={{ reportes.next_page_number }}">Siguiente</a>
+            <a href="?page={{ reportes.paginator.num_pages }}">Última</a>
+        {% endif %}
     </div>
 </div>
 
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    // Seleccionar todos los checkboxes
     document.getElementById('select_all').addEventListener('change', function() {
-        let checkboxes = document.querySelectorAll('input[name="reporte_ids"]');
-        for (let checkbox of checkboxes) {
+        document.querySelectorAll('input[name="reporte_ids"]').forEach(checkbox => {
             checkbox.checked = this.checked;
-        }
+        });
     });
 
-    // Ocultar registros seleccionados mediante AJAX
     document.getElementById('ocultar-seleccionados-btn').addEventListener('click', function() {
-        let seleccionados = [];
-        document.querySelectorAll('input[name="reporte_ids"]:checked').forEach((checkbox) => {
-            seleccionados.push(checkbox.value);
-        });
+        let seleccionados = Array.from(document.querySelectorAll('input[name="reporte_ids"]:checked')).map(checkbox => checkbox.value);
 
         if (seleccionados.length === 0) {
             alert("No has seleccionado ningún registro.");
             return;
         }
 
-        // Petición AJAX para ocultar registros seleccionados
-        $.ajax({
-            url: "{% url 'ocultar_diario' %}",
+        fetch("{% url 'ocultar_diario' %}", {
             method: "POST",
             headers: {
+                'Content-Type': 'application/json',
                 'X-CSRFToken': '{{ csrf_token }}'
             },
-            data: {
-                "reporte_ids": seleccionados.join(",")
-            },
-            success: function(response) {
-                if (response.success) {
-                    seleccionados.forEach(id => {
-                        $('#reporte-' + id).fadeOut();  // Ocultar las filas seleccionadas
-                    });
-                } else {
-                    alert(response.error || "Error al ocultar los registros seleccionados.");
-                }
-            },
-            error: function() {
-                alert("Ocurrió un error al intentar ocultar los registros seleccionados.");
+            body: JSON.stringify({ reporte_ids: seleccionados })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                seleccionados.forEach(id => document.getElementById(`reporte-${id}`).remove());
+            } else {
+                alert(data.error || "Error al ocultar los registros seleccionados.");
             }
-        });
+        })
+        .catch(() => alert("Ocurrió un error al intentar ocultar los registros seleccionados."));
     });
 </script>
 

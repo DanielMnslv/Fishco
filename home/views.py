@@ -904,8 +904,8 @@ def generar_reporte_orden(request, orden_id):
 
     return response
 
-@staff_required  # O @superuser_required, dependiendo del nivel de restricción    
 @login_required
+@staff_required
 def generar_pdf_anticipos_aprobados(request):
     # Obtener las fechas de inicio y fin del filtro
     fecha_inicio = request.GET.get("fecha_inicio")
@@ -913,9 +913,7 @@ def generar_pdf_anticipos_aprobados(request):
 
     # Verificar que se proporcionen las fechas
     if not fecha_inicio or not fecha_fin:
-        messages.error(
-            request, "Debes seleccionar un rango de fechas para descargar el PDF."
-        )
+        messages.error(request, "Debes seleccionar un rango de fechas para descargar el PDF.")
         return redirect("ver_anticipos")
 
     try:
@@ -931,16 +929,12 @@ def generar_pdf_anticipos_aprobados(request):
     )
 
     if not anticipos_aprobados.exists():
-        messages.error(
-            request, "No hay anticipos aprobados en el rango de fechas seleccionado."
-        )
+        messages.error(request, "No hay anticipos aprobados en el rango de fechas seleccionado.")
         return redirect("ver_anticipos")
 
     # Crear la respuesta HTTP para descargar el PDF
     response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = (
-        f'attachment; filename="anticipos_aprobados_{fecha_inicio}_{fecha_fin}.pdf"'
-    )
+    response["Content-Disposition"] = f'attachment; filename="anticipos_aprobados_{fecha_inicio}_{fecha_fin}.pdf"'
 
     # Crear el documento PDF con formato apaisado
     doc = SimpleDocTemplate(response, pagesize=landscape(A4))
@@ -948,72 +942,69 @@ def generar_pdf_anticipos_aprobados(request):
 
     # Encabezado del PDF
     styles = getSampleStyleSheet()
-    elements.append(
-        Paragraph(
-            f"Anticipos Aprobados desde {fecha_inicio} hasta {fecha_fin}",
-            styles["Title"],
-        )
-    )
+    elements.append(Paragraph(f"Anticipos Aprobados desde {fecha_inicio} hasta {fecha_fin}", styles["Title"]))
 
     # Crear una tabla con los datos de los anticipos aprobados
     data = [
-        [
-            "Centro de Costo",
-            "NIT",
-            "Nombre",
-            "Producto/Servicio",
-            "Cantidad",
-            "Subtotal",
-            "IVA",
-            "Retención",
-            "Total a Pagar",
-            "Observaciones",
-        ]
+        ["Centro de Costo", "NIT", "Nombre", "Producto/Servicio", "Cantidad", "Subtotal", "IVA", "Retención", "Total a Pagar", "Observaciones"]
     ]
+
+    # Variable para acumular el total a pagar
+    total_pagar_sum = 0
 
     # Llenar la tabla con los datos y aplicar saltos de línea en las columnas largas
     for anticipo in anticipos_aprobados:
-     subtotal = anticipo.subtotal if anticipo.subtotal is not None else 0
-     valor_iva = anticipo.valor_iva if anticipo.valor_iva is not None else 0
-     valor_retencion = anticipo.valor_retencion if anticipo.valor_retencion is not None else 0
-     total_pagar = anticipo.total_pagar if anticipo.total_pagar is not None else 0
+        subtotal = anticipo.subtotal if anticipo.subtotal is not None else 0
+        valor_iva = anticipo.valor_iva if anticipo.valor_iva is not None else 0
+        valor_retencion = anticipo.valor_retencion if anticipo.valor_retencion is not None else 0
+        total_pagar = anticipo.total_pagar if anticipo.total_pagar is not None else 0
 
-     data.append(
-         [
-            Paragraph(anticipo.centro_costo, styles["Normal"]),  # Salto de línea para centro de costo
+        # Acumular el total a pagar
+        total_pagar_sum += total_pagar
+
+        data.append([
+            Paragraph(anticipo.centro_costo, styles["Normal"]),
             anticipo.nit,
-            Paragraph(anticipo.nombre, styles["Normal"]),  # Salto de línea para nombre
-            Paragraph(anticipo.producto_servicio, styles["Normal"]),  # Salto de línea para producto/servicio
+            Paragraph(anticipo.nombre, styles["Normal"]),
+            Paragraph(anticipo.producto_servicio, styles["Normal"]),
             str(anticipo.cantidad),
             f"${subtotal:,.2f}",
             f"${valor_iva:,.2f}",
             f"${valor_retencion:,.2f}",
             f"${total_pagar:,.2f}",
-            Paragraph(anticipo.observaciones or "N/A", styles["Normal"]),  # Salto de línea para observaciones
-         ]
-    )
+            Paragraph(anticipo.observaciones or "N/A", styles["Normal"]),
+        ])
 
+    # Agregar la fila de total al final de la tabla, con un tamaño de fuente grande y ocupando toda la fila
+    data.append([
+        f"Total a Pagar (Suma): ${total_pagar_sum:,.2f}"
+    ])
 
-    # Ajustar el ancho de las columnas
+    # Ajustar el ancho de las columnas y combinar todas en la fila de total
     col_widths = [80, 80, 100, 100, 60, 80, 80, 80, 80, 100]
     table = Table(data, colWidths=col_widths)
 
     # Estilos de la tabla
-    table.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),  # Fondo gris para el encabezado
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),  # Color de texto blanco en el encabezado
-                ("ALIGN", (0, 0), (-1, -1), "CENTER"),  # Alinear todo al centro
-                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),  # Fuente en negrita para el encabezado
-                ("FONTSIZE", (0, 0), (-1, 0), 10),  # Tamaño de fuente para el encabezado
-                ("FONTSIZE", (0, 1), (-1, -1), 8),  # Tamaño de fuente reducido para el contenido
-                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),  # Espacio debajo del encabezado
-                ("BACKGROUND", (0, 1), (-1, -1), colors.beige),  # Fondo beige para el resto de las filas
-                ("GRID", (0, 0), (-1, -1), 1, colors.black),  # Cuadrícula negra
-            ]
-        )
-    )
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, 0), 10),
+        ("FONTSIZE", (0, 1), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+        ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
+        ("GRID", (0, 0), (-1, -1), 1, colors.black),
+        # Estilo especial para la fila de total
+        ("SPAN", (0, -1), (-1, -1)),  # Unir todas las celdas en la última fila
+        ("BACKGROUND", (0, -1), (-1, -1), colors.lightgrey),
+        ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
+        ("TEXTCOLOR", (0, -1), (-1, -1), colors.HexColor("#FF5733")),
+        ("ALIGN", (0, -1), (-1, -1), "CENTER"),
+        ("FONTSIZE", (0, -1), (-1, -1), 14),  # Tamaño de fuente grande para el total
+        ("TOPPADDING", (0, -1), (-1, -1), 12),  # Espacio extra en la fila de total
+        ("BOTTOMPADDING", (0, -1), (-1, -1), 12),
+    ]))
 
     # Añadir la tabla a los elementos
     elements.append(table)
@@ -1022,7 +1013,7 @@ def generar_pdf_anticipos_aprobados(request):
     doc.build(elements)
 
     # Devolver la respuesta
-    return response  # Este es el return que faltaba
+    return response
 
 
 @login_required
