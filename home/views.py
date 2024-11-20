@@ -494,16 +494,35 @@ def guardar_reporte_combustible(request):
 
 
 def ver_reporte_combustible(request):
-    # Obtener todos los reportes de combustible
     reportes = ReporteCombustible.objects.all()
 
-    # Paginación: muestra 10 reportes por página
+    # Filtrar por rango de fechas
+    fecha_inicio = request.GET.get("fecha_inicio")
+    fecha_fin = request.GET.get("fecha_fin")
+    if fecha_inicio and fecha_fin:
+        reportes = reportes.filter(fecha__range=[fecha_inicio, fecha_fin])
+    elif fecha_inicio:
+        reportes = reportes.filter(fecha__gte=fecha_inicio)
+    elif fecha_fin:
+        reportes = reportes.filter(fecha__lte=fecha_fin)
+
+    # Filtrar por tipo de combustible
+    combustible = request.GET.get("combustible")
+    if combustible:
+        reportes = reportes.filter(combustible__icontains=combustible)
+
+    # Filtrar por código de estación
+    codigo_estacion = request.GET.get("codigo_estacion")
+    if codigo_estacion:
+        reportes = reportes.filter(codigo_estacion__icontains=codigo_estacion)
+
+    # Paginación
     paginator = Paginator(reportes, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # Renderiza el template con los reportes paginados
     return render(request, 'pages/ver_reporte_combustible.html', {'reportes': page_obj})
+
 
 @login_required
 @staff_required
@@ -1112,36 +1131,52 @@ def generar_pdf_diarios(request):
 
 
 def generar_pdf_combustible(request):
+    
+    # Obtener las fechas de inicio y fin del filtro desde la solicitud
+    fecha_inicio = request.GET.get("fecha_inicio")
+    fecha_fin = request.GET.get("fecha_fin")
+
+    # Verificar que se proporcionen las fechas
+    if not fecha_inicio or not fecha_fin:
+        return HttpResponse("Debes seleccionar un rango de fechas.", status=400)
+
+    try:
+        fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
+        fecha_fin = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
+    except ValueError:
+        return HttpResponse("Formato de fecha inválido.", status=400)
+
+    # Filtrar los reportes por las fechas proporcionadas
+    reportes = ReporteCombustible.objects.filter(fecha__range=(fecha_inicio, fecha_fin))
+
+    if not reportes.exists():
+        return HttpResponse("No se encontraron datos en el rango de fechas seleccionado.", status=404)
+
+    # Crear la respuesta para el archivo PDF
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="reporte_combustible.pdf"'
+    response['Content-Disposition'] = f'attachment; filename="reporte_combustible_{fecha_inicio}_a_{fecha_fin}.pdf"'
 
-    # Ajuste de márgenes más amplios
-    doc = SimpleDocTemplate(response, pagesize=landscape(A4), leftMargin=1 * inch, rightMargin=1 * inch, topMargin=0.75 * inch, bottomMargin=0.75 * inch)
+    # Configurar el documento PDF
+    doc = SimpleDocTemplate(response, pagesize=landscape(A4))
     elements = []
-
+    
     # Añadir el logo al encabezado
     logo_path = os.path.join(
         settings.MEDIA_ROOT, "imagenes/Logo.png"
     )  # Asegúrate de que la imagen del logo esté en esta ruta
     logo = Image(logo_path, width=100, height=50)  # Ajusta el tamaño del logo
     elements.append(logo)
-
-    # Estilos y título
+    # Estilo y título
     styles = getSampleStyleSheet()
-    title = Paragraph("Reporte de Combustible", styles['Title'])
-    elements.append(title)
+    elements.append(Paragraph("Reporte de Combustible", styles['Title']))
 
-
-    # Espacio entre el título y la tabla
-    elements.append(Paragraph("<br/><br/>", styles['Normal']))
-
-    # Encabezados y contenido de la tabla
+    # Encabezados de la tabla
     data = [["Fecha", "Combustible", "Cantidad", "Código Estación", "Empresa", "Centro de Costo", "Destino", "Conductor", "Placa"]]
-    reportes = ReporteCombustible.objects.all()
 
+    # Agregar los datos de los reportes filtrados
     for reporte in reportes:
         data.append([
-            reporte.fecha.strftime("%Y-%m-%d"),  # Asegúrate de agregar el campo de fecha aquí
+            reporte.fecha.strftime("%Y-%m-%d"),
             reporte.combustible,
             f"{reporte.cantidad:.2f}",
             reporte.codigo_estacion,
@@ -1152,25 +1187,20 @@ def generar_pdf_combustible(request):
             reporte.placa
         ])
 
-    # Define el ancho de las columnas
-    col_widths = [60, 80, 70, 90, 120, 110, 90, 100, 70]
-
-    # Configuración de la tabla con estilos
-    table = Table(data, colWidths=col_widths)
+    # Configuración de la tabla
+    table = Table(data)
     table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 10),
-        ('FONTSIZE', (0, 1), (-1, -1), 8),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, 0), 10),
+        ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+        ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
+        ("GRID", (0, 0), (-1, -1), 1, colors.black),
     ]))
-
     elements.append(table)
-    
+
     # Espacio antes de la firma
     elements.append(Paragraph("<br/><br/>", styles['Normal']))
 
@@ -1179,88 +1209,85 @@ def generar_pdf_combustible(request):
     firma = Image(firma_path, width=150, height=75)
     elements.append(firma)
 
+    # Construir el documento PDF
     doc.build(elements)
+
     return response
 
 
-def generar_pdf_combustible2(request, reporte_id):
-    reporte = get_object_or_404(ReporteCombustible, id=reporte_id)
-    
+from datetime import datetime
+
+from datetime import datetime
+from reportlab.platypus import Table, TableStyle
+from reportlab.lib import colors
+
+def generar_pdf_combustible2(request):
+    # Obtener las fechas de inicio y fin del filtro desde la solicitud
+    fecha_inicio = request.GET.get("fecha_inicio")
+    fecha_fin = request.GET.get("fecha_fin")
+
+    # Verificar que se proporcionen las fechas
+    if not fecha_inicio or not fecha_fin:
+        return HttpResponse("Debes seleccionar un rango de fechas.", status=400)
+
+    try:
+        fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
+        fecha_fin = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
+    except ValueError:
+        return HttpResponse("Formato de fecha inválido.", status=400)
+
+    # Filtrar los reportes por las fechas proporcionadas
+    reportes = ReporteCombustible.objects.filter(fecha__range=(fecha_inicio, fecha_fin))
+
+    if not reportes.exists():
+        return HttpResponse("No se encontraron datos en el rango de fechas seleccionado.", status=404)
+
+    # Crear la respuesta para el archivo PDF
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="reporte_combustible_{reporte_id}.pdf"'
-    
-    doc = SimpleDocTemplate(response, pagesize=letter)
+    response['Content-Disposition'] = f'attachment; filename="reporte_combustible_{fecha_inicio}_a_{fecha_fin}.pdf"'
+
+    # Configurar el documento PDF
+    doc = SimpleDocTemplate(response, pagesize=landscape(A4))
     elements = []
-    
-    # Crear un estilo para los encabezados
+
+    # Estilo y título
     styles = getSampleStyleSheet()
-    title_style = styles["Title"]
-    header_style = styles["Heading2"]
-    normal_style = styles["Normal"]
-    
-    # Añadir el logo al encabezado
-    logo_path = os.path.join(
-        settings.MEDIA_ROOT, "imagenes/Logo.png"
-    )  # Asegúrate de que la imagen del logo esté en esta ruta
-    logo = Image(logo_path, width=100, height=50)  # Ajusta el tamaño del logo
-    elements.append(logo)
+    elements.append(Paragraph("Reporte de Combustible", styles['Title']))
+    elements.append(Paragraph(f"Desde: {fecha_inicio} Hasta: {fecha_fin}", styles['Normal']))
+    elements.append(Paragraph("<br/>", styles['Normal']))
 
-    # Añadir el texto del encabezado
-    header_text = Paragraph(
-        "REPORTE DE COMBUSTIBLE - C.I. PISCÍCOLA FISHCO S.A.S.", header_style
-    )
-    elements.append(header_text)
+    # Encabezados de la tabla
+    data = [["Fecha", "Combustible", "Cantidad", "Código Estación", "Empresa", "Centro de Costo", "Destino", "Conductor", "Placa"]]
 
-    # Espacio después del encabezado
-    elements.append(Paragraph("<br/>", normal_style))
+    # Agregar los datos de los reportes filtrados
+    for reporte in reportes:
+        data.append([
+            reporte.fecha.strftime("%Y-%m-%d"),
+            reporte.combustible,
+            f"{reporte.cantidad:.2f}",
+            reporte.codigo_estacion,
+            reporte.empresa,
+            reporte.centro_costo,
+            reporte.destino,
+            reporte.conductor,
+            reporte.placa
+        ])
 
-    # Título del documento
-    title = Paragraph(f"Reporte de Combustible {reporte.id}", title_style)
-    elements.append(title)
-
-    # Espacio después del título
-    elements.append(Paragraph("<br/>", normal_style))
-    
-    # Datos en tabla
-    data = [
-        ["Combustible", reporte.combustible],
-        ["Cantidad (galones)", f"{reporte.cantidad:.2f}"],
-        ["Código Estación", reporte.codigo_estacion],
-        ["Empresa", reporte.empresa],
-        ["Centro de Costo", reporte.centro_costo],
-        ["Destino", reporte.destino],
-        ["Conductor", reporte.conductor],
-        ["Placa", reporte.placa],
-    ]
-    
+    # Configuración de la tabla
     table = Table(data)
     table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.black),
-        ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
         ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
-        ("BACKGROUND", (0, 1), (-1, -1), colors.whitesmoke),
+        ("FONTSIZE", (0, 0), (-1, 0), 10),
+        ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+        ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
         ("GRID", (0, 0), (-1, -1), 1, colors.black),
     ]))
-    
     elements.append(table)
 
-    # Añadir espacio antes de la firma
-    elements.append(Paragraph("<br/><br/>", normal_style))
-
-    # Incluir la imagen de la firma
-    firma_path = os.path.join(settings.MEDIA_ROOT, "imagenes/Firma.jpeg")
-    firma = Image(
-        firma_path, width=150, height=75
-    )  # Ajustar tamaño para ser más proporcional
-    elements.append(firma)
-
-    # Espacio y nombre del responsable de la firma
-    elements.append(Paragraph("", header_style))
-    
     # Construir el documento PDF
     doc.build(elements)
+
     return response
-
-
