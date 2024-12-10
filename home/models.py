@@ -20,7 +20,10 @@ class Solicitud(models.Model):
         upload_to='archivos/', 
         blank=True, 
         null=True,
-        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'pdf', 'xls', 'xlsx'])]  # Extensiones permitidas
+        validators=[FileExtensionValidator(allowed_extensions=[
+            'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff', 'svg', 
+            'pdf', 'xls', 'xlsx'
+        ])]  # Agrega extensiones adicionales si es necesario
     )
     oculto = models.BooleanField(default=False)
     estado = models.CharField(
@@ -111,54 +114,70 @@ class Orden(models.Model):
 
 
 class Anticipo(models.Model):
+    IVA_CHOICES = [
+        (0, "Sin IVA"),
+        (5, "5%"),
+        (19, "19%"),
+    ]
+    RETENCION_CHOICES = [
+        (0, "Sin Retención"),
+        (0.625, "0.625%"),
+        (0.1, "0.1%"),
+        (2, "2%"),
+        (2.5, "2.5%"),
+        (3.5, "3.5%"),
+        (4, "4%"),
+        (6, "6%"),
+        (10, "10%"),
+        (11, "11%"),
+    ]
+    RETEICA_CHOICES = [
+        ("0", "Sin ReteICA"),
+        ("0.003", "0.3%"),
+        ("0.004", "0.4%"),
+        ("0.005", "0.5%"),
+        ("0.006", "0.6%"),
+        ("0.007", "0.7%"),
+        ("0.010", "0.10%"),
+    ]
+
     fecha = models.DateField()
+    centro_costo = models.CharField(max_length=50)
     nit = models.CharField(max_length=20)
     nombre = models.CharField(max_length=100)
-    cantidad = models.PositiveIntegerField()
-    centro_costo = models.CharField(max_length=50)
     producto_servicio = models.CharField(max_length=100)
-    subtotal = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True
-    )
-    iva = models.DecimalField(
-        max_digits=5, decimal_places=2, blank=True, null=True
-    )  # Porcentaje de IVA
-    valor_iva = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True
-    )  # Valor calculado del IVA
-    retencion = models.DecimalField(
-        max_digits=5, decimal_places=2, blank=True, null=True
-    )  # Porcentaje de retención
-    valor_retencion = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True
-    )  # Valor calculado de retención
-    total_pagar = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True
-    )
+    cantidad = models.PositiveIntegerField(default=1)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    iva = models.DecimalField(max_digits=5, decimal_places=2, choices=IVA_CHOICES, blank=True, null=True)
+    retencion = models.DecimalField(max_digits=5, decimal_places=2, choices=RETENCION_CHOICES, blank=True, null=True)
+    reteica = models.CharField(max_length=10, choices=RETEICA_CHOICES, default="0")
+    saldo_a_favor = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0"))
+    valor_iva = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    valor_retencion = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    valor_reteica = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    total_pagar = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     observaciones = models.TextField(blank=True, null=True)
     aprobado = models.BooleanField(default=False)
-    oculto = models.BooleanField(default=False)  # Nuevo campo para ocultar anticipos
+    oculto = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         if self.subtotal:
-            # Calcular el valor del IVA y la retención redondeados a enteros
-            self.valor_iva = (
-                self.subtotal * (self.iva or Decimal("0")) / Decimal("100")
-            ).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+            # Convertir reteica de cadena a decimal
+            reteica_decimal = Decimal(self.reteica)
 
-            self.valor_retencion = (
-                self.subtotal * (self.retencion or Decimal("0")) / Decimal("100")
-            ).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
-
-            # Calcular el total a pagar redondeado a enteros
+            # Calcular valores
+            self.valor_iva = (self.subtotal * (self.iva or 0) / 100).quantize(Decimal("0.01"))
+            self.valor_retencion = (self.subtotal * (self.retencion or 0) / 100).quantize(Decimal("0.01"))
+            self.valor_reteica = (self.subtotal * reteica_decimal).quantize(Decimal("0.01"))
             self.total_pagar = (
-                self.subtotal + self.valor_iva - self.valor_retencion
-            ).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+                (self.subtotal * self.cantidad) +
+                self.valor_iva -
+                self.valor_retencion -
+                self.valor_reteica -
+                self.saldo_a_favor
+            ).quantize(Decimal("0.01"))
 
-        super(Anticipo, self).save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.nombre} - Total a Pagar: {self.total_pagar}"
+        super().save(*args, **kwargs)
 
 
 class Diario(models.Model):

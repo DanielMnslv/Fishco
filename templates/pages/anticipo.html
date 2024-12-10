@@ -2,58 +2,185 @@
 {% load static %}
 
 {% block content %}
-<div class="container">
-    <h1>Crear Anticipo</h1>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Guardar Anticipo</button>
-    </form>
+
+<!-- Mostrar mensajes de éxito o error -->
+{% if messages %}
+  <div class="row">
+    <div class="col-sm-12">
+      {% for message in messages %}
+        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}" role="alert">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}
+
+<!-- [ Main Content ] start -->
+<div class="row">
+  <div class="col-sm-12">
+    <div class="card">
+      <div class="card-header">
+        <h5>Registrar Anticipo</h5>
+      </div>
+      <div class="card-body">
+        <h5>Nuevo Formulario</h5>
+        <hr>
+        <form action="{% url 'anticipo' %}" method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+
+          <!-- Fecha -->
+          <div class="form-group">
+            <label for="fecha">Fecha</label>
+            <input type="date" id="fecha" name="fecha" class="form-control" required>
+          </div>
+
+          <!-- NIT -->
+          <div class="form-group">
+            <label for="nit">NIT</label>
+            <input type="text" id="nit" name="nit" class="form-control" required>
+          </div>
+
+          <!-- Nombre -->
+          <div class="form-group">
+            <label for="nombre">Nombre</label>
+            <input type="text" id="nombre" name="nombre" class="form-control" required>
+          </div>
+
+          <!-- Cantidad -->
+          <div class="form-group">
+            <label for="cantidad">Cantidad</label>
+            <input type="number" id="cantidad" name="cantidad" class="form-control" value="1" min="1" required>
+          </div>
+
+          <!-- Centro de Costo -->
+          <div class="form-group">
+            <label for="centro_costo">Centro de Costo</label>
+            <select id="centro_costo" name="centro_costo" class="form-control" required>
+              <option value="">Seleccione una opción</option>
+              <option>ADMINISTRACIÓN</option>
+              <option>PRODUCCIÓN</option>
+              <option>ALEVINERA</option>
+              <option>ECOPEZ</option>
+              <option>FERRY</option>
+              <option>CARRO VNS228</option>
+              <option>CARRO WGY</option>
+              <option>CARRO THS 473</option>
+              <option>CARRO PESCA SRP 254</option>
+              <option>TERMOKIN GQZ 727</option>
+              <option>TERMOKIN GRK 030</option>
+              <option>THERMO KING THS 592</option>
+              <option>UNIDAD COMERCIALIZACION</option>
+            </select>
+          </div>
+
+          <!-- Producto o Servicio -->
+          <div class="form-group">
+            <label for="producto_servicio">Producto o Servicio</label>
+            <input type="text" id="producto_servicio" name="producto_servicio" class="form-control" required>
+          </div>
+
+          <!-- Subtotal -->
+          <div class="form-group">
+            <label for="subtotal">Subtotal</label>
+            <input type="number" id="subtotal" name="subtotal" class="form-control" step="0.01" required>
+          </div>
+
+          <!-- Saldo a Favor -->
+          <div class="form-group">
+            <label for="saldo_a_favor">Saldo a Favor</label>
+            <input type="number" id="saldo_a_favor" name="saldo_a_favor" class="form-control" step="0.01" value="0">
+          </div>
+
+          <!-- IVA -->
+          <div class="form-group">
+            <label for="iva">IVA</label>
+            <select id="iva" name="iva" class="form-control" required>
+              <option value="0">Sin IVA</option>
+              <option value="5">5%</option>
+              <option value="19">19%</option>
+            </select>
+          </div>
+
+          <!-- Retención -->
+          <div class="form-group">
+            <label for="retencion">Retención</label>
+            <select id="retencion" name="retencion" class="form-control" required>
+              <option value="0">Sin Retención</option>
+              <option value="0.625">0.625%</option>
+              <option value="0.1">0.1%</option>
+              <option value="2">2%</option>
+              <option value="2.5">2.5%</option>
+              <option value="3.5">3.5%</option>
+              <option value="4">4%</option>
+              <option value="6">6%</option>
+              <option value="10">10%</option>
+              <option value="11">11%</option>
+            </select>
+          </div>
+
+          <!-- Reteica -->
+          <div class="form-group">
+            <label for="reteica">Reteica</label>
+           <select id="reteica" name="reteica" class="form-control" required>
+    <option value="0">Sin ReteICA</option>
+    <option value="0.003">0.3%</option>
+    <option value="0.004">0.4%</option>
+    <option value="0.005">0.5%</option>
+    <option value="0.006">0.6%</option>
+    <option value="0.007">0.7%</option>
+    <option value="0.01">0.10%</option>
+</select>
+
+          <!-- Observaciones -->
+          <div class="form-group">
+            <label for="observaciones">Observaciones</label>
+            <textarea id="observaciones" name="observaciones" class="form-control" rows="3"></textarea>
+          </div>
+
+          <!-- Total a Pagar -->
+          <div class="form-group">
+            <label for="total_pagar">Total a Pagar</label>
+            <input type="text" id="total_pagar" class="form-control" readonly>
+            <input type="hidden" id="hidden_total_pagar" name="total_pagar">
+          </div>
+
+          <div class="text-center">
+            <button type="button" class="btn btn-secondary" onclick="calcularTotal()">Calcular Total</button>
+            <button type="submit" class="btn btn-primary">Enviar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>
-{% endblock content %}
+<!-- [ Main Content ] end -->
 
-{% block scripts %}
-<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
-<!-- Incluir el script de cálculo aquí -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    function calcularValores() {
-        var subtotal = parseFloat(document.querySelector('input[name="subtotal"]').value) || 0;
-        var iva = parseFloat(document.querySelector('select[name="iva"]').value) || 0;
-        var retencion = parseFloat(document.querySelector('select[name="retencion"]').value) || 0;
+  function calcularTotal() {
+    try {
+        const cantidad = parseFloat(document.getElementById('cantidad').value) || 1;
+        const subtotal = parseFloat(document.getElementById('subtotal').value) || 0;
+        const saldoAFavor = parseFloat(document.getElementById('saldo_a_favor').value) || 0;
+        const iva = parseFloat(document.getElementById('iva').value) || 0;
+        const retencion = parseFloat(document.getElementById('retencion').value) || 0;
+        const reteica = parseFloat(document.getElementById('reteica').value) || 0;
 
-        // Calcular el valor del IVA y la retención
-        var valor_iva = subtotal * (iva / 100);
-        var valor_retencion = subtotal * (retencion / 100);
+        // Convertir valores de porcentaje a decimales
+        const totalIVA = Math.round((subtotal * (iva / 100)) * 100) / 100;
+        const totalRetencion = Math.round((subtotal * (retencion / 100)) * 100) / 100;
+        const totalReteica = Math.round((subtotal * reteica) * 100) / 100; // reteica ya es un decimal directo
 
-        // Calcular el total a pagar
-        var total_pagar = subtotal + valor_iva - valor_retencion;
+        // Calcular total
+        const total = Math.round(((subtotal * cantidad) + totalIVA - totalRetencion - totalReteica - saldoAFavor) * 100) / 100;
 
-        // Redondear a enteros
-        var valor_iva_redondeado = Math.round(valor_iva);
-        var valor_retencion_redondeado = Math.round(valor_retencion);
-        var total_pagar_redondeado = Math.round(total_pagar);
-
-        // Mostrar el valor calculado del IVA y la retención en el formulario
-        document.querySelector('input[name="valor_iva"]').value = valor_iva_redondeado;
-        document.querySelector('input[name="valor_retencion"]').value = valor_retencion_redondeado;
-
-        // Mostrar el total a pagar redondeado
-        document.querySelector('input[name="total_pagar"]').value = total_pagar_redondeado;
+        // Asignar valores al campo
+        document.getElementById('total_pagar').value = total.toFixed(2);
+        document.getElementById('hidden_total_pagar').value = total.toFixed(2);
+    } catch (error) {
+        console.error("Error al calcular el total:", error);
     }
-
-    // Añadir eventos a los campos para recalcular los valores
-    document.querySelectorAll('input[name="subtotal"], select[name="iva"], select[name="retencion"]').forEach(function(element) {
-        element.addEventListener('input', calcularValores);
-    });
-
-    // Calcular valores iniciales cuando la página carga
-    calcularValores();
-});
+}
 </script>
 
-
-{% endblock scripts %}
-
-
-
+{% endblock content %}

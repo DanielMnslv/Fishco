@@ -34,7 +34,10 @@ class SolicitudForm(forms.ModelForm):
             ),
             "tipo": forms.TextInput(attrs={"class": "form-control", "required": True}),
             "observaciones": forms.Textarea(attrs={"class": "form-control", "rows": 2}),
-            "archivo": forms.ClearableFileInput(attrs={"class": "form-control", "accept": ".jpg,.jpeg,.png,.pdf,.xls,.xlsx"}),
+            "archivo": forms.ClearableFileInput(attrs={
+                "class": "form-control", 
+                "accept": ".jpg,.jpeg,.png,.gif,.bmp,.webp,.tiff,.svg,.pdf,.xls,.xlsx"
+            }),
         }
 
 
@@ -111,76 +114,25 @@ class AnticipoForm(forms.ModelForm):
     class Meta:
         model = Anticipo
         fields = [
-            "fecha",
-            "nit",
-            "nombre",
-            "cantidad",
-            "centro_costo",
-            "producto_servicio",
-            "subtotal",
-            "iva",
-            "valor_iva",  # Mostrar el valor calculado del IVA
-            "retencion",
-            "valor_retencion",  # Mostrar el valor calculado de la retención
-            "total_pagar",
-            "observaciones",
+            "fecha", "centro_costo", "nit", "nombre", 
+            "producto_servicio", "cantidad", "subtotal", 
+            "iva", "retencion", "reteica", "saldo_a_favor", 
+            "observaciones", "total_pagar"
         ]
         widgets = {
-            "fecha": forms.DateTimeInput(
-                attrs={"class": "form-control", "type": "date"}
-            ),
+            "fecha": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "centro_costo": forms.TextInput(attrs={"class": "form-control"}),
             "nit": forms.TextInput(attrs={"class": "form-control"}),
             "nombre": forms.TextInput(attrs={"class": "form-control"}),
-            "cantidad": forms.NumberInput(attrs={"class": "form-control", "min": 1}),
-            "centro_costo": forms.Select(
-                choices=[
-                    ("ADMINISTRACIÓN", "ADMINISTRACIÓN"),
-                    ("PRODUCCION", "PRODUCCIÓN"),
-                    ("ALEVINERA", "ALEVINERA"),
-                    ("ECOPEZ", "ECOPEZ"),
-                    ("FERRY", "FERRY"),
-                    ("CARRO VNS228", "CARRO VNS228"),
-                    ("CARRO WGY", "CARRO WGY"),
-                    ("CARRO THS 473", "CARRO THS 473"),
-                    ("CARRO PESCA SRP 254", "CARRO PESCA SRP 254"),
-                    ("TERMOKIN GQZ 727", "TERMOKIN GQZ 727"),
-                    ("TERMOKIN GRK 030", "TERMOKIN GRK 030"),
-                    ("THERMO KING THS 592", "THERMO KING THS 592"),
-                    ("UNIDAD COMERCIALIZACION", "UNIDAD COMERCIALIZACIÓN"),
-                ],
-                attrs={"class": "form-control"},
-            ),
             "producto_servicio": forms.TextInput(attrs={"class": "form-control"}),
-            "subtotal": forms.NumberInput(attrs={"class": "form-control"}),
-            "iva": forms.Select(
-                choices=[(0, "Sin IVA"), (5, "5%"), (19, "19%")],
-                attrs={"class": "form-control"},
-            ),
-            "valor_iva": forms.NumberInput(
-                attrs={"class": "form-control", "readonly": True}
-            ),  # Solo lectura
-            "retencion": forms.Select(
-                choices=[
-                    (0, "Sin Retención"),
-                    (0.625, "0.625%"),
-                    (0.1, "0.1%"),
-                    (2, "2%"),
-                    (2.5, "2.5%"),
-                    (3.5, "3.5%"),
-                    (4, "4%"),
-                    (6, "6%"),
-                    (10, "10%"),
-                    (11, "11%"),
-                ],
-                attrs={"class": "form-control"},
-            ),
-            "valor_retencion": forms.NumberInput(
-                attrs={"class": "form-control", "readonly": True}
-            ),  # Solo lectura
-            "total_pagar": forms.NumberInput(
-                attrs={"class": "form-control", "readonly": True}
-            ),
+            "cantidad": forms.NumberInput(attrs={"class": "form-control", "min": 1}),
+            "subtotal": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+            "iva": forms.Select(attrs={"class": "form-control"}),  # Select para choices de IVA
+            "retencion": forms.Select(attrs={"class": "form-control"}),  # Select para choices de Retención
+            "reteica": forms.Select(attrs={"class": "form-control"}),  # Select para choices de ReteICA
+            "saldo_a_favor": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
             "observaciones": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "total_pagar": forms.NumberInput(attrs={"class": "form-control", "readonly": True}),
         }
 
 
