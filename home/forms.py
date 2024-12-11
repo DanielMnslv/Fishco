@@ -129,7 +129,7 @@ class AnticipoForm(forms.ModelForm):
             "subtotal": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
             "iva": forms.Select(attrs={"class": "form-control"}),  # Select para choices de IVA
             "retencion": forms.Select(attrs={"class": "form-control"}),  # Select para choices de Retención
-            "reteica": forms.Select(attrs={"class": "form-control"}),  # Select para choices de ReteICA
+            "reteica": forms.Select(attrs={"class": "form-control"}),  # Select para choices de reteICA
             "saldo_a_favor": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
             "observaciones": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
             "total_pagar": forms.NumberInput(attrs={"class": "form-control", "readonly": True}),

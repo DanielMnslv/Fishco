@@ -146,7 +146,7 @@ class Anticipo(models.Model):
     nit = models.CharField(max_length=20)
     nombre = models.CharField(max_length=100)
     producto_servicio = models.CharField(max_length=100)
-    cantidad = models.PositiveIntegerField(default=1)
+    cantidad = models.PositiveIntegerField(default=1)  # Si ya no es necesario, puedes eliminar este campo
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     iva = models.DecimalField(max_digits=5, decimal_places=2, choices=IVA_CHOICES, blank=True, null=True)
     retencion = models.DecimalField(max_digits=5, decimal_places=2, choices=RETENCION_CHOICES, blank=True, null=True)
@@ -169,15 +169,20 @@ class Anticipo(models.Model):
             self.valor_iva = (self.subtotal * (self.iva or 0) / 100).quantize(Decimal("0.01"))
             self.valor_retencion = (self.subtotal * (self.retencion or 0) / 100).quantize(Decimal("0.01"))
             self.valor_reteica = (self.subtotal * reteica_decimal).quantize(Decimal("0.01"))
+
+            # Calcular total a pagar sin considerar la cantidad
             self.total_pagar = (
-                (self.subtotal * self.cantidad) +
-                self.valor_iva -
-                self.valor_retencion -
-                self.valor_reteica -
+                self.subtotal + 
+                self.valor_iva - 
+                self.valor_retencion - 
+                self.valor_reteica - 
                 self.saldo_a_favor
             ).quantize(Decimal("0.01"))
 
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.nombre} - {self.total_pagar}"
 
 
 class Diario(models.Model):
