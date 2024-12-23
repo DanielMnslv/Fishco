@@ -31,27 +31,64 @@
 <div class="container">
     <h1>Ver Reporte de Combustible</h1>
 
+    <!-- Mostrar filtros activos -->
+    {% if filtros %}
+    <div class="alert alert-info">
+        <strong>Filtros aplicados:</strong>
+        <ul>
+            {% for key, value in filtros.items %}
+                {% if value %}
+                    <li>{{ key|capfirst }}: {{ value }}</li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
     <!-- Filtros adicionales -->
     <form method="GET" action="">
         <div class="row">
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
                 <label for="fecha_inicio">Fecha Inicio:</label>
                 <input type="date" name="fecha_inicio" class="form-control" value="{{ request.GET.fecha_inicio }}">
             </div>
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
                 <label for="fecha_fin">Fecha Fin:</label>
                 <input type="date" name="fecha_fin" class="form-control" value="{{ request.GET.fecha_fin }}">
             </div>
-            <div class="col-md-4 mb-3">
-                <label for="combustible">Tipo de Combustible:</label>
+            <div class="col-md-3 mb-3">
+                <label for="combustible">Combustible:</label>
                 <input type="text" name="combustible" class="form-control" value="{{ request.GET.combustible }}">
             </div>
-            <!-- Filtros adicionales -->
-            <div class="col-md-4 mb-3">
-                <label for="codigo_estacion">Código de Estación:</label>
+            <div class="col-md-3 mb-3">
+                <label for="cantidad">Cantidad (galones):</label>
+                <input type="number" step="any" name="cantidad" class="form-control" value="{{ request.GET.cantidad }}">
+            </div>
+            <div class="col-md-3 mb-3">
+                <label for="codigo_estacion">Código Estación:</label>
                 <input type="text" name="codigo_estacion" class="form-control" value="{{ request.GET.codigo_estacion }}">
             </div>
-            <div class="col-md-4 mb-3 align-self-end">
+            <div class="col-md-3 mb-3">
+                <label for="empresa">Empresa:</label>
+                <input type="text" name="empresa" class="form-control" value="{{ request.GET.empresa }}">
+            </div>
+            <div class="col-md-3 mb-3">
+                <label for="centro_costo">Centro de Costo:</label>
+                <input type="text" name="centro_costo" class="form-control" value="{{ request.GET.centro_costo }}">
+            </div>
+            <div class="col-md-3 mb-3">
+                <label for="destino">Destino:</label>
+                <input type="text" name="destino" class="form-control" value="{{ request.GET.destino }}">
+            </div>
+            <div class="col-md-3 mb-3">
+                <label for="conductor">Conductor:</label>
+                <input type="text" name="conductor" class="form-control" value="{{ request.GET.conductor }}">
+            </div>
+            <div class="col-md-3 mb-3">
+                <label for="placa">Placa:</label>
+                <input type="text" name="placa" class="form-control" value="{{ request.GET.placa }}">
+            </div>
+            <div class="col-md-3 mb-3 align-self-end">
                 <button type="submit" class="btn btn-primary">Filtrar</button>
             </div>
         </div>
@@ -63,8 +100,9 @@
             <tr>
                 <td>
                     <form method="GET" action="{% url 'generar_pdf_combustible' %}">
-                        <input type="hidden" name="fecha_inicio" value="{{ request.GET.fecha_inicio }}">
-                        <input type="hidden" name="fecha_fin" value="{{ request.GET.fecha_fin }}">
+                        {% for key, value in filtros.items %}
+                            <input type="hidden" name="{{ key }}" value="{{ value }}">
+                        {% endfor %}
                         <button type="submit" class="btn btn-warning">Descargar PDF</button>
                     </form>
                 </td>

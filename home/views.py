@@ -498,34 +498,76 @@ def guardar_reporte_combustible(request):
 
 
 def ver_reporte_combustible(request):
+    # Inicia una consulta base
     reportes = ReporteCombustible.objects.all()
+    filters = Q()
 
     # Filtrar por rango de fechas
     fecha_inicio = request.GET.get("fecha_inicio")
     fecha_fin = request.GET.get("fecha_fin")
     if fecha_inicio and fecha_fin:
-        reportes = reportes.filter(fecha__range=[fecha_inicio, fecha_fin])
+        filters &= Q(fecha__range=[fecha_inicio, fecha_fin])
     elif fecha_inicio:
-        reportes = reportes.filter(fecha__gte=fecha_inicio)
+        filters &= Q(fecha__gte=fecha_inicio)
     elif fecha_fin:
-        reportes = reportes.filter(fecha__lte=fecha_fin)
+        filters &= Q(fecha__lte=fecha_fin)
 
     # Filtrar por tipo de combustible
     combustible = request.GET.get("combustible")
     if combustible:
-        reportes = reportes.filter(combustible__icontains=combustible)
+        filters &= Q(combustible__icontains=combustible)
+
+    # Filtrar por cantidad
+    cantidad = request.GET.get("cantidad")
+    if cantidad:
+        try:
+            cantidad = float(cantidad)
+            filters &= Q(cantidad=cantidad)
+        except ValueError:
+            pass  # Ignorar si el valor no es válido
 
     # Filtrar por código de estación
     codigo_estacion = request.GET.get("codigo_estacion")
     if codigo_estacion:
-        reportes = reportes.filter(codigo_estacion__icontains=codigo_estacion)
+        filters &= Q(codigo_estacion__icontains=codigo_estacion)
+
+    # Filtrar por empresa
+    empresa = request.GET.get("empresa")
+    if empresa:
+        filters &= Q(empresa__icontains=empresa)
+
+    # Filtrar por centro de costo
+    centro_costo = request.GET.get("centro_costo")
+    if centro_costo:
+        filters &= Q(centro_costo__icontains=centro_costo)
+
+    # Filtrar por destino
+    destino = request.GET.get("destino")
+    if destino:
+        filters &= Q(destino__icontains=destino)
+
+    # Filtrar por conductor
+    conductor = request.GET.get("conductor")
+    if conductor:
+        filters &= Q(conductor__icontains=conductor)
+
+    # Filtrar por placa
+    placa = request.GET.get("placa")
+    if placa:
+        filters &= Q(placa__icontains=placa)
+
+    # Aplicar filtros dinámicos
+    reportes = reportes.filter(filters)
 
     # Paginación
     paginator = Paginator(reportes, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    return render(request, 'pages/ver_reporte_combustible.html', {'reportes': page_obj})
+    return render(request, 'pages/ver_reporte_combustible.html', {
+        'reportes': page_obj,
+        'filtros': request.GET,  # Para mostrar los valores en el frontend
+    })
 
 
 @login_required
@@ -1140,42 +1182,87 @@ def generar_pdf_diarios(request):
 
 
 
+import matplotlib.pyplot as plt
+from io import BytesIO
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import landscape, A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Image
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from django.db.models import Q
+import os
+from datetime import datetime
+
 def generar_pdf_combustible(request):
-    
-    # Obtener las fechas de inicio y fin del filtro desde la solicitud
+    # Obtener los filtros desde la solicitud
     fecha_inicio = request.GET.get("fecha_inicio")
     fecha_fin = request.GET.get("fecha_fin")
+    combustible = request.GET.get("combustible")
+    cantidad = request.GET.get("cantidad")
+    codigo_estacion = request.GET.get("codigo_estacion")
+    empresa = request.GET.get("empresa")
+    centro_costo = request.GET.get("centro_costo")
+    destino = request.GET.get("destino")
+    conductor = request.GET.get("conductor")
+    placa = request.GET.get("placa")
 
-    # Verificar que se proporcionen las fechas
-    if not fecha_inicio or not fecha_fin:
-        return HttpResponse("Debes seleccionar un rango de fechas.", status=400)
+    # Construir el filtro dinámico
+    filters = Q()
+    
+    # Aplicar cada filtro opcionalmente
+    if fecha_inicio and fecha_fin:
+        try:
+            fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
+            fecha_fin = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
+            filters &= Q(fecha__range=(fecha_inicio, fecha_fin))
+        except ValueError:
+            return HttpResponse("Formato de fecha inválido.", status=400)
 
-    try:
-        fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
-        fecha_fin = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
-    except ValueError:
-        return HttpResponse("Formato de fecha inválido.", status=400)
+    if combustible:
+        filters &= Q(combustible__iexact=combustible)
+    if cantidad:
+        try:
+            filters &= Q(cantidad=float(cantidad))
+        except ValueError:
+            return HttpResponse("Cantidad inválida.", status=400)
+    if codigo_estacion:
+        filters &= Q(codigo_estacion__icontains=codigo_estacion)
+    if empresa:
+        filters &= Q(empresa__icontains=empresa)
+    if centro_costo:
+        filters &= Q(centro_costo__iexact=centro_costo)
+    if destino:
+        filters &= Q(destino__iexact=destino)
+    if conductor:
+        filters &= Q(conductor__icontains=conductor)
+    if placa:
+        filters &= Q(placa__icontains=placa)
 
-    # Filtrar los reportes por las fechas proporcionadas
-    reportes = ReporteCombustible.objects.filter(fecha__range=(fecha_inicio, fecha_fin))
+    # Obtener los reportes filtrados
+    reportes = ReporteCombustible.objects.filter(filters)
 
     if not reportes.exists():
-        return HttpResponse("No se encontraron datos en el rango de fechas seleccionado.", status=404)
+        return HttpResponse("No se encontraron datos con los filtros seleccionados.", status=404)
+
+    # Calcular el total de combustible
+    total_combustible = sum(reporte.cantidad for reporte in reportes)
 
     # Crear la respuesta para el archivo PDF
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="reporte_combustible_{fecha_inicio}_a_{fecha_fin}.pdf"'
+    response['Content-Disposition'] = f'attachment; filename="reporte_combustible_filtros.pdf"'
 
     # Configurar el documento PDF
     doc = SimpleDocTemplate(response, pagesize=landscape(A4))
     elements = []
-    
+
     # Añadir el logo al encabezado
-    logo_path = os.path.join(
-        settings.MEDIA_ROOT, "imagenes/Logo.png"
-    )  # Asegúrate de que la imagen del logo esté en esta ruta
-    logo = Image(logo_path, width=100, height=50)  # Ajusta el tamaño del logo
-    elements.append(logo)
+    logo_path = os.path.join(settings.MEDIA_ROOT, "imagenes/Logo.png")
+    try:
+        logo = Image(logo_path, width=100, height=50)
+        elements.append(logo)
+    except FileNotFoundError:
+        elements.append(Paragraph("LOGO NO DISPONIBLE", getSampleStyleSheet()['Normal']))
+
     # Estilo y título
     styles = getSampleStyleSheet()
     elements.append(Paragraph("Reporte de Combustible", styles['Title']))
@@ -1197,6 +1284,11 @@ def generar_pdf_combustible(request):
             reporte.placa
         ])
 
+    # Agregar la fila con el total de combustible
+    data.append([
+        "", "", f"Total: {total_combustible:.2f}", "", "", "", "", "", ""
+    ])
+
     # Configuración de la tabla
     table = Table(data)
     table.setStyle(TableStyle([
@@ -1208,16 +1300,29 @@ def generar_pdf_combustible(request):
         ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
         ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
         ("GRID", (0, 0), (-1, -1), 1, colors.black),
+        ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),  # Negrita para la fila de total
+        ("ALIGN", (2, -1), (2, -1), "RIGHT")  # Alinea el total a la derecha en la columna "Cantidad"
     ]))
     elements.append(table)
 
-    # Espacio antes de la firma
-    elements.append(Paragraph("<br/><br/>", styles['Normal']))
+    # Generar el gráfico
+    fig, ax = plt.subplots(figsize=(10, 6))
+    centros = reportes.values_list('centro_costo', flat=True).distinct()
+    data_por_centro = {centro: reportes.filter(centro_costo=centro).aggregate(Sum('cantidad'))['cantidad__sum'] for centro in centros}
 
-    # Incluir la imagen de la firma
-    firma_path = os.path.join(settings.MEDIA_ROOT, "imagenes/Firma.jpeg")
-    firma = Image(firma_path, width=150, height=75)
-    elements.append(firma)
+    ax.bar(data_por_centro.keys(), data_por_centro.values())
+    ax.set_title('Consumo por Centro de Costo')
+    ax.set_xlabel('Centro de Costo')
+    ax.set_ylabel('Cantidad (galones)')
+    plt.xticks(rotation=45)
+
+    # Guardar el gráfico en un buffer
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+
+    # Añadir el gráfico al PDF
+    elements.append(Image(buffer, width=500, height=300))
 
     # Construir el documento PDF
     doc.build(elements)
