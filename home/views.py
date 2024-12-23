@@ -37,12 +37,16 @@ from django.core.mail import send_mail
 import json
 from django.db.models import Count, Avg, F, ExpressionWrapper, DurationField
 from datetime import timedelta
-from django.utils import timezone
 from django.db.models.functions import TruncMonth
 from pathlib import Path
 from django.db.models import Q
 from datetime import date
+import matplotlib
+matplotlib.use('Agg')  # Establecer el backend sin interfaz gráfica (ideal para servidores)
 
+import matplotlib.pyplot as plt
+from io import BytesIO
+from django.db.models import Sum
 
 
 @login_required
@@ -497,6 +501,7 @@ def guardar_reporte_combustible(request):
     return render(request, 'pages/reporte_combustible.html', {'form': form})
 
 
+from django.db.models import Sum
 def ver_reporte_combustible(request):
     # Inicia una consulta base
     reportes = ReporteCombustible.objects.all()
@@ -725,8 +730,7 @@ def aprobar_anticipo(request, anticipo_id):
     return render(request, "aprobar_anticipo.html", {"anticipo": anticipo})
 
 
-from django.core.mail import send_mail
-from django.conf import settings
+
 
 @user_passes_test(lambda u: u.id in [31, 33])  # IDs permitidos
 @login_required
@@ -1182,17 +1186,6 @@ def generar_pdf_diarios(request):
 
 
 
-import matplotlib.pyplot as plt
-from io import BytesIO
-from django.http import HttpResponse
-from reportlab.lib.pagesizes import landscape, A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Image
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
-from django.db.models import Q
-import os
-from datetime import datetime
-
 def generar_pdf_combustible(request):
     # Obtener los filtros desde la solicitud
     fecha_inicio = request.GET.get("fecha_inicio")
@@ -1208,8 +1201,6 @@ def generar_pdf_combustible(request):
 
     # Construir el filtro dinámico
     filters = Q()
-    
-    # Aplicar cada filtro opcionalmente
     if fecha_inicio and fecha_fin:
         try:
             fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
@@ -1300,29 +1291,43 @@ def generar_pdf_combustible(request):
         ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
         ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
         ("GRID", (0, 0), (-1, -1), 1, colors.black),
-        ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),  # Negrita para la fila de total
-        ("ALIGN", (2, -1), (2, -1), "RIGHT")  # Alinea el total a la derecha en la columna "Cantidad"
+        ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
+        ("ALIGN", (2, -1), (2, -1), "RIGHT")
     ]))
     elements.append(table)
 
-    # Generar el gráfico
-    fig, ax = plt.subplots(figsize=(10, 6))
-    centros = reportes.values_list('centro_costo', flat=True).distinct()
-    data_por_centro = {centro: reportes.filter(centro_costo=centro).aggregate(Sum('cantidad'))['cantidad__sum'] for centro in centros}
+    # Agrupar los datos por mes y calcular el consumo total
+    consumo_mensual = reportes.annotate(mes=TruncMonth('fecha')).values('mes').annotate(total=Sum('cantidad')).order_by('mes')
 
-    ax.bar(data_por_centro.keys(), data_por_centro.values())
-    ax.set_title('Consumo por Centro de Costo')
-    ax.set_xlabel('Centro de Costo')
-    ax.set_ylabel('Cantidad (galones)')
-    plt.xticks(rotation=45)
+    # Preparar los datos para el gráfico
+    meses = [item['mes'].strftime('%B %Y') for item in consumo_mensual]
+    consumos = [item['total'] for item in consumo_mensual]
+
+    # Traducir los nombres de los meses a español
+    meses_esp = {
+        'January': 'Enero', 'February': 'Febrero', 'March': 'Marzo', 'April': 'Abril', 'May': 'Mayo',
+        'June': 'Junio', 'July': 'Julio', 'August': 'Agosto', 'September': 'Septiembre', 'October': 'Octubre',
+        'November': 'Noviembre', 'December': 'Diciembre'
+    }
+    meses = [meses_esp[mes.split(' ')[0]] + ' ' + mes.split(' ')[1] for mes in meses]
+
+    # Generar el gráfico de barras
+    fig, ax = plt.subplots(figsize=(14, 8))  # Aumentar el tamaño del gráfico
+    ax.bar(meses, consumos, color='skyblue')
+    ax.set_title('Consumo Mensual de Combustible', fontsize=16)
+    ax.set_xlabel('Mes', fontsize=12)
+    ax.set_ylabel('Cantidad (galones)', fontsize=12)
+    plt.xticks(rotation=45, ha='right', fontsize=10)
+    plt.yticks(fontsize=10)
 
     # Guardar el gráfico en un buffer
     buffer = BytesIO()
     plt.savefig(buffer, format='png')
     buffer.seek(0)
+    plt.close()
 
     # Añadir el gráfico al PDF
-    elements.append(Image(buffer, width=500, height=300))
+    elements.append(Image(buffer, width=600, height=350))  # Ajustar el tamaño del gráfico
 
     # Construir el documento PDF
     doc.build(elements)
@@ -1330,11 +1335,6 @@ def generar_pdf_combustible(request):
     return response
 
 
-from datetime import datetime
-
-from datetime import datetime
-from reportlab.platypus import Table, TableStyle
-from reportlab.lib import colors
 
 def generar_pdf_combustible2(request):
     # Obtener las fechas de inicio y fin del filtro desde la solicitud

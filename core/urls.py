@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework.authtoken.views import obtain_auth_token  # <-- NEW
+from django.conf.urls.static import static
+from django.conf import settings
 
 from home.views import (
     SolicitudView,
@@ -30,8 +32,6 @@ from home.views import (
     generar_pdf_combustible2,
 )
 
-from django.conf.urls.static import static
-from django.conf import settings
 
 
 urlpatterns = [
