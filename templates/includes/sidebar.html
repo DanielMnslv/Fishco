@@ -17,6 +17,12 @@
           <label>Modulos</label>
         </li>
 
+
+        <li class="nav-item pcoded-menu-caption fs-6">
+          <label>Solicitud</label>
+        </li>
+
+
         <!-- Visible para todos los usuarios (superusuario, staff y usuarios regulares) -->
         <li class="nav-item {% if 'solicitud' in segment %}active{% endif %}">
           <a href="{% url 'solicitud' %}" class="nav-link">
@@ -32,12 +38,44 @@
           </a>
         </li>
 
+        <li class="nav-item {% if 'ver_solicitudes' in segment %}active{% endif %}">
+            <a href="{% url 'ver_solicitudes' %}" class="nav-link">
+              <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Ver Solicitudes</span>
+            </a>
+          </li>
+
+        <li class="nav-item pcoded-menu-caption fs-6">
+          <label>ORDENES</label>
+        </li>
+
         <!-- Opciones exclusivas para superusuarios -->
         {% if request.user.is_superuser %}
+          <li class="nav-item {% if 'ver_ordenes' in segment %}active{% endif %}">
+            <a href="{% url 'ver_ordenes' %}" class="nav-link">
+              <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Ver Ordenes</span>
+            </a>
+          </li>
+          <li class="nav-item {% if 'diario' in segment %}active{% endif %}">
+            <a href="{% url 'diario' %}" class="nav-link">
+              <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Crear Diario</span>
+            </a>
+          </li>
+
           <li class="nav-item {% if 'orden' in segment %}active{% endif %}">
             <a href="{% url 'orden' %}" class="nav-link">
               <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Crear Orden</span>
             </a>
+          </li>
+
+          <li class="nav-item {% if 'ver_diario' in segment %}active{% endif %}">
+            <a href="{% url 'ver_diario' %}" class="nav-link">
+              <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Ver Ordenes Diarias</span>
+            </a>
+          </li>
+          
+          
+          <li class="nav-item pcoded-menu-caption fs-6">
+          <label>COMBUSTIBLE</label>
           </li>
 
           <!-- Opciones para reporte de combustible solo para superusuarios -->
@@ -46,41 +84,34 @@
               <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Reporte Combustible</span>
             </a>
           </li>
-          <li class="nav-item {% if 'anticipo' in segment %}active{% endif %}">
-            <a href="{% url 'anticipo' %}" class="nav-link">
-              <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Crear Anticipo</span>
-            </a>
-          </li>
-          <li class="nav-item {% if 'diario' in segment %}active{% endif %}">
-            <a href="{% url 'diario' %}" class="nav-link">
-              <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Crear Diario</span>
-            </a>
-          </li>
-          <li class="nav-item {% if 'ver_solicitudes' in segment %}active{% endif %}">
-            <a href="{% url 'ver_solicitudes' %}" class="nav-link">
-              <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Ver Solicitudes</span>
-            </a>
-          </li>
-          <li class="nav-item {% if 'ver_ordenes' in segment %}active{% endif %}">
-            <a href="{% url 'ver_ordenes' %}" class="nav-link">
-              <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Ver Ordenes</span>
-            </a>
-          </li>
-          <li class="nav-item {% if 'ver_anticipos' in segment %}active{% endif %}">
-            <a href="{% url 'ver_anticipos' %}" class="nav-link">
-              <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Ver Anticipos</span>
-            </a>
-          </li>
-          <li class="nav-item {% if 'ver_diario' in segment %}active{% endif %}">
-            <a href="{% url 'ver_diario' %}" class="nav-link">
-              <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Ver Ordenes Diarias</span>
-            </a>
-          </li>
           <li class="nav-item {% if 'ver_combustible' in segment %}active{% endif %}">
             <a href="{% url 'ver_reporte_combustible' %}" class="nav-link">
               <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Ver Reporte Combustible</span>
             </a>
           </li>
+
+          <li class="nav-item pcoded-menu-caption fs-6">
+          <label>ANTICIPO</label>
+          </li>
+
+          <li class="nav-item {% if 'anticipo' in segment %}active{% endif %}">
+            <a href="{% url 'anticipo' %}" class="nav-link">
+              <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Crear Anticipo</span>
+            </a>
+          </li>
+          
+          
+          
+          <li class="nav-item {% if 'ver_anticipos' in segment %}active{% endif %}">
+            <a href="{% url 'ver_anticipos' %}" class="nav-link">
+              <span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Ver Anticipos</span>
+            </a>
+          </li>
+          
+
+        <li class="nav-item pcoded-menu-caption fs-6">
+          <label>CONFIGURACIÓN</label>
+        </li>
 
         {% elif request.user.is_staff %}
           <!-- Opciones visibles para usuarios staff -->
@@ -140,4 +171,5 @@
     </div>
   </div>
 </nav>
+
 
