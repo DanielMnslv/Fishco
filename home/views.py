@@ -565,7 +565,7 @@ def ver_reporte_combustible(request):
     reportes = reportes.filter(filters)
 
     # Paginación
-    paginator = Paginator(reportes, 10)
+    paginator = Paginator(reportes, 1000)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
