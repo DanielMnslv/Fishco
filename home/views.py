@@ -1296,29 +1296,50 @@ def generar_pdf_combustible(request):
     ]))
     elements.append(table)
 
-    # Agrupar los datos por mes y calcular el consumo total
-    consumo_mensual = reportes.annotate(mes=TruncMonth('fecha')).values('mes').annotate(total=Sum('cantidad')).order_by('mes')
+    # Agrupar los datos por mes y centro de costo
+    consumo_mensual_cc = reportes.annotate(
+        mes=TruncMonth('fecha')
+    ).values(
+        'mes', 'centro_costo'
+    ).annotate(
+        total=Sum('cantidad')
+    ).filter(
+        centro_costo__in=['FERRY', 'ECOPEZ', 'PRODUCCION']
+    ).order_by('mes', 'centro_costo')
 
     # Preparar los datos para el gráfico
-    meses = [item['mes'].strftime('%B %Y') for item in consumo_mensual]
-    consumos = [item['total'] for item in consumo_mensual]
+    meses = sorted(set(item['mes'] for item in consumo_mensual_cc))
+    meses_labels = [mes.strftime('%B %Y') for mes in meses]
+    centros_costo = ['FERRY', 'ECOPEZ', 'PRODUCCION']
 
-    # Traducir los nombres de los meses a español
+    # Traducir los meses al español
     meses_esp = {
         'January': 'Enero', 'February': 'Febrero', 'March': 'Marzo', 'April': 'Abril', 'May': 'Mayo',
         'June': 'Junio', 'July': 'Julio', 'August': 'Agosto', 'September': 'Septiembre', 'October': 'Octubre',
         'November': 'Noviembre', 'December': 'Diciembre'
     }
-    meses = [meses_esp[mes.split(' ')[0]] + ' ' + mes.split(' ')[1] for mes in meses]
+    meses_labels = [meses_esp[mes.strftime('%B')] + ' ' + str(mes.year) for mes in meses]
 
-    # Generar el gráfico de barras
-    fig, ax = plt.subplots(figsize=(14, 8))  # Aumentar el tamaño del gráfico
-    ax.bar(meses, consumos, color='skyblue')
-    ax.set_title('Consumo Mensual de Combustible', fontsize=16)
+    # Crear los datos por centro de costo
+    data_cc = {cc: [0] * len(meses) for cc in centros_costo}
+    for item in consumo_mensual_cc:
+        mes_index = meses.index(item['mes'])
+        data_cc[item['centro_costo']][mes_index] = item['total']
+
+    # Crear el gráfico
+    x = range(len(meses))
+    width = 0.25
+    fig, ax = plt.subplots(figsize=(14, 8))
+
+    for i, cc in enumerate(centros_costo):
+        ax.bar([p + i * width for p in x], data_cc[cc], width, label=cc)
+
+    ax.set_title('Consumo Mensual de Combustible por Centro de Costo', fontsize=16)
     ax.set_xlabel('Mes', fontsize=12)
     ax.set_ylabel('Cantidad (galones)', fontsize=12)
-    plt.xticks(rotation=45, ha='right', fontsize=10)
-    plt.yticks(fontsize=10)
+    ax.set_xticks([p + width for p in x])
+    ax.set_xticklabels(meses_labels, rotation=45, ha='right')
+    ax.legend(title='Centro de Costo')
 
     # Guardar el gráfico en un buffer
     buffer = BytesIO()
@@ -1327,7 +1348,7 @@ def generar_pdf_combustible(request):
     plt.close()
 
     # Añadir el gráfico al PDF
-    elements.append(Image(buffer, width=600, height=350))  # Ajustar el tamaño del gráfico
+    elements.append(Image(buffer, width=600, height=350))
 
     # Construir el documento PDF
     doc.build(elements)
